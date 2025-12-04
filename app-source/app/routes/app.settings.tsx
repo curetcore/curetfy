@@ -436,9 +436,6 @@ function SortableFieldCard({ element, index, isExpanded, onToggle, onUpdate, onR
                   <Icon source={DragHandleIcon} tone="subdued" />
                 </div>
 
-                {/* Index Badge */}
-                <Badge tone={colors.badge}>{index + 1}</Badge>
-
                 {/* Icon & Label */}
                 <Icon source={config.icon} tone="base" />
                 <BlockStack gap="0">
@@ -540,18 +537,20 @@ function SortableFieldCard({ element, index, isExpanded, onToggle, onUpdate, onR
                   />
                 ) : <div />}
 
-                {/* Delete Button */}
-                <Button
-                  icon={DeleteIcon}
-                  tone="critical"
-                  variant="plain"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemove();
-                  }}
-                >
-                  Eliminar
-                </Button>
+                {/* Delete Button - Hidden for required fields */}
+                {!element.required && (
+                  <Button
+                    icon={DeleteIcon}
+                    tone="critical"
+                    variant="plain"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemove();
+                    }}
+                  >
+                    Eliminar
+                  </Button>
+                )}
               </InlineStack>
             </BlockStack>
           </Box>
