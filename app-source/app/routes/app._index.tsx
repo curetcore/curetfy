@@ -358,26 +358,20 @@ export default function Dashboard() {
 
         {/* Installation Guide */}
         <Card>
-          <BlockStack gap="400">
-            <InlineStack align="space-between" blockAlign="center">
-              <BlockStack gap="100">
-                <Text as="h2" variant="headingLg">Curetfy COD Form</Text>
-                <Text as="p" tone="subdued">Tu formulario de pago contra entrega con WhatsApp</Text>
-              </BlockStack>
+          <InlineStack align="space-between" blockAlign="center">
+            <BlockStack gap="100">
+              <Text as="h2" variant="headingLg">Curetfy COD Form</Text>
+              <Text as="p" tone="subdued">Tu formulario de pago contra entrega con WhatsApp</Text>
+            </BlockStack>
+            <BlockStack gap="200" inlineAlign="end">
               <Badge tone={setupComplete ? "success" : "attention"}>
                 {setupComplete ? "Activo" : "Configuración pendiente"}
               </Badge>
-            </InlineStack>
-            <Divider />
-            <InlineStack gap="300" wrap>
-              <Button url={`https://${shop.shopDomain}/admin/themes/current/editor`} external>
+              <Button url={`https://${shop.shopDomain}/admin/themes/current/editor`} external size="slim">
                 Instalar en tema
               </Button>
-              <Button url="/app/settings" variant="secondary">
-                Configurar formulario
-              </Button>
-            </InlineStack>
-          </BlockStack>
+            </BlockStack>
+          </InlineStack>
         </Card>
 
         {/* Quick Access Links */}
