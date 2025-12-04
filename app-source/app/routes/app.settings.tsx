@@ -1020,7 +1020,6 @@ export default function Settings() {
   const isSubmitting = navigation.state === "submitting";
   const [selectedTab, setSelectedTab] = useState(0);
   const [showSaved, setShowSaved] = useState(false);
-  const [previewMode, setPreviewMode] = useState<"form" | "success">("form");
 
   // Form builder state
   const [expandedFields, setExpandedFields] = useState<Set<string>>(new Set());
@@ -1696,35 +1695,29 @@ export default function Settings() {
                 {/* PREVIEW */}
                 <Layout.Section variant="oneThird">
                   <div style={{ position: "sticky", top: "20px" }}>
-                    <Card>
-                      <BlockStack gap="400" inlineAlign="start">
-                        <InlineStack align="space-between" wrap={false}>
-                          <Text as="h2" variant="headingSm">Vista previa</Text>
-                          <Badge tone="success">En vivo</Badge>
-                        </InlineStack>
-                        <ButtonGroup variant="segmented" fullWidth>
-                          <Button
-                            pressed={previewMode === "form"}
-                            onClick={() => setPreviewMode("form")}
-                            size="slim"
-                          >
-                            Formulario
-                          </Button>
-                          <Button
-                            pressed={previewMode === "success"}
-                            onClick={() => setPreviewMode("success")}
-                            size="slim"
-                          >
-                            Confirmacion
-                          </Button>
-                        </ButtonGroup>
-                        {previewMode === "form" ? (
+                    <BlockStack gap="400">
+                      {/* Form Preview */}
+                      <Card>
+                        <BlockStack gap="400">
+                          <InlineStack align="space-between" wrap={false}>
+                            <Text as="h2" variant="headingSm">Formulario</Text>
+                            <Badge tone="success">En vivo</Badge>
+                          </InlineStack>
                           <FormModalPreview formState={formState} previewType="form" sampleProduct={sampleProduct} />
-                        ) : (
+                        </BlockStack>
+                      </Card>
+
+                      {/* Success Preview */}
+                      <Card>
+                        <BlockStack gap="400">
+                          <InlineStack align="space-between" wrap={false}>
+                            <Text as="h2" variant="headingSm">Confirmación</Text>
+                            <Badge tone="success">En vivo</Badge>
+                          </InlineStack>
                           <SuccessPreview formState={formState} />
-                        )}
-                      </BlockStack>
-                    </Card>
+                        </BlockStack>
+                      </Card>
+                    </BlockStack>
                   </div>
                 </Layout.Section>
               </Layout>
