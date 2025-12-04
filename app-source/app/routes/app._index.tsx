@@ -505,40 +505,45 @@ export default function Dashboard() {
 
         {/* Stats Summary - Last 7 Days */}
         <Text as="h2" variant="headingMd">Últimos 7 días</Text>
-        <InlineGrid columns={4} gap="400">
-          <Card>
-            <BlockStack gap="200" inlineAlign="start">
-              <Text as="p" variant="headingXl" fontWeight="bold">
-                {stats.formOpensLast7Days}
-              </Text>
-              <Text as="span" tone="subdued" variant="bodySm">Aberturas de formulario</Text>
-            </BlockStack>
-          </Card>
-          <Card>
-            <BlockStack gap="200" inlineAlign="start">
-              <Text as="p" variant="headingXl" fontWeight="bold">
-                {stats.ordersLast7Days}
-              </Text>
-              <Text as="span" tone="subdued" variant="bodySm">Pedidos</Text>
-            </BlockStack>
-          </Card>
-          <Card>
-            <BlockStack gap="200" inlineAlign="start">
-              <Text as="p" variant="headingXl" fontWeight="bold">
-                {currency} {stats.revenueLast7Days.toLocaleString()}
-              </Text>
-              <Text as="span" tone="subdued" variant="bodySm">Ingresos</Text>
-            </BlockStack>
-          </Card>
-          <Card>
-            <BlockStack gap="200" inlineAlign="start">
-              <Text as="p" variant="headingXl" fontWeight="bold">
-                {stats.conversionRate}%
-              </Text>
-              <Text as="span" tone="subdued" variant="bodySm">Tasa de conversión</Text>
-            </BlockStack>
-          </Card>
-        </InlineGrid>
+        <Card>
+          <InlineStack align="space-between" wrap={false}>
+            <Box paddingInlineEnd="400">
+              <BlockStack gap="100">
+                <Text as="p" variant="headingLg" fontWeight="bold">
+                  {stats.formOpensLast7Days}
+                </Text>
+                <Text as="span" tone="subdued" variant="bodySm">Aberturas</Text>
+              </BlockStack>
+            </Box>
+            <div style={{ width: "1px", background: "#e1e3e5", alignSelf: "stretch" }} />
+            <Box paddingInline="400">
+              <BlockStack gap="100">
+                <Text as="p" variant="headingLg" fontWeight="bold">
+                  {stats.ordersLast7Days}
+                </Text>
+                <Text as="span" tone="subdued" variant="bodySm">Pedidos</Text>
+              </BlockStack>
+            </Box>
+            <div style={{ width: "1px", background: "#e1e3e5", alignSelf: "stretch" }} />
+            <Box paddingInline="400">
+              <BlockStack gap="100">
+                <Text as="p" variant="headingLg" fontWeight="bold">
+                  {currency} {stats.revenueLast7Days.toLocaleString()}
+                </Text>
+                <Text as="span" tone="subdued" variant="bodySm">Ingresos</Text>
+              </BlockStack>
+            </Box>
+            <div style={{ width: "1px", background: "#e1e3e5", alignSelf: "stretch" }} />
+            <Box paddingInlineStart="400">
+              <BlockStack gap="100">
+                <Text as="p" variant="headingLg" fontWeight="bold">
+                  {stats.conversionRate}%
+                </Text>
+                <Text as="span" tone="subdued" variant="bodySm">Conversión</Text>
+              </BlockStack>
+            </Box>
+          </InlineStack>
+        </Card>
 
         {/* Charts Section */}
         <Text as="h2" variant="headingMd">Analítica</Text>
