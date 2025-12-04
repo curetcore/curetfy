@@ -8,6 +8,7 @@ import {
   Text,
   BlockStack,
   InlineStack,
+  InlineGrid,
   Badge,
   Button,
   Banner,
@@ -504,48 +505,40 @@ export default function Dashboard() {
 
         {/* Stats Summary - Last 7 Days */}
         <Text as="h2" variant="headingMd">Últimos 7 días</Text>
-        <Layout>
-          <Layout.Section variant="oneQuarter">
-            <Card>
-              <BlockStack gap="200" inlineAlign="start">
-                <Text as="p" variant="heading2xl" fontWeight="bold">
-                  {stats.formOpensLast7Days}
-                </Text>
-                <Text as="span" tone="subdued" variant="bodySm">Aberturas de formulario</Text>
-              </BlockStack>
-            </Card>
-          </Layout.Section>
-          <Layout.Section variant="oneQuarter">
-            <Card>
-              <BlockStack gap="200" inlineAlign="start">
-                <Text as="p" variant="heading2xl" fontWeight="bold">
-                  {stats.ordersLast7Days}
-                </Text>
-                <Text as="span" tone="subdued" variant="bodySm">Pedidos</Text>
-              </BlockStack>
-            </Card>
-          </Layout.Section>
-          <Layout.Section variant="oneQuarter">
-            <Card>
-              <BlockStack gap="200" inlineAlign="start">
-                <Text as="p" variant="heading2xl" fontWeight="bold">
-                  {currency} {stats.revenueLast7Days.toLocaleString()}
-                </Text>
-                <Text as="span" tone="subdued" variant="bodySm">Ingresos</Text>
-              </BlockStack>
-            </Card>
-          </Layout.Section>
-          <Layout.Section variant="oneQuarter">
-            <Card>
-              <BlockStack gap="200" inlineAlign="start">
-                <Text as="p" variant="heading2xl" fontWeight="bold">
-                  {stats.conversionRate}%
-                </Text>
-                <Text as="span" tone="subdued" variant="bodySm">Tasa de conversión</Text>
-              </BlockStack>
-            </Card>
-          </Layout.Section>
-        </Layout>
+        <InlineGrid columns={4} gap="400">
+          <Card>
+            <BlockStack gap="200" inlineAlign="start">
+              <Text as="p" variant="heading2xl" fontWeight="bold">
+                {stats.formOpensLast7Days}
+              </Text>
+              <Text as="span" tone="subdued" variant="bodySm">Aberturas de formulario</Text>
+            </BlockStack>
+          </Card>
+          <Card>
+            <BlockStack gap="200" inlineAlign="start">
+              <Text as="p" variant="heading2xl" fontWeight="bold">
+                {stats.ordersLast7Days}
+              </Text>
+              <Text as="span" tone="subdued" variant="bodySm">Pedidos</Text>
+            </BlockStack>
+          </Card>
+          <Card>
+            <BlockStack gap="200" inlineAlign="start">
+              <Text as="p" variant="heading2xl" fontWeight="bold">
+                {currency} {stats.revenueLast7Days.toLocaleString()}
+              </Text>
+              <Text as="span" tone="subdued" variant="bodySm">Ingresos</Text>
+            </BlockStack>
+          </Card>
+          <Card>
+            <BlockStack gap="200" inlineAlign="start">
+              <Text as="p" variant="heading2xl" fontWeight="bold">
+                {stats.conversionRate}%
+              </Text>
+              <Text as="span" tone="subdued" variant="bodySm">Tasa de conversión</Text>
+            </BlockStack>
+          </Card>
+        </InlineGrid>
 
         {/* Charts Section */}
         <Text as="h2" variant="headingLg">Analítica</Text>
