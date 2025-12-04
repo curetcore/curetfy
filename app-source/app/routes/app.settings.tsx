@@ -23,6 +23,7 @@ import {
   ResourceItem,
   ResourceList,
   ButtonGroup,
+  Modal,
 } from "@shopify/polaris";
 import {
   PersonIcon,
@@ -385,30 +386,103 @@ function WhatsAppPreview({ template }: { template: string }) {
 
   return (
     <div style={{
-      background: "#e5ddd5",
+      background: "#0b141a",
       borderRadius: "12px",
-      padding: "16px",
-      maxHeight: "400px",
-      overflowY: "auto",
+      overflow: "hidden",
+      maxHeight: "450px",
     }}>
+      {/* WhatsApp Header */}
       <div style={{
-        background: "#dcf8c6",
-        borderRadius: "8px",
-        padding: "12px",
-        maxWidth: "90%",
-        marginLeft: "auto",
-        boxShadow: "0 1px 1px rgba(0,0,0,0.1)",
-        fontSize: "14px",
-        lineHeight: "1.5",
+        background: "#202c33",
+        padding: "10px 16px",
+        display: "flex",
+        alignItems: "center",
+        gap: "12px",
       }}>
-        <span dangerouslySetInnerHTML={{ __html: formattedPreview }} />
         <div style={{
-          fontSize: "11px",
-          color: "#667781",
-          textAlign: "right",
-          marginTop: "4px",
+          width: "40px",
+          height: "40px",
+          borderRadius: "50%",
+          background: "#00a884",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "white",
+          fontWeight: "bold",
+          fontSize: "16px",
         }}>
-          12:30 PM ✓✓
+          🏪
+        </div>
+        <div>
+          <div style={{ color: "#e9edef", fontWeight: "500", fontSize: "16px" }}>Mi Tienda</div>
+          <div style={{ color: "#8696a0", fontSize: "13px" }}>en línea</div>
+        </div>
+      </div>
+
+      {/* Chat Area */}
+      <div style={{
+        background: "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFklEQVQYV2NkIBIwEqmOYVQh3pAiHAYAE/wBE6gDdeQAAAAASUVORK5CYII=') #0b141a",
+        padding: "16px",
+        minHeight: "280px",
+        overflowY: "auto",
+      }}>
+        {/* Message Bubble */}
+        <div style={{
+          background: "#005c4b",
+          borderRadius: "8px",
+          borderTopLeftRadius: "0",
+          padding: "8px 12px",
+          maxWidth: "85%",
+          boxShadow: "0 1px 1px rgba(0,0,0,0.2)",
+          fontSize: "14.2px",
+          lineHeight: "1.5",
+          color: "#e9edef",
+        }}>
+          <span dangerouslySetInnerHTML={{ __html: formattedPreview }} />
+          <div style={{
+            fontSize: "11px",
+            color: "rgba(255,255,255,0.6)",
+            textAlign: "right",
+            marginTop: "4px",
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            gap: "4px",
+          }}>
+            12:30
+            <span style={{ fontSize: "14px" }}>✓✓</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Input Area */}
+      <div style={{
+        background: "#202c33",
+        padding: "10px 16px",
+        display: "flex",
+        alignItems: "center",
+        gap: "10px",
+      }}>
+        <div style={{
+          flex: 1,
+          background: "#2a3942",
+          borderRadius: "8px",
+          padding: "9px 12px",
+          color: "#8696a0",
+          fontSize: "15px",
+        }}>
+          Escribe un mensaje
+        </div>
+        <div style={{
+          width: "40px",
+          height: "40px",
+          borderRadius: "50%",
+          background: "#00a884",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+          🎤
         </div>
       </div>
     </div>
@@ -871,6 +945,7 @@ export default function Settings() {
   const isSubmitting = navigation.state === "submitting";
   const [selectedTab, setSelectedTab] = useState(0);
   const [showSaved, setShowSaved] = useState(false);
+  const [showVariablesModal, setShowVariablesModal] = useState(false);
 
   const [formState, setFormState] = useState({
     // WhatsApp
@@ -1096,24 +1171,10 @@ export default function Settings() {
                   </BlockStack>
                 </Card>
 
-                <Box paddingBlockStart="400">
-                  <Card>
-                    <BlockStack gap="400">
-                      <Text as="h2" variant="headingMd">Variables disponibles</Text>
-                      <BlockStack gap="200">
-                        <Text as="p" variant="bodySm"><Badge>{"{{orderNumber}}"}</Badge> - Número de orden</Text>
-                        <Text as="p" variant="bodySm"><Badge>{"{{name}}"}</Badge> - Nombre del cliente</Text>
-                        <Text as="p" variant="bodySm"><Badge>{"{{phone}}"}</Badge> - Teléfono del cliente</Text>
-                        <Text as="p" variant="bodySm"><Badge>{"{{email}}"}</Badge> - Email del cliente</Text>
-                        <Text as="p" variant="bodySm"><Badge>{"{{address}}"}</Badge> - Dirección de entrega</Text>
-                        <Text as="p" variant="bodySm"><Badge>{"{{city}}"}</Badge> - Ciudad</Text>
-                        <Text as="p" variant="bodySm"><Badge>{"{{province}}"}</Badge> - Provincia/Estado</Text>
-                        <Text as="p" variant="bodySm"><Badge>{"{{notes}}"}</Badge> - Notas del pedido</Text>
-                        <Text as="p" variant="bodySm"><Badge>{"{{total}}"}</Badge> - Total del pedido</Text>
-                        <Text as="p" variant="bodySm"><Badge>{"{{#products}}...{{/products}}"}</Badge> - Lista de productos</Text>
-                      </BlockStack>
-                    </BlockStack>
-                  </Card>
+                <Box paddingBlockStart="200">
+                  <Button variant="plain" onClick={() => setShowVariablesModal(true)}>
+                    Ver variables disponibles
+                  </Button>
                 </Box>
               </Layout.Section>
 
@@ -1963,6 +2024,87 @@ export default function Settings() {
           )}
         </Box>
       </Tabs>
+
+      {/* Variables Modal */}
+      <Modal
+        open={showVariablesModal}
+        onClose={() => setShowVariablesModal(false)}
+        title="Variables disponibles"
+      >
+        <Modal.Section>
+          <BlockStack gap="400">
+            <Text as="p" variant="bodySm" tone="subdued">
+              Usa estas variables en tu plantilla de mensaje. Se reemplazarán automáticamente con los datos del pedido.
+            </Text>
+            <BlockStack gap="300">
+              <InlineStack gap="200" align="start">
+                <Badge tone="info">{"{{orderNumber}}"}</Badge>
+                <Text as="span" variant="bodySm">Número de orden (ej: COD-00001)</Text>
+              </InlineStack>
+              <InlineStack gap="200" align="start">
+                <Badge tone="info">{"{{name}}"}</Badge>
+                <Text as="span" variant="bodySm">Nombre del cliente</Text>
+              </InlineStack>
+              <InlineStack gap="200" align="start">
+                <Badge tone="info">{"{{phone}}"}</Badge>
+                <Text as="span" variant="bodySm">Teléfono del cliente</Text>
+              </InlineStack>
+              <InlineStack gap="200" align="start">
+                <Badge tone="info">{"{{email}}"}</Badge>
+                <Text as="span" variant="bodySm">Email del cliente</Text>
+              </InlineStack>
+              <InlineStack gap="200" align="start">
+                <Badge tone="info">{"{{address}}"}</Badge>
+                <Text as="span" variant="bodySm">Dirección de entrega</Text>
+              </InlineStack>
+              <InlineStack gap="200" align="start">
+                <Badge tone="info">{"{{city}}"}</Badge>
+                <Text as="span" variant="bodySm">Ciudad</Text>
+              </InlineStack>
+              <InlineStack gap="200" align="start">
+                <Badge tone="info">{"{{province}}"}</Badge>
+                <Text as="span" variant="bodySm">Provincia o estado</Text>
+              </InlineStack>
+              <InlineStack gap="200" align="start">
+                <Badge tone="info">{"{{notes}}"}</Badge>
+                <Text as="span" variant="bodySm">Notas del pedido</Text>
+              </InlineStack>
+              <InlineStack gap="200" align="start">
+                <Badge tone="info">{"{{total}}"}</Badge>
+                <Text as="span" variant="bodySm">Total del pedido</Text>
+              </InlineStack>
+              <Divider />
+              <Text as="p" variant="headingSm">Bloque de productos</Text>
+              <Text as="p" variant="bodySm" tone="subdued">
+                Para mostrar múltiples productos, usa este bloque:
+              </Text>
+              <Box background="bg-surface-secondary" padding="300" borderRadius="200">
+                <Text as="p" variant="bodySm" fontWeight="medium">
+                  {"{{#products}}"}<br/>
+                  {"  *Producto:* {{title}}"}<br/>
+                  {"  *Cantidad:* {{quantity}}"}<br/>
+                  {"  *Precio:* {{price}}"}<br/>
+                  {"{{/products}}"}
+                </Text>
+              </Box>
+              <BlockStack gap="200">
+                <InlineStack gap="200" align="start">
+                  <Badge>{"{{title}}"}</Badge>
+                  <Text as="span" variant="bodySm">Nombre del producto</Text>
+                </InlineStack>
+                <InlineStack gap="200" align="start">
+                  <Badge>{"{{quantity}}"}</Badge>
+                  <Text as="span" variant="bodySm">Cantidad</Text>
+                </InlineStack>
+                <InlineStack gap="200" align="start">
+                  <Badge>{"{{price}}"}</Badge>
+                  <Text as="span" variant="bodySm">Precio del producto</Text>
+                </InlineStack>
+              </BlockStack>
+            </BlockStack>
+          </BlockStack>
+        </Modal.Section>
+      </Modal>
     </Page>
   );
 }
