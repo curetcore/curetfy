@@ -25,6 +25,10 @@ import {
   Collapsible,
   Tooltip,
   EmptyState,
+  ColorPicker,
+  Popover,
+  hsbToHex,
+  hexToRgb,
 } from "@shopify/polaris";
 import {
   PersonIcon,
@@ -72,6 +76,114 @@ import { CSS } from "@dnd-kit/utilities";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
+
+// Helper function to convert hex to HSB
+function hexToHsb(hex: string): { hue: number; saturation: number; brightness: number } {
+  // Remove # if present
+  hex = hex.replace('#', '');
+
+  // Parse hex to RGB
+  const r = parseInt(hex.substring(0, 2), 16) / 255;
+  const g = parseInt(hex.substring(2, 4), 16) / 255;
+  const b = parseInt(hex.substring(4, 6), 16) / 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const delta = max - min;
+
+  let hue = 0;
+  if (delta !== 0) {
+    if (max === r) {
+      hue = ((g - b) / delta) % 6;
+    } else if (max === g) {
+      hue = (b - r) / delta + 2;
+    } else {
+      hue = (r - g) / delta + 4;
+    }
+    hue = Math.round(hue * 60);
+    if (hue < 0) hue += 360;
+  }
+
+  const saturation = max === 0 ? 0 : delta / max;
+  const brightness = max;
+
+  return { hue, saturation, brightness };
+}
+
+// Color Picker Field Component
+function ColorPickerField({
+  label,
+  value,
+  onChange,
+  helpText
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  helpText?: string;
+}) {
+  const [popoverActive, setPopoverActive] = useState(false);
+
+  // Extract hex color (handle gradients by taking first color)
+  const hexMatch = value.match(/#[0-9A-Fa-f]{6}/);
+  const hexColor = hexMatch ? hexMatch[0] : '#25D366';
+
+  const [color, setColor] = useState(() => hexToHsb(hexColor));
+
+  const handleColorChange = (newColor: { hue: number; saturation: number; brightness: number }) => {
+    setColor(newColor);
+    const hex = hsbToHex(newColor);
+    onChange(hex);
+  };
+
+  const activator = (
+    <div
+      onClick={() => setPopoverActive(true)}
+      style={{ cursor: 'pointer' }}
+    >
+      <InlineStack gap="200" blockAlign="center">
+        <div style={{
+          width: '36px',
+          height: '36px',
+          borderRadius: '8px',
+          background: value,
+          border: '2px solid #e1e3e5',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+        }} />
+        <BlockStack gap="0">
+          <Text as="span" variant="bodyMd" fontWeight="medium">{label}</Text>
+          <Text as="span" variant="bodySm" tone="subdued">{hexColor}</Text>
+        </BlockStack>
+      </InlineStack>
+    </div>
+  );
+
+  return (
+    <Popover
+      active={popoverActive}
+      activator={activator}
+      onClose={() => setPopoverActive(false)}
+      preferredAlignment="left"
+    >
+      <Popover.Section>
+        <BlockStack gap="300">
+          <Text as="span" variant="headingSm">{label}</Text>
+          <ColorPicker onChange={handleColorChange} color={color} />
+          <TextField
+            label="Código de color"
+            value={value}
+            onChange={onChange}
+            autoComplete="off"
+            labelHidden
+          />
+          {helpText && (
+            <Text as="span" variant="bodySm" tone="subdued">{helpText}</Text>
+          )}
+        </BlockStack>
+      </Popover.Section>
+    </Popover>
+  );
+}
 
 // Category colors for form fields
 const CATEGORY_COLORS = {
@@ -1088,7 +1200,7 @@ export default function Settings() {
     formTitle: shop?.formTitle || "Completa tu pedido",
     formSubtitle: shop?.formSubtitle || "Ingresa tus datos para recibir tu pedido",
     submitButtonText: shop?.submitButtonText || "Enviar pedido por WhatsApp",
-    submitButtonColor: shop?.submitButtonColor || "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+    submitButtonColor: shop?.submitButtonColor || "#25D366",
     modalHeaderColor: shop?.modalHeaderColor || "#075E54",
     modalAccentColor: shop?.modalAccentColor || "#25D366",
     showProductImage: shop?.showProductImage ?? true,
@@ -1605,39 +1717,18 @@ export default function Settings() {
                             onChange={handleChange("submitButtonText")}
                             autoComplete="off"
                           />
-                          <FormLayout.Group>
-                            <TextField
-                              label="Color/Gradiente del botón"
+                          <InlineStack gap="600">
+                            <ColorPickerField
+                              label="Color del botón"
                               value={formState.submitButtonColor}
                               onChange={handleChange("submitButtonColor")}
-                              prefix={
-                                <div style={{
-                                  width: "20px",
-                                  height: "20px",
-                                  borderRadius: "4px",
-                                  background: formState.submitButtonColor,
-                                  border: "1px solid #ddd",
-                                }} />
-                              }
-                              autoComplete="off"
-                              helpText="Acepta colores (#25D366) o gradientes (linear-gradient(...))"
                             />
-                            <TextField
+                            <ColorPickerField
                               label="Color del encabezado"
                               value={formState.modalHeaderColor}
                               onChange={handleChange("modalHeaderColor")}
-                              prefix={
-                                <div style={{
-                                  width: "20px",
-                                  height: "20px",
-                                  borderRadius: "4px",
-                                  background: formState.modalHeaderColor,
-                                  border: "1px solid #ddd",
-                                }} />
-                              }
-                              autoComplete="off"
                             />
-                          </FormLayout.Group>
+                          </InlineStack>
                           <Checkbox
                             label="Mostrar imagen del producto"
                             checked={formState.showProductImage}
