@@ -1116,36 +1116,72 @@ function FormModalPreview({
         </div>
 
         {/* Order Summary */}
-        <div style={{
-          padding: "16px",
-          background: "#f9fafb",
-          borderRadius: "8px",
-          marginBottom: "16px",
-        }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "14px" }}>
-            <span style={{ color: "#6b7177" }}>Productos:</span>
-            <span>RD$2,500</span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "14px" }}>
-            <span style={{ color: "#6b7177" }}>Envío:</span>
-            <span style={{ color: "#008060", fontWeight: 500 }}>GRATIS</span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px", fontSize: "14px" }}>
-            <span style={{ color: "#6b7177" }}>Descuento:</span>
-            <span style={{ color: "#dc2626" }}>-RD$4</span>
-          </div>
-          <div style={{
-            display: "flex",
-            justifyContent: "space-between",
-            paddingTop: "12px",
-            borderTop: "1px solid #e1e3e5",
-            fontSize: "16px",
-            fontWeight: 600,
-          }}>
-            <span>Total:</span>
-            <span style={{ color: "#1a1a1a" }}>RD$2,496</span>
-          </div>
-        </div>
+        {(() => {
+          const subtotal = 2500;
+          const shipping = 0;
+          const discount = 4;
+          const taxRate = parseFloat(formState.taxRate) || 18;
+          const taxIncluded = formState.taxIncluded;
+
+          let taxAmount = 0;
+          let displaySubtotal = subtotal;
+          let total = subtotal;
+
+          if (formState.enableTax) {
+            if (taxIncluded) {
+              // Tax is included - calculate tax portion from subtotal
+              taxAmount = Math.round((subtotal * taxRate) / (100 + taxRate));
+              displaySubtotal = subtotal - taxAmount;
+            } else {
+              // Tax is added on top
+              taxAmount = Math.round((subtotal * taxRate) / 100);
+              total = subtotal + taxAmount;
+            }
+          }
+
+          total = total + shipping - discount;
+
+          return (
+            <div style={{
+              padding: "16px",
+              background: "#f9fafb",
+              borderRadius: "8px",
+              marginBottom: "16px",
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "14px" }}>
+                <span style={{ color: "#6b7177" }}>Subtotal:</span>
+                <span>RD${displaySubtotal.toLocaleString()}</span>
+              </div>
+              {formState.enableTax && (
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "14px" }}>
+                  <span style={{ color: "#6b7177" }}>
+                    ITBIS ({taxRate}%){taxIncluded ? " incluido" : ""}:
+                  </span>
+                  <span>{taxIncluded ? "" : "+"} RD${taxAmount.toLocaleString()}</span>
+                </div>
+              )}
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "14px" }}>
+                <span style={{ color: "#6b7177" }}>Envío:</span>
+                <span style={{ color: "#008060", fontWeight: 500 }}>GRATIS</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px", fontSize: "14px" }}>
+                <span style={{ color: "#6b7177" }}>Descuento:</span>
+                <span style={{ color: "#dc2626" }}>-RD${discount}</span>
+              </div>
+              <div style={{
+                display: "flex",
+                justifyContent: "space-between",
+                paddingTop: "12px",
+                borderTop: "1px solid #e1e3e5",
+                fontSize: "16px",
+                fontWeight: 600,
+              }}>
+                <span>Total:</span>
+                <span style={{ color: "#1a1a1a" }}>RD${total.toLocaleString()}</span>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Submit Button */}
         <button style={{
@@ -1340,6 +1376,11 @@ export default function Settings() {
     enableShipping: shop?.enableShipping ?? false,
     shippingSource: shop?.shippingSource || "custom",
     customShippingRates: shop?.customShippingRates || [],
+
+    // Tax
+    enableTax: shop?.enableTax ?? false,
+    taxRate: shop?.taxRate || "18",
+    taxIncluded: shop?.taxIncluded ?? true, // true = included in price, false = add on top
 
     // Custom Fields
     customFields: shop?.customFields || [],
@@ -2112,6 +2153,60 @@ export default function Settings() {
                           helpText="Esta nota se agregará internamente al pedido en Shopify."
                           autoComplete="off"
                         />
+                      </FormLayout>
+                    </BlockStack>
+                  </Card>
+                </Box>
+
+                {/* Tax Configuration */}
+                <Box paddingBlockStart="400">
+                  <Card>
+                    <BlockStack gap="400" inlineAlign="start">
+                      <BlockStack gap="200">
+                        <Text as="h2" variant="headingSm">Configuración de impuestos</Text>
+                        <Text as="p" variant="bodySm" tone="subdued">
+                          Configura cómo se manejan los impuestos en tus pedidos.
+                        </Text>
+                      </BlockStack>
+                      <FormLayout>
+                        <Checkbox
+                          label="Habilitar impuestos"
+                          helpText="Mostrar el desglose de impuestos en el resumen del pedido."
+                          checked={formState.enableTax}
+                          onChange={handleChange("enableTax")}
+                        />
+                        {formState.enableTax && (
+                          <>
+                            <TextField
+                              label="Tasa de impuesto (%)"
+                              value={formState.taxRate}
+                              onChange={handleChange("taxRate")}
+                              type="number"
+                              suffix="%"
+                              helpText="ITBIS u otro impuesto aplicable (ej: 18%)"
+                              autoComplete="off"
+                            />
+                            <BlockStack gap="200">
+                              <Text as="span" variant="bodyMd" fontWeight="medium">¿Cómo se aplica el impuesto?</Text>
+                              <RadioButton
+                                label="El impuesto ya está incluido en el precio"
+                                helpText="El precio que ven los clientes ya incluye el ITBIS"
+                                id="tax-included"
+                                name="taxIncluded"
+                                checked={formState.taxIncluded === true}
+                                onChange={() => handleChange("taxIncluded")(true)}
+                              />
+                              <RadioButton
+                                label="Agregar impuesto sobre el precio"
+                                helpText="El ITBIS se calculará y sumará al subtotal"
+                                id="tax-added"
+                                name="taxIncluded"
+                                checked={formState.taxIncluded === false}
+                                onChange={() => handleChange("taxIncluded")(false)}
+                              />
+                            </BlockStack>
+                          </>
+                        )}
                       </FormLayout>
                     </BlockStack>
                   </Card>
