@@ -956,6 +956,7 @@ export default function Settings() {
   const [selectedTab, setSelectedTab] = useState(0);
   const [showSaved, setShowSaved] = useState(false);
   const [showVariablesModal, setShowVariablesModal] = useState(false);
+  const [previewMode, setPreviewMode] = useState<"form" | "success">("form");
 
   const [formState, setFormState] = useState({
     // WhatsApp
@@ -1765,7 +1766,7 @@ export default function Settings() {
                   <div style={{ position: "sticky", top: "20px" }}>
                     <Card>
                       <BlockStack gap="400" inlineAlign="start">
-                        <InlineStack align="space-between">
+                        <InlineStack align="space-between" wrap={false}>
                           <Text as="h2" variant="headingSm">Vista previa</Text>
                           <InlineStack gap="100" blockAlign="center">
                             <span style={{
@@ -1779,7 +1780,27 @@ export default function Settings() {
                             <Text as="span" variant="bodySm" tone="success">En vivo</Text>
                           </InlineStack>
                         </InlineStack>
-                        <FormModalPreview formState={formState} previewType="form" sampleProduct={sampleProduct} />
+                        <ButtonGroup variant="segmented" fullWidth>
+                          <Button
+                            pressed={previewMode === "form"}
+                            onClick={() => setPreviewMode("form")}
+                            size="slim"
+                          >
+                            Formulario
+                          </Button>
+                          <Button
+                            pressed={previewMode === "success"}
+                            onClick={() => setPreviewMode("success")}
+                            size="slim"
+                          >
+                            Confirmacion
+                          </Button>
+                        </ButtonGroup>
+                        {previewMode === "form" ? (
+                          <FormModalPreview formState={formState} previewType="form" sampleProduct={sampleProduct} />
+                        ) : (
+                          <SuccessPreview formState={formState} />
+                        )}
                       </BlockStack>
                     </Card>
                   </div>
