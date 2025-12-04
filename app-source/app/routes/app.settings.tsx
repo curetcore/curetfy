@@ -1035,39 +1035,10 @@ function FormModalPreview({
         </div>
       )}
 
-      {/* Form Fields */}
-      <div style={{ padding: "20px" }}>
-        {/* Custom HTML Top */}
-        {formState.customHtmlTop && (
-          <div
-            style={{ marginBottom: "16px", padding: "12px", background: "#f9fafb", borderRadius: "8px", fontSize: "13px" }}
-            dangerouslySetInnerHTML={{ __html: formState.customHtmlTop }}
-          />
-        )}
-
-        {/* Render all fields from customFields in order */}
-        {customFields.length === 0 ? (
-          <div style={{ padding: "20px", textAlign: "center" as const, color: "#6b7177", fontSize: "13px" }}>
-            Agrega campos al formulario para ver la vista previa
-          </div>
-        ) : (
-          customFields.map((field) => renderCustomField(field))
-        )}
-
-
-        {/* Custom Image - Bottom */}
-        {formState.customImagePosition === "bottom" && <CustomImage />}
-
-        {/* Custom HTML Bottom */}
-        {formState.customHtmlBottom && (
-          <div
-            style={{ marginBottom: "16px", padding: "12px", background: "#f9fafb", borderRadius: "8px", fontSize: "13px" }}
-            dangerouslySetInnerHTML={{ __html: formState.customHtmlBottom }}
-          />
-        )}
-
-        {/* Coupon Section */}
-        <div style={{ marginBottom: "16px" }}>
+      {/* Coupon & Order Summary Section */}
+      <div style={{ padding: "16px 20px", background: "#f9fafb", borderBottom: "1px solid #e1e3e5" }}>
+        {/* Coupon Input */}
+        <div style={{ marginBottom: "12px" }}>
           <div style={{ fontSize: "13px", fontWeight: 500, marginBottom: "8px", color: "#6b7177" }}>
             ¿Tienes un cupón?
           </div>
@@ -1087,7 +1058,7 @@ function FormModalPreview({
             />
             <button style={{
               padding: "10px 16px",
-              background: "#f6f6f7",
+              background: "#fff",
               border: "1px solid #e1e3e5",
               borderRadius: "8px",
               fontSize: "14px",
@@ -1129,11 +1100,9 @@ function FormModalPreview({
 
           if (formState.enableTax) {
             if (taxIncluded) {
-              // Tax is included - calculate tax portion from subtotal
               taxAmount = Math.round((subtotal * taxRate) / (100 + taxRate));
               displaySubtotal = subtotal - taxAmount;
             } else {
-              // Tax is added on top
               taxAmount = Math.round((subtotal * taxRate) / 100);
               total = subtotal + taxAmount;
             }
@@ -1143,37 +1112,37 @@ function FormModalPreview({
 
           return (
             <div style={{
-              padding: "16px",
-              background: "#f9fafb",
+              padding: "12px",
+              background: "#fff",
               borderRadius: "8px",
-              marginBottom: "16px",
+              border: "1px solid #e1e3e5",
             }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "14px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", fontSize: "13px" }}>
                 <span style={{ color: "#6b7177" }}>Subtotal:</span>
                 <span>RD${displaySubtotal.toLocaleString()}</span>
               </div>
               {formState.enableTax && (
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "14px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", fontSize: "13px" }}>
                   <span style={{ color: "#6b7177" }}>
-                    ITBIS ({taxRate}%){taxIncluded ? " incluido" : ""}:
+                    ITBIS ({taxRate}%){taxIncluded ? " incl." : ""}:
                   </span>
                   <span>{taxIncluded ? "" : "+"} RD${taxAmount.toLocaleString()}</span>
                 </div>
               )}
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "14px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", fontSize: "13px" }}>
                 <span style={{ color: "#6b7177" }}>Envío:</span>
                 <span style={{ color: "#008060", fontWeight: 500 }}>GRATIS</span>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px", fontSize: "14px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "13px" }}>
                 <span style={{ color: "#6b7177" }}>Descuento:</span>
                 <span style={{ color: "#dc2626" }}>-RD${discount}</span>
               </div>
               <div style={{
                 display: "flex",
                 justifyContent: "space-between",
-                paddingTop: "12px",
+                paddingTop: "8px",
                 borderTop: "1px solid #e1e3e5",
-                fontSize: "16px",
+                fontSize: "15px",
                 fontWeight: 600,
               }}>
                 <span>Total:</span>
@@ -1182,6 +1151,38 @@ function FormModalPreview({
             </div>
           );
         })()}
+      </div>
+
+      {/* Form Fields */}
+      <div style={{ padding: "20px" }}>
+        {/* Custom HTML Top */}
+        {formState.customHtmlTop && (
+          <div
+            style={{ marginBottom: "16px", padding: "12px", background: "#f9fafb", borderRadius: "8px", fontSize: "13px" }}
+            dangerouslySetInnerHTML={{ __html: formState.customHtmlTop }}
+          />
+        )}
+
+        {/* Render all fields from customFields in order */}
+        {customFields.length === 0 ? (
+          <div style={{ padding: "20px", textAlign: "center" as const, color: "#6b7177", fontSize: "13px" }}>
+            Agrega campos al formulario para ver la vista previa
+          </div>
+        ) : (
+          customFields.map((field) => renderCustomField(field))
+        )}
+
+
+        {/* Custom Image - Bottom */}
+        {formState.customImagePosition === "bottom" && <CustomImage />}
+
+        {/* Custom HTML Bottom */}
+        {formState.customHtmlBottom && (
+          <div
+            style={{ marginBottom: "16px", padding: "12px", background: "#f9fafb", borderRadius: "8px", fontSize: "13px" }}
+            dangerouslySetInnerHTML={{ __html: formState.customHtmlBottom }}
+          />
+        )}
 
         {/* Submit Button */}
         <button style={{
