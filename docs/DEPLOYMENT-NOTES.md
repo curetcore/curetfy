@@ -166,6 +166,78 @@ app-source/
 
 ---
 
+### 6. Theme Extension - Schema Inválido
+
+**Error:**
+```
+Invalid tag 'schema': unknown key 'presets'
+Invalid tag 'schema': enabled_on.groups[0]: must be one of header, footer, aside
+```
+
+**Causa:** Los App Blocks tienen restricciones de schema diferentes a los Theme Sections
+
+**Solución:**
+- Remover `presets` del schema (solo aplica a sections, no app blocks)
+- En `enabled_on.groups`, solo usar: `header`, `footer`, `aside` (no `body`)
+- O simplemente usar solo `templates` sin `groups`:
+```json
+"enabled_on": {
+  "templates": ["product"]
+}
+```
+
+---
+
+### 7. shopify.app.toml - Campos Faltantes/Obsoletos
+
+**Error:**
+```
+Validation errors in shopify.app.toml:
+• [embedded]: Boolean is required
+• Unsupported section(s): scopes
+```
+
+**Causa:** Nuevas versiones del Shopify CLI requieren formato actualizado
+
+**Solución:**
+```toml
+# Agregar campo embedded a nivel raíz
+embedded = true
+
+# Cambiar scopes a access_scopes
+[access_scopes]
+scopes = "read_products,write_products,..."
+```
+
+---
+
+### 8. Shopify CLI Desactualizado
+
+**Error:**
+```
+CLI version 3.83.2 is no longer supported
+```
+
+**Solución:**
+```bash
+npm install -g @shopify/cli@latest
+```
+
+---
+
+## Theme Extension Deployment
+
+Para desplegar cambios en la Theme Extension:
+
+```bash
+cd app-source
+shopify app deploy --force
+```
+
+**Nota:** Requiere autenticación con Shopify Partners. El CLI mostrará un código para verificar en el navegador.
+
+---
+
 ## Comandos Útiles
 
 ```bash
