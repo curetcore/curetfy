@@ -125,13 +125,76 @@ const COUNTRIES = [
 ];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { session, admin } = await authenticate.admin(request);
 
   const shop = await prisma.shop.findUnique({
     where: { shopDomain: session.shop },
   });
 
-  return json({ shop, provincesConfig: PROVINCES_BY_COUNTRY });
+  // Fetch a random product for preview
+  let sampleProduct = null;
+  try {
+    const productsResponse = await admin.graphql(`
+      query {
+        products(first: 10) {
+          edges {
+            node {
+              id
+              title
+              featuredImage {
+                url
+              }
+              variants(first: 1) {
+                edges {
+                  node {
+                    price
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `);
+    const productsData = await productsResponse.json();
+    const products = productsData.data?.products?.edges || [];
+    if (products.length > 0) {
+      // Pick a random product
+      const randomProduct = products[Math.floor(Math.random() * products.length)].node;
+      sampleProduct = {
+        title: randomProduct.title,
+        image: randomProduct.featuredImage?.url || null,
+        price: randomProduct.variants?.edges?.[0]?.node?.price || "0.00",
+      };
+    }
+  } catch (error) {
+    console.error("Error fetching sample product:", error);
+  }
+
+  // Get the next order number from store (for auto-sequence)
+  let nextOrderNumber = 1;
+  try {
+    const ordersResponse = await admin.graphql(`
+      query {
+        orders(first: 1, sortKey: CREATED_AT, reverse: true) {
+          edges {
+            node {
+              name
+            }
+          }
+        }
+      }
+    `);
+    const ordersData = await ordersResponse.json();
+    const lastOrderName = ordersData.data?.orders?.edges?.[0]?.node?.name || "#0";
+    // Extract number from order name like "#1042"
+    const orderNum = parseInt(lastOrderName.replace(/[^0-9]/g, ''), 10) || 0;
+    nextOrderNumber = orderNum + 1;
+  } catch (error) {
+    console.error("Error fetching order count:", error);
+  }
+
+  return json({ shop, provincesConfig: PROVINCES_BY_COUNTRY, sampleProduct, nextOrderNumber });
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -346,12 +409,19 @@ function WhatsAppPreview({ template }: { template: string }) {
 function FormModalPreview({
   formState,
   previewType,
+  sampleProduct,
 }: {
   formState: any;
   previewType: "form" | "fields" | "modal";
+  sampleProduct?: { title: string; image: string | null; price: string } | null;
 }) {
   const provinces = PROVINCES_BY_COUNTRY[formState.defaultCountry] || PROVINCES_BY_COUNTRY.DO;
   const customFields = formState.customFields as any[] || [];
+
+  // Use sample product from store or fallback
+  const productTitle = sampleProduct?.title || "Producto de ejemplo";
+  const productImage = sampleProduct?.image;
+  const productPrice = sampleProduct?.price ? `$${parseFloat(sampleProduct.price).toLocaleString('es-DO', { minimumFractionDigits: 2 })}` : "RD$ 1,250.00";
 
   const hideLabels = formState.hideFieldLabels;
   const fieldStyle = { marginBottom: "16px" };
@@ -607,26 +677,42 @@ function FormModalPreview({
           background: "#fafbfb",
           borderBottom: "1px solid #e1e3e5",
         }}>
-          <div style={{
-            width: "64px",
-            height: "64px",
-            background: "#e1e3e5",
-            borderRadius: "8px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#6b7177",
-            fontSize: "24px",
-          }}>
-            📦
-          </div>
+          {productImage ? (
+            <img
+              src={productImage}
+              alt={productTitle}
+              style={{
+                width: "64px",
+                height: "64px",
+                borderRadius: "8px",
+                objectFit: "cover",
+              }}
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          ) : (
+            <div style={{
+              width: "64px",
+              height: "64px",
+              background: "#e1e3e5",
+              borderRadius: "8px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#6b7177",
+              fontSize: "24px",
+            }}>
+              📦
+            </div>
+          )}
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 500, fontSize: "14px", color: "#1a1a1a" }}>
-              Producto de Ejemplo
+              {productTitle}
             </div>
             {formState.showProductPrice && (
               <div style={{ fontWeight: 600, fontSize: "15px", color: "#1a1a1a", marginTop: "4px" }}>
-                RD$ 1,250.00
+                {productPrice}
               </div>
             )}
           </div>
@@ -690,7 +776,7 @@ function FormModalPreview({
           fontWeight: 600,
         }}>
           <span>Total:</span>
-          <span style={{ fontSize: "17px" }}>RD$ 1,250.00</span>
+          <span style={{ fontSize: "17px" }}>{productPrice}</span>
         </div>
 
         {/* Submit Button */}
@@ -769,7 +855,7 @@ function SuccessPreview({ formState }: { formState: any }) {
 // ============================================
 
 export default function Settings() {
-  const { shop } = useLoaderData<typeof loader>();
+  const { shop, sampleProduct, nextOrderNumber } = useLoaderData<typeof loader>();
   const submit = useSubmit();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -1587,7 +1673,7 @@ export default function Settings() {
                           <Text as="h2" variant="headingMd">Vista previa</Text>
                           <Badge tone="info">En tiempo real</Badge>
                         </InlineStack>
-                        <FormModalPreview formState={formState} previewType="form" />
+                        <FormModalPreview formState={formState} previewType="form" sampleProduct={sampleProduct} />
                       </BlockStack>
                     </Card>
                   </div>
@@ -1749,7 +1835,7 @@ export default function Settings() {
                         label="Prefijo de etiqueta"
                         value={formState.orderTagPrefix}
                         onChange={handleChange("orderTagPrefix")}
-                        helpText="Se agregará al número de orden: cod-form-001"
+                        helpText={`Próxima orden: ${formState.orderTagPrefix}-${nextOrderNumber}. Sigue la secuencia de tu tienda.`}
                         autoComplete="off"
                       />
                       <TextField

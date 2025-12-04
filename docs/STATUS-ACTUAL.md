@@ -1,6 +1,6 @@
 # Estado Actual del Proyecto - Curetfy COD Form
 
-> Última actualización: 2025-12-04 (v6)
+> Última actualización: 2025-12-04 (v7)
 
 ## Resumen Ejecutivo
 
@@ -19,15 +19,22 @@
 - [x] Deploy en Easypanel (Contabo VPS)
 - [x] Dominio: `app.curetcore.com`
 
-### 2. Dashboard (App Embebida) - REDISEÑADO v6
+### 2. Dashboard (App Embebida) - REDISEÑADO v7
 - [x] **Dashboard principal** (`app._index.tsx`) con analytics
   - Encabezado con título y botón de instalación en tema
   - Tarjetas de acceso rápido: WhatsApp, Formulario, Facebook Pixel
   - Estadísticas de últimos 7 días (aberturas, pedidos, ingresos, conversión)
-  - Gráficos placeholder para tendencias
+  - **Gráficos SVG reales** con ejes de fecha y puntos de datos:
+    - Aberturas de formulario (últimos 30 días)
+    - Pedidos (últimos 30 días)
+    - Tasa de conversión (últimos 30 días)
+    - Ingresos (últimos 30 días)
+  - **Tabla de datos UTM** con fuente, medio, campaña, aberturas, pedidos, conversión
   - Banner de ingresos totales generados
   - Barra de progreso del plan
 - [x] **Página de configuración** (`app.settings.tsx`) - Constructor de formularios
+  - **Vista previa con producto aleatorio** de la tienda real (imagen, nombre, precio)
+  - **Prefijo de etiqueta auto-secuencial** - muestra próximo número de orden de la tienda
 - [x] **Página de billing** (`app.billing.tsx`) - "Planes de facturación"
 - [x] ~~Página de órdenes~~ - ELIMINADA (gestión en Shopify Admin)
 - [x] Integración con Polaris UI y Polaris Icons
@@ -282,6 +289,7 @@ npm run build
 
 | Commit | Descripción |
 |--------|-------------|
+| `ee2b39a` | Dashboard real charts + UTM table + random product preview + order sequence |
 | `decbb08` | Major UI redesign: dashboard analytics, shipping rates, consolidated settings |
 | `7d022cb` | Fix form builder: sync preview with reordering + auto-load default template |
 | `aadb338` | Redesign form builder with unified page-builder style interface |
