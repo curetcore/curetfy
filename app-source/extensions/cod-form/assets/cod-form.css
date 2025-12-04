@@ -1,6 +1,6 @@
 /**
  * Curetfy COD Form - Professional Styles
- * Version: 2.0.0
+ * Version: 4.0.0 - Full Featured
  * Design: Shopify-style clean and modern
  */
 
@@ -76,8 +76,6 @@
 /* ============================================
    Button Animations
    ============================================ */
-
-/* Pulse Animation */
 .curetfy-animate-pulse {
   animation: curetfy-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
@@ -87,7 +85,6 @@
   50% { opacity: 0.85; }
 }
 
-/* Glow Animation */
 .curetfy-animate-glow {
   animation: curetfy-glow 2s ease-in-out infinite;
 }
@@ -97,7 +94,6 @@
   50% { box-shadow: 0 0 20px rgba(0, 0, 0, 0.4), 0 0 30px rgba(0, 0, 0, 0.2); }
 }
 
-/* Shake Animation */
 .curetfy-animate-shake {
   animation: curetfy-shake 4s ease-in-out infinite;
 }
@@ -112,7 +108,6 @@
   97% { transform: translateX(2px); }
 }
 
-/* Bounce Animation */
 .curetfy-animate-bounce {
   animation: curetfy-bounce 2s ease infinite;
 }
@@ -145,6 +140,30 @@
 @keyframes curetfy-overlay-in {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+.curetfy-modal-overlay.curetfy-closing {
+  animation: curetfy-overlay-out 0.15s ease forwards;
+}
+
+@keyframes curetfy-overlay-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* RTL Support */
+.curetfy-modal-overlay.curetfy-rtl {
+  direction: rtl;
+}
+
+.curetfy-rtl .curetfy-modal-header {
+  flex-direction: row-reverse;
+}
+
+.curetfy-rtl .curetfy-form-group select {
+  background-position: left 12px center;
+  padding-left: 36px;
+  padding-right: 12px;
 }
 
 /* ============================================
@@ -183,24 +202,34 @@
   justify-content: space-between;
   padding: 16px 20px;
   border-bottom: 1px solid var(--curetfy-border);
-  background: var(--curetfy-bg);
+}
+
+.curetfy-modal-header-text {
+  flex: 1;
 }
 
 .curetfy-modal-title {
   margin: 0;
   font-size: 17px;
   font-weight: 600;
-  color: var(--curetfy-text);
   letter-spacing: -0.01em;
+  color: inherit;
+}
+
+.curetfy-modal-subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  opacity: 0.85;
 }
 
 .curetfy-modal-close {
   background: transparent;
   border: none;
   padding: 8px;
-  margin: -8px;
+  margin: -8px -8px -8px 8px;
   cursor: pointer;
-  color: var(--curetfy-text-secondary);
+  color: inherit;
+  opacity: 0.7;
   border-radius: 8px;
   transition: all 0.15s ease;
   display: flex;
@@ -209,8 +238,8 @@
 }
 
 .curetfy-modal-close:hover {
-  background: var(--curetfy-bg-secondary);
-  color: var(--curetfy-text);
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* ============================================
@@ -219,6 +248,24 @@
 .curetfy-modal-content {
   overflow-y: auto;
   flex: 1;
+}
+
+/* ============================================
+   Custom HTML/Image
+   ============================================ */
+.curetfy-custom-html-top,
+.curetfy-custom-html-bottom {
+  padding: 12px 20px;
+}
+
+.curetfy-custom-image {
+  padding: 12px 20px;
+}
+
+.curetfy-custom-image img {
+  width: 100%;
+  height: auto;
+  border-radius: var(--curetfy-radius);
 }
 
 /* ============================================
@@ -267,21 +314,26 @@
   color: var(--curetfy-text);
 }
 
-/* Multiple items in cart */
+/* Cart items */
 .curetfy-cart-items {
   max-height: 200px;
   overflow-y: auto;
+  background: var(--curetfy-bg-secondary);
+  border-bottom: 1px solid var(--curetfy-border);
+}
+
+.curetfy-cart-count {
+  margin: 0;
+  padding: 12px 20px 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--curetfy-text-secondary);
 }
 
 .curetfy-cart-item {
   display: flex;
   gap: 12px;
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--curetfy-border);
-}
-
-.curetfy-cart-item:last-child {
-  border-bottom: none;
+  padding: 8px 20px 12px;
 }
 
 .curetfy-cart-item-image {
@@ -398,6 +450,17 @@
   min-height: 16px;
 }
 
+.curetfy-form-error {
+  margin-top: 12px;
+  padding: 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--curetfy-radius);
+  color: var(--curetfy-error);
+  font-size: 13px;
+  text-align: center;
+}
+
 /* Form row */
 .curetfy-form-row {
   display: flex;
@@ -409,9 +472,89 @@
   min-width: 0;
 }
 
+/* Form heading */
+.curetfy-form-heading {
+  margin: 20px 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--curetfy-text);
+}
+
+.curetfy-form-heading:first-child {
+  margin-top: 0;
+}
+
+/* Form image */
+.curetfy-form-image {
+  margin: 12px 0;
+}
+
+.curetfy-form-image img {
+  width: 100%;
+  height: auto;
+  border-radius: var(--curetfy-radius);
+}
+
+/* Form link button */
+.curetfy-form-link-button {
+  display: block;
+  margin: 12px 0;
+  padding: 10px 16px;
+  text-align: center;
+  background: var(--curetfy-bg-secondary);
+  border: 1px solid var(--curetfy-border);
+  border-radius: var(--curetfy-radius);
+  color: var(--curetfy-text);
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.15s ease;
+}
+
+.curetfy-form-link-button:hover {
+  background: var(--curetfy-border);
+  text-decoration: none;
+}
+
+/* ============================================
+   Radio and Checkbox
+   ============================================ */
+.curetfy-radio-group,
+.curetfy-checkbox-group {
+  margin-bottom: 16px;
+}
+
+.curetfy-radio-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.curetfy-radio-label,
+.curetfy-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--curetfy-text);
+}
+
+.curetfy-radio-label input,
+.curetfy-checkbox-label input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--curetfy-primary);
+}
+
 /* ============================================
    Quantity Control
    ============================================ */
+.curetfy-quantity-group {
+  max-width: 160px;
+}
+
 .curetfy-quantity-wrap {
   display: flex;
   align-items: stretch;
@@ -465,22 +608,183 @@
 }
 
 /* ============================================
-   Total Row
+   Shipping Section
    ============================================ */
-.curetfy-total-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 0;
-  margin-bottom: 4px;
+.curetfy-shipping-section {
+  margin: 20px 0;
+  padding-top: 20px;
   border-top: 1px solid var(--curetfy-border);
-  font-size: 15px;
+}
+
+.curetfy-section-title {
+  margin: 0 0 16px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--curetfy-text);
 }
 
+/* Free shipping progress */
+.curetfy-free-shipping-bar {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--curetfy-radius);
+}
+
+.curetfy-free-shipping-text {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #166534;
+  font-weight: 500;
+}
+
+.curetfy-progress-track {
+  height: 8px;
+  background: #dcfce7;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.curetfy-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.curetfy-free-shipping-achieved {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--curetfy-radius);
+  font-size: 14px;
+  font-weight: 500;
+  color: #166534;
+}
+
+/* Shipping options */
+.curetfy-shipping-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.curetfy-shipping-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--curetfy-border);
+  border-radius: var(--curetfy-radius);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.curetfy-shipping-option:hover {
+  border-color: #a0a0a0;
+}
+
+.curetfy-shipping-option:has(input:checked) {
+  border-color: var(--curetfy-primary);
+  background: var(--curetfy-bg-secondary);
+}
+
+.curetfy-shipping-option input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  cursor: pointer;
+  accent-color: var(--curetfy-primary);
+}
+
+.curetfy-shipping-option-content {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.curetfy-shipping-option-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.curetfy-shipping-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--curetfy-text);
+}
+
+.curetfy-shipping-details {
+  font-size: 12px;
+  color: var(--curetfy-text-secondary);
+}
+
+.curetfy-shipping-price {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--curetfy-text);
+  white-space: nowrap;
+}
+
+.curetfy-price-free {
+  color: var(--curetfy-success);
+}
+
+/* ============================================
+   Terms Section
+   ============================================ */
+.curetfy-terms-section {
+  margin: 16px 0;
+}
+
+.curetfy-terms-label {
+  font-size: 13px;
+}
+
+.curetfy-terms-label a {
+  color: var(--curetfy-primary);
+  text-decoration: underline;
+}
+
+.curetfy-terms-label a:hover {
+  text-decoration: none;
+}
+
+/* ============================================
+   Order Summary
+   ============================================ */
+.curetfy-order-summary {
+  margin: 20px 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--curetfy-border);
+}
+
+.curetfy-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 14px;
+  color: var(--curetfy-text);
+}
+
+.curetfy-summary-row.curetfy-total-row {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--curetfy-border);
+  font-size: 16px;
+  font-weight: 600;
+}
+
 .curetfy-total-amount {
-  font-size: 17px;
+  font-size: 18px;
 }
 
 /* ============================================
@@ -601,6 +905,13 @@
   .curetfy-form-row {
     flex-direction: column;
     gap: 16px;
+  }
+
+  /* Fullscreen mobile option */
+  .curetfy-fullscreen-mobile .curetfy-modal {
+    max-height: 100vh;
+    max-height: 100dvh;
+    border-radius: 0;
   }
 }
 

@@ -235,6 +235,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
         submitText: shop.submitButtonText,
         submitColor: shop.submitButtonColor,
         headerColor: shop.modalHeaderColor,
+        headerTextColor: shop.modalHeaderTextColor || "#ffffff",
         accentColor: shop.modalAccentColor,
         showProductImage: shop.showProductImage,
         showProductPrice: shop.showProductPrice,
@@ -277,6 +278,42 @@ export async function loader({ request }: LoaderFunctionArgs) {
       enableShipping: shop.enableShipping ?? false,
       shippingSource: shop.shippingSource || "custom",
       customShippingRates: shop.customShippingRates || [],
+
+      // Free Shipping
+      freeShippingEnabled: shop.freeShippingEnabled ?? false,
+      freeShippingThreshold: shop.freeShippingThreshold || "2000",
+      freeShippingLabel: shop.freeShippingLabel || "Envío gratis",
+
+      // Store Pickup
+      enablePickup: shop.enablePickup ?? false,
+      pickupName: shop.pickupName || "Recoger en tienda",
+      pickupAddress: shop.pickupAddress || "",
+      pickupInstructions: shop.pickupInstructions || "",
+
+      // COD Fee
+      enableCodFee: shop.enableCodFee ?? false,
+      codFeeType: shop.codFeeType || "fixed",
+      codFeeAmount: shop.codFeeAmount || "0",
+      codFeeLabel: shop.codFeeLabel || "Cargo por pago contra entrega",
+
+      // Order Limits
+      enableMinOrder: shop.enableMinOrder ?? false,
+      minOrderAmount: shop.minOrderAmount || "0",
+      minOrderMessage: shop.minOrderMessage || "El monto mínimo de compra es {monto}",
+      enableMaxOrder: shop.enableMaxOrder ?? false,
+      maxOrderAmount: shop.maxOrderAmount || "0",
+      maxOrderMessage: shop.maxOrderMessage || "El monto máximo de compra es {monto}",
+
+      // Terms and Conditions
+      enableTerms: shop.enableTerms ?? false,
+      termsText: shop.termsText || "Acepto los términos y condiciones",
+      termsUrl: shop.termsUrl || "",
+      termsRequired: shop.termsRequired ?? true,
+
+      // Blocked Provinces
+      enableBlockedProvinces: shop.enableBlockedProvinces ?? false,
+      blockedProvinces: shop.blockedProvinces || [],
+      blockedProvinceMessage: shop.blockedProvinceMessage || "Lo sentimos, no realizamos envíos a esta provincia",
 
       // Custom Fields
       customFields: shop.customFields || [],
@@ -364,6 +401,7 @@ function getDefaultConfig() {
       submitText: "Enviar pedido por WhatsApp",
       submitColor: "#25D366",
       headerColor: "#000000",
+      headerTextColor: "#ffffff",
       accentColor: "#25D366",
       showProductImage: true,
       showProductPrice: true,
@@ -397,6 +435,36 @@ function getDefaultConfig() {
     enableShipping: false,
     shippingSource: "custom",
     customShippingRates: [],
+    // Free Shipping
+    freeShippingEnabled: false,
+    freeShippingThreshold: "2000",
+    freeShippingLabel: "Envío gratis",
+    // Store Pickup
+    enablePickup: false,
+    pickupName: "Recoger en tienda",
+    pickupAddress: "",
+    pickupInstructions: "",
+    // COD Fee
+    enableCodFee: false,
+    codFeeType: "fixed",
+    codFeeAmount: "0",
+    codFeeLabel: "Cargo por pago contra entrega",
+    // Order Limits
+    enableMinOrder: false,
+    minOrderAmount: "0",
+    minOrderMessage: "El monto mínimo de compra es {monto}",
+    enableMaxOrder: false,
+    maxOrderAmount: "0",
+    maxOrderMessage: "El monto máximo de compra es {monto}",
+    // Terms and Conditions
+    enableTerms: false,
+    termsText: "Acepto los términos y condiciones",
+    termsUrl: "",
+    termsRequired: true,
+    // Blocked Provinces
+    enableBlockedProvinces: false,
+    blockedProvinces: [],
+    blockedProvinceMessage: "Lo sentimos, no realizamos envíos a esta provincia",
     // Custom Fields
     customFields: [],
   };
