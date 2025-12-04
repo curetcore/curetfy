@@ -346,93 +346,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     console.error("Error fetching order count:", error);
   }
 
-  // Fetch Shopify shipping zones and rates
-  let shopifyShippingZones: any[] = [];
-  try {
-    const shippingResponse = await admin.graphql(`
-      query {
-        deliveryProfiles(first: 10) {
-          edges {
-            node {
-              id
-              name
-              profileLocationGroups {
-                locationGroupZones(first: 20) {
-                  edges {
-                    node {
-                      zone {
-                        id
-                        name
-                        countries {
-                          code {
-                            countryCode
-                          }
-                          name
-                          provinces {
-                            code
-                            name
-                          }
-                        }
-                      }
-                      methodDefinitions(first: 20) {
-                        edges {
-                          node {
-                            id
-                            name
-                            active
-                            rateProvider {
-                              ... on DeliveryRateDefinition {
-                                id
-                                price {
-                                  amount
-                                  currencyCode
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    `);
-    const shippingData = await shippingResponse.json();
-    const profiles = shippingData.data?.deliveryProfiles?.edges || [];
-
-    // Parse shipping zones into a flat structure
-    for (const profile of profiles) {
-      const locationGroups = profile.node?.profileLocationGroups || [];
-      for (const group of locationGroups) {
-        const zones = group?.locationGroupZones?.edges || [];
-        for (const zoneEdge of zones) {
-          const zone = zoneEdge.node?.zone;
-          const methods = zoneEdge.node?.methodDefinitions?.edges || [];
-
-          for (const methodEdge of methods) {
-            const method = methodEdge.node;
-            if (method?.active) {
-              shopifyShippingZones.push({
-                id: method.id,
-                zoneName: zone?.name || "Sin zona",
-                name: method.name,
-                price: method.rateProvider?.price?.amount || "0.00",
-                currency: method.rateProvider?.price?.currencyCode || "DOP",
-              });
-            }
-          }
-        }
-      }
-    }
-  } catch (error) {
-    console.error("Error fetching Shopify shipping zones:", error);
-  }
-
-  return json({ shop, provincesConfig: PROVINCES_BY_COUNTRY, sampleProduct, nextOrderNumber, shopifyShippingZones });
+  return json({ shop, provincesConfig: PROVINCES_BY_COUNTRY, sampleProduct, nextOrderNumber });
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -1458,7 +1372,7 @@ function SuccessPreview({ formState }: { formState: any }) {
 // ============================================
 
 export default function Settings() {
-  const { shop, sampleProduct, nextOrderNumber, shopifyShippingZones } = useLoaderData<typeof loader>();
+  const { shop, sampleProduct, nextOrderNumber } = useLoaderData<typeof loader>();
   const submit = useSubmit();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -2196,24 +2110,6 @@ export default function Settings() {
               }
             };
 
-            const importFromShopify = () => {
-              if (shopifyShippingZones && shopifyShippingZones.length > 0) {
-                const importedRates = shopifyShippingZones.map((zone, i) => ({
-                  id: `rate_${Date.now()}_${i}`,
-                  name: `${zone.name} (${zone.zoneName})`,
-                  price: zone.price,
-                  deliveryDays: "",
-                  condition: "always",
-                  minOrder: "",
-                  provinces: [],
-                }));
-                setFormState(prev => ({
-                  ...prev,
-                  customShippingRates: importedRates
-                }));
-              }
-            };
-
             // Calculate sample values for preview
             const sampleSubtotal = parseFloat(sampleProduct?.price || "2500");
             const freeShippingThreshold = parseFloat(formState.freeShippingThreshold as string) || 2000;
@@ -2338,16 +2234,9 @@ export default function Settings() {
                           <BlockStack gap="400">
                             <InlineStack align="space-between" blockAlign="center">
                               <Text as="h2" variant="headingSm">Tarifas de envío</Text>
-                              <InlineStack gap="200">
-                                {shopifyShippingZones && shopifyShippingZones.length > 0 && (
-                                  <Button onClick={importFromShopify}>
-                                    Importar de Shopify ({shopifyShippingZones.length})
-                                  </Button>
-                                )}
-                                <Button onClick={addShippingRate} icon={PlusIcon} variant="primary">
-                                  Agregar tarifa
-                                </Button>
-                              </InlineStack>
+                              <Button onClick={addShippingRate} icon={PlusIcon} variant="primary">
+                                Agregar tarifa
+                              </Button>
                             </InlineStack>
 
                             {shippingRates.length === 0 ? (
@@ -2357,16 +2246,9 @@ export default function Settings() {
                                   <Text as="p" tone="subdued" alignment="center">
                                     No tienes tarifas de envío configuradas.
                                   </Text>
-                                  <InlineStack gap="200">
-                                    {shopifyShippingZones && shopifyShippingZones.length > 0 && (
-                                      <Button onClick={importFromShopify}>
-                                        Importar de Shopify
-                                      </Button>
-                                    )}
-                                    <Button onClick={addShippingRate} variant="primary">
-                                      Agregar tarifa
-                                    </Button>
-                                  </InlineStack>
+                                  <Button onClick={addShippingRate} variant="primary">
+                                    Agregar tarifa
+                                  </Button>
                                 </BlockStack>
                               </Box>
                             ) : (
