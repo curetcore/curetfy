@@ -28,6 +28,8 @@ import {
   ColorPicker,
   Popover,
   ActionList,
+  RadioButton,
+  ChoiceList,
   hsbToHex,
   hexToRgb,
 } from "@shopify/polaris";
@@ -459,7 +461,17 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // Shipping
     'shippingSource', 'freeShippingThreshold', 'freeShippingLabel',
     // Pickup
-    'pickupName', 'pickupAddress', 'pickupInstructions'
+    'pickupName', 'pickupAddress', 'pickupInstructions',
+    // COD Fee
+    'codFeeType', 'codFeeAmount', 'codFeeLabel',
+    // Order Limits
+    'minOrderAmount', 'minOrderMessage', 'maxOrderAmount', 'maxOrderMessage',
+    // Terms
+    'termsText', 'termsUrl',
+    // WhatsApp Template
+    'whatsappTemplate',
+    // Blocked Provinces
+    'blockedProvinceMessage'
   ];
 
   textFields.forEach(field => {
@@ -478,7 +490,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // Modal options
     'hideCloseButton', 'hideFieldLabels', 'enableRTL', 'fullscreenMobile',
     // Shipping
-    'enableShipping', 'freeShippingEnabled', 'enablePickup'
+    'enableShipping', 'freeShippingEnabled', 'enablePickup',
+    // COD Fee
+    'enableCodFee',
+    // Order Limits
+    'enableMinOrder', 'enableMaxOrder',
+    // Terms
+    'enableTerms', 'termsRequired',
+    // Blocked Provinces
+    'enableBlockedProvinces'
   ];
 
   booleanFields.forEach(field => {
@@ -495,6 +515,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const countries = formData.get('countries') as string;
   if (countries) {
     updateData.countries = countries.split(',').map(c => c.trim()).filter(Boolean);
+  }
+
+  // Blocked Provinces array
+  const blockedProvinces = formData.get('blockedProvinces') as string;
+  if (blockedProvinces !== null) {
+    try {
+      updateData.blockedProvinces = JSON.parse(blockedProvinces);
+    } catch {
+      updateData.blockedProvinces = blockedProvinces.split(',').map(p => p.trim()).filter(Boolean);
+    }
   }
 
   // Number fields
@@ -1593,6 +1623,34 @@ export default function Settings() {
     taxRate: shop?.taxRate || "18",
     taxIncluded: shop?.taxIncluded ?? true, // true = included in price, false = add on top
 
+    // COD Fee
+    enableCodFee: shop?.enableCodFee ?? false,
+    codFeeType: shop?.codFeeType || "fixed",
+    codFeeAmount: shop?.codFeeAmount || "0",
+    codFeeLabel: shop?.codFeeLabel || "Cargo por pago contra entrega",
+
+    // Order Limits
+    enableMinOrder: shop?.enableMinOrder ?? false,
+    minOrderAmount: shop?.minOrderAmount || "500",
+    minOrderMessage: shop?.minOrderMessage || "El monto mínimo de compra es ${monto}",
+    enableMaxOrder: shop?.enableMaxOrder ?? false,
+    maxOrderAmount: shop?.maxOrderAmount || "50000",
+    maxOrderMessage: shop?.maxOrderMessage || "El monto máximo de compra es ${monto}",
+
+    // Terms and Conditions
+    enableTerms: shop?.enableTerms ?? false,
+    termsText: shop?.termsText || "Acepto los términos y condiciones",
+    termsUrl: shop?.termsUrl || "",
+    termsRequired: shop?.termsRequired ?? true,
+
+    // WhatsApp Template
+    whatsappTemplate: shop?.whatsappTemplate || "*Nuevo Pedido*\n\n*Cliente:* {nombre}\n*Teléfono:* {telefono}\n*Dirección:* {direccion}\n\n*Productos:*\n{productos}\n\n*Subtotal:* {subtotal}\n*Envío:* {envio}\n*Total:* {total}",
+
+    // Blocked Provinces
+    enableBlockedProvinces: shop?.enableBlockedProvinces ?? false,
+    blockedProvinces: shop?.blockedProvinces || [],
+    blockedProvinceMessage: shop?.blockedProvinceMessage || "Lo sentimos, no realizamos envíos a esta provincia",
+
     // Custom Fields
     customFields: shop?.customFields || [],
   });
@@ -2549,112 +2607,382 @@ export default function Settings() {
             );
           })()}
 
-          {/* TAB: Order Configuration */}
-          {selectedTab === 2 && (
-            <Layout>
-              <Layout.Section>
-                <Card>
-                  <BlockStack gap="400" inlineAlign="start">
-                    <Text as="h2" variant="headingSm">Etiquetas de pedidos</Text>
-                    <FormLayout>
-                      <TextField
-                        label="Prefijo de etiqueta"
-                        value={formState.orderTagPrefix}
-                        onChange={handleChange("orderTagPrefix")}
-                        helpText={`Próxima orden: ${formState.orderTagPrefix}-${nextOrderNumber}. Sigue la secuencia de tu tienda.`}
-                        autoComplete="off"
-                      />
-                      <TextField
-                        label="Etiquetas automáticas"
-                        value={formState.orderTags}
-                        onChange={handleChange("orderTags")}
-                        helpText="Separadas por coma. Se agregarán a cada pedido en Shopify."
-                        autoComplete="off"
-                      />
-                    </FormLayout>
-                  </BlockStack>
-                </Card>
+          {/* TAB: Order Configuration - Enterprise Version */}
+          {selectedTab === 2 && (() => {
+            const provincesForCountry = PROVINCES_BY_COUNTRY[formState.defaultCountry as string] || [];
+            const blockedProvincesArray = (formState.blockedProvinces as string[]) || [];
 
-                <Box paddingBlockStart="400">
-                  <Card>
-                    <BlockStack gap="400" inlineAlign="start">
-                      <Text as="h2" variant="headingSm">Creación de pedidos</Text>
-                      <FormLayout>
-                        <Checkbox
-                          label="Crear orden borrador en Shopify"
-                          helpText="Si está activo, se creará una orden borrador que podrás convertir en orden real después de confirmar el pago."
-                          checked={formState.createDraftOrder}
-                          onChange={handleChange("createDraftOrder")}
-                        />
-                        <TextField
-                          label="Nota interna del pedido"
-                          value={formState.orderNote}
-                          onChange={handleChange("orderNote")}
-                          multiline={2}
-                          helpText="Esta nota se agregará internamente al pedido en Shopify."
-                          autoComplete="off"
-                        />
-                      </FormLayout>
-                    </BlockStack>
-                  </Card>
-                </Box>
+            const toggleBlockedProvince = (province: string) => {
+              const newBlocked = blockedProvincesArray.includes(province)
+                ? blockedProvincesArray.filter(p => p !== province)
+                : [...blockedProvincesArray, province];
+              setFormState(prev => ({ ...prev, blockedProvinces: newBlocked }));
+            };
 
-                {/* Tax Configuration */}
-                <Box paddingBlockStart="400">
-                  <Card>
-                    <BlockStack gap="400" inlineAlign="start">
-                      <BlockStack gap="200">
-                        <Text as="h2" variant="headingSm">Configuración de impuestos</Text>
-                        <Text as="p" variant="bodySm" tone="subdued">
-                          Configura cómo se manejan los impuestos en tus pedidos.
-                        </Text>
-                      </BlockStack>
-                      <FormLayout>
-                        <Checkbox
-                          label="Habilitar impuestos"
-                          helpText="Mostrar el desglose de impuestos en el resumen del pedido."
-                          checked={formState.enableTax}
-                          onChange={handleChange("enableTax")}
-                        />
-                        {formState.enableTax && (
-                          <>
+            return (
+              <Layout>
+                <Layout.Section>
+                  <BlockStack gap="400">
+                    {/* Order Tags */}
+                    <Card>
+                      <BlockStack gap="400">
+                        <Text as="h2" variant="headingSm">Etiquetas de pedidos</Text>
+                        <FormLayout>
+                          <FormLayout.Group>
                             <TextField
-                              label="Tasa de impuesto (%)"
+                              label="Prefijo de etiqueta"
+                              value={formState.orderTagPrefix}
+                              onChange={handleChange("orderTagPrefix")}
+                              helpText={`Próxima orden: ${formState.orderTagPrefix}-${nextOrderNumber}`}
+                              autoComplete="off"
+                            />
+                            <TextField
+                              label="Etiquetas automáticas"
+                              value={formState.orderTags}
+                              onChange={handleChange("orderTags")}
+                              helpText="Separadas por coma"
+                              autoComplete="off"
+                            />
+                          </FormLayout.Group>
+                        </FormLayout>
+                      </BlockStack>
+                    </Card>
+
+                    {/* COD Fee */}
+                    <Card>
+                      <BlockStack gap="400">
+                        <InlineStack align="space-between" blockAlign="center">
+                          <BlockStack gap="100">
+                            <Text as="h2" variant="headingSm">Tarifa COD (Contra entrega)</Text>
+                            <Text as="p" variant="bodySm" tone="subdued">
+                              Cobra un cargo adicional por pago contra entrega
+                            </Text>
+                          </BlockStack>
+                          <Checkbox
+                            label=""
+                            checked={formState.enableCodFee}
+                            onChange={handleChange("enableCodFee")}
+                          />
+                        </InlineStack>
+
+                        {formState.enableCodFee && (
+                          <FormLayout>
+                            <FormLayout.Group>
+                              <Select
+                                label="Tipo de cargo"
+                                options={[
+                                  { value: "fixed", label: "Monto fijo" },
+                                  { value: "percentage", label: "Porcentaje del total" },
+                                ]}
+                                value={formState.codFeeType as string}
+                                onChange={handleChange("codFeeType")}
+                              />
+                              <TextField
+                                label={formState.codFeeType === "percentage" ? "Porcentaje" : "Monto"}
+                                value={formState.codFeeAmount as string}
+                                onChange={handleChange("codFeeAmount")}
+                                type="number"
+                                prefix={formState.codFeeType === "percentage" ? "" : "$"}
+                                suffix={formState.codFeeType === "percentage" ? "%" : ""}
+                                autoComplete="off"
+                              />
+                            </FormLayout.Group>
+                            <TextField
+                              label="Etiqueta en el resumen"
+                              value={formState.codFeeLabel as string}
+                              onChange={handleChange("codFeeLabel")}
+                              placeholder="Cargo por pago contra entrega"
+                              autoComplete="off"
+                            />
+                          </FormLayout>
+                        )}
+                      </BlockStack>
+                    </Card>
+
+                    {/* Order Limits */}
+                    <Card>
+                      <BlockStack gap="400">
+                        <BlockStack gap="100">
+                          <Text as="h2" variant="headingSm">Límites de pedido</Text>
+                          <Text as="p" variant="bodySm" tone="subdued">
+                            Establece montos mínimos y máximos de compra
+                          </Text>
+                        </BlockStack>
+
+                        {/* Min Order */}
+                        <Box padding="400" background="bg-surface-secondary" borderRadius="200">
+                          <BlockStack gap="300">
+                            <InlineStack align="space-between" blockAlign="center">
+                              <Text as="span" fontWeight="medium">Monto mínimo</Text>
+                              <Checkbox
+                                label=""
+                                checked={formState.enableMinOrder}
+                                onChange={handleChange("enableMinOrder")}
+                              />
+                            </InlineStack>
+                            {formState.enableMinOrder && (
+                              <FormLayout>
+                                <FormLayout.Group>
+                                  <TextField
+                                    label="Monto mínimo"
+                                    value={formState.minOrderAmount as string}
+                                    onChange={handleChange("minOrderAmount")}
+                                    type="number"
+                                    prefix="$"
+                                    autoComplete="off"
+                                  />
+                                  <TextField
+                                    label="Mensaje de error"
+                                    value={formState.minOrderMessage as string}
+                                    onChange={handleChange("minOrderMessage")}
+                                    helpText="Usa {monto} para mostrar el mínimo"
+                                    autoComplete="off"
+                                  />
+                                </FormLayout.Group>
+                              </FormLayout>
+                            )}
+                          </BlockStack>
+                        </Box>
+
+                        {/* Max Order */}
+                        <Box padding="400" background="bg-surface-secondary" borderRadius="200">
+                          <BlockStack gap="300">
+                            <InlineStack align="space-between" blockAlign="center">
+                              <Text as="span" fontWeight="medium">Monto máximo</Text>
+                              <Checkbox
+                                label=""
+                                checked={formState.enableMaxOrder}
+                                onChange={handleChange("enableMaxOrder")}
+                              />
+                            </InlineStack>
+                            {formState.enableMaxOrder && (
+                              <FormLayout>
+                                <FormLayout.Group>
+                                  <TextField
+                                    label="Monto máximo"
+                                    value={formState.maxOrderAmount as string}
+                                    onChange={handleChange("maxOrderAmount")}
+                                    type="number"
+                                    prefix="$"
+                                    autoComplete="off"
+                                  />
+                                  <TextField
+                                    label="Mensaje de error"
+                                    value={formState.maxOrderMessage as string}
+                                    onChange={handleChange("maxOrderMessage")}
+                                    helpText="Usa {monto} para mostrar el máximo"
+                                    autoComplete="off"
+                                  />
+                                </FormLayout.Group>
+                              </FormLayout>
+                            )}
+                          </BlockStack>
+                        </Box>
+                      </BlockStack>
+                    </Card>
+
+                    {/* Terms and Conditions */}
+                    <Card>
+                      <BlockStack gap="400">
+                        <InlineStack align="space-between" blockAlign="center">
+                          <BlockStack gap="100">
+                            <Text as="h2" variant="headingSm">Términos y condiciones</Text>
+                            <Text as="p" variant="bodySm" tone="subdued">
+                              Requiere que los clientes acepten tus términos antes de ordenar
+                            </Text>
+                          </BlockStack>
+                          <Checkbox
+                            label=""
+                            checked={formState.enableTerms}
+                            onChange={handleChange("enableTerms")}
+                          />
+                        </InlineStack>
+
+                        {formState.enableTerms && (
+                          <FormLayout>
+                            <TextField
+                              label="Texto del checkbox"
+                              value={formState.termsText as string}
+                              onChange={handleChange("termsText")}
+                              placeholder="Acepto los términos y condiciones"
+                              autoComplete="off"
+                            />
+                            <TextField
+                              label="URL de términos (opcional)"
+                              value={formState.termsUrl as string}
+                              onChange={handleChange("termsUrl")}
+                              placeholder="https://tutienda.com/terminos"
+                              helpText="Si lo dejas vacío, el texto no será un enlace"
+                              autoComplete="off"
+                            />
+                            <Checkbox
+                              label="Obligatorio para enviar el pedido"
+                              checked={formState.termsRequired}
+                              onChange={handleChange("termsRequired")}
+                            />
+                          </FormLayout>
+                        )}
+                      </BlockStack>
+                    </Card>
+
+                    {/* WhatsApp Template */}
+                    <Card>
+                      <BlockStack gap="400">
+                        <BlockStack gap="100">
+                          <Text as="h2" variant="headingSm">Plantilla de mensaje WhatsApp</Text>
+                          <Text as="p" variant="bodySm" tone="subdued">
+                            Personaliza el mensaje que se envía por WhatsApp
+                          </Text>
+                        </BlockStack>
+                        <TextField
+                          label="Plantilla del mensaje"
+                          value={formState.whatsappTemplate as string}
+                          onChange={handleChange("whatsappTemplate")}
+                          multiline={8}
+                          autoComplete="off"
+                          helpText="Variables: {nombre}, {telefono}, {direccion}, {ciudad}, {provincia}, {productos}, {subtotal}, {envio}, {impuesto}, {total}, {notas}"
+                        />
+                        <Box padding="300" background="bg-surface-secondary" borderRadius="200">
+                          <BlockStack gap="200">
+                            <Text as="span" variant="bodySm" fontWeight="medium">Variables disponibles:</Text>
+                            <InlineStack gap="200" wrap>
+                              {['{nombre}', '{telefono}', '{direccion}', '{ciudad}', '{provincia}', '{productos}', '{subtotal}', '{envio}', '{impuesto}', '{total}', '{notas}'].map(v => (
+                                <Badge key={v} tone="info">{v}</Badge>
+                              ))}
+                            </InlineStack>
+                          </BlockStack>
+                        </Box>
+                      </BlockStack>
+                    </Card>
+
+                    {/* Blocked Provinces */}
+                    <Card>
+                      <BlockStack gap="400">
+                        <InlineStack align="space-between" blockAlign="center">
+                          <BlockStack gap="100">
+                            <Text as="h2" variant="headingSm">Bloquear provincias</Text>
+                            <Text as="p" variant="bodySm" tone="subdued">
+                              Excluye provincias donde no realizas envíos
+                            </Text>
+                          </BlockStack>
+                          <Checkbox
+                            label=""
+                            checked={formState.enableBlockedProvinces}
+                            onChange={handleChange("enableBlockedProvinces")}
+                          />
+                        </InlineStack>
+
+                        {formState.enableBlockedProvinces && (
+                          <BlockStack gap="300">
+                            <TextField
+                              label="Mensaje cuando se bloquea"
+                              value={formState.blockedProvinceMessage as string}
+                              onChange={handleChange("blockedProvinceMessage")}
+                              autoComplete="off"
+                            />
+                            <BlockStack gap="200">
+                              <Text as="span" variant="bodySm" fontWeight="medium">
+                                Selecciona las provincias bloqueadas ({blockedProvincesArray.length} seleccionadas):
+                              </Text>
+                              <Box padding="300" background="bg-surface-secondary" borderRadius="200" maxHeight="200px" overflowY="auto">
+                                <InlineStack gap="200" wrap>
+                                  {provincesForCountry.map((prov) => (
+                                    <Button
+                                      key={prov.value}
+                                      size="slim"
+                                      pressed={blockedProvincesArray.includes(prov.value)}
+                                      onClick={() => toggleBlockedProvince(prov.value)}
+                                    >
+                                      {prov.label} {blockedProvincesArray.includes(prov.value) ? '✕' : ''}
+                                    </Button>
+                                  ))}
+                                </InlineStack>
+                              </Box>
+                            </BlockStack>
+                          </BlockStack>
+                        )}
+                      </BlockStack>
+                    </Card>
+
+                    {/* Tax Configuration */}
+                    <Card>
+                      <BlockStack gap="400">
+                        <InlineStack align="space-between" blockAlign="center">
+                          <BlockStack gap="100">
+                            <Text as="h2" variant="headingSm">Configuración de impuestos</Text>
+                            <Text as="p" variant="bodySm" tone="subdued">
+                              Configura cómo se manejan los impuestos
+                            </Text>
+                          </BlockStack>
+                          <Checkbox
+                            label=""
+                            checked={formState.enableTax}
+                            onChange={handleChange("enableTax")}
+                          />
+                        </InlineStack>
+
+                        {formState.enableTax && (
+                          <FormLayout>
+                            <TextField
+                              label="Tasa de impuesto"
                               value={formState.taxRate}
                               onChange={handleChange("taxRate")}
                               type="number"
                               suffix="%"
-                              helpText="ITBIS u otro impuesto aplicable (ej: 18%)"
+                              helpText="ITBIS u otro impuesto (ej: 18%)"
                               autoComplete="off"
                             />
                             <BlockStack gap="200">
-                              <Text as="span" variant="bodyMd" fontWeight="medium">¿Cómo se aplica el impuesto?</Text>
+                              <Text as="span" variant="bodyMd" fontWeight="medium">¿Cómo se aplica?</Text>
                               <RadioButton
-                                label="El impuesto ya está incluido en el precio"
-                                helpText="El precio que ven los clientes ya incluye el ITBIS"
+                                label="Incluido en el precio"
+                                helpText="Los precios ya incluyen ITBIS"
                                 id="tax-included"
                                 name="taxIncluded"
                                 checked={formState.taxIncluded === true}
                                 onChange={() => handleChange("taxIncluded")(true)}
                               />
                               <RadioButton
-                                label="Agregar impuesto sobre el precio"
-                                helpText="El ITBIS se calculará y sumará al subtotal"
+                                label="Agregar sobre el precio"
+                                helpText="El ITBIS se suma al subtotal"
                                 id="tax-added"
                                 name="taxIncluded"
                                 checked={formState.taxIncluded === false}
                                 onChange={() => handleChange("taxIncluded")(false)}
                               />
                             </BlockStack>
-                          </>
+                          </FormLayout>
                         )}
-                      </FormLayout>
-                    </BlockStack>
-                  </Card>
-                </Box>
-              </Layout.Section>
-            </Layout>
-          )}
+                      </BlockStack>
+                    </Card>
+
+                    {/* Order Creation */}
+                    <Card>
+                      <BlockStack gap="400">
+                        <Text as="h2" variant="headingSm">Creación de pedidos en Shopify</Text>
+                        <FormLayout>
+                          <Checkbox
+                            label="Crear orden borrador automáticamente"
+                            helpText="Se creará una orden borrador que podrás confirmar después"
+                            checked={formState.createDraftOrder}
+                            onChange={handleChange("createDraftOrder")}
+                          />
+                          <TextField
+                            label="Nota interna del pedido"
+                            value={formState.orderNote}
+                            onChange={handleChange("orderNote")}
+                            multiline={2}
+                            helpText="Solo visible para ti en Shopify"
+                            autoComplete="off"
+                          />
+                        </FormLayout>
+                      </BlockStack>
+                    </Card>
+                  </BlockStack>
+                </Layout.Section>
+              </Layout>
+            );
+          })()}
       </Box>
     </Page>
   );

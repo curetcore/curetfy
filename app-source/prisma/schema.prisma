@@ -227,6 +227,44 @@ model Shop {
   orderMaximum                Decimal? @db.Decimal(10, 2) // Maximum order total (null = no limit)
 
   // ==========================================
+  // COD FEE (Cash on Delivery)
+  // ==========================================
+  enableCodFee        Boolean  @default(false)
+  codFeeType          String   @default("fixed") // "fixed" or "percentage"
+  codFeeAmount        String   @default("0")
+  codFeeLabel         String   @default("Cargo por pago contra entrega")
+
+  // ==========================================
+  // ORDER LIMITS (enhanced)
+  // ==========================================
+  enableMinOrder      Boolean  @default(false)
+  minOrderAmount      String   @default("0")
+  minOrderMessage     String   @default("El monto mínimo de compra es {monto}")
+  enableMaxOrder      Boolean  @default(false)
+  maxOrderAmount      String   @default("0")
+  maxOrderMessage     String   @default("El monto máximo de compra es {monto}")
+
+  // ==========================================
+  // TERMS AND CONDITIONS
+  // ==========================================
+  enableTerms         Boolean  @default(false)
+  termsText           String   @default("Acepto los términos y condiciones")
+  termsUrl            String?
+  termsRequired       Boolean  @default(true)
+
+  // ==========================================
+  // WHATSAPP MESSAGE TEMPLATE
+  // ==========================================
+  whatsappTemplate    String   @default("*Nuevo Pedido*\n\n*Cliente:* {nombre}\n*Teléfono:* {telefono}\n*Dirección:* {direccion}\n\n*Productos:*\n{productos}\n\n*Subtotal:* {subtotal}\n*Envío:* {envio}\n*Total:* {total}")
+
+  // ==========================================
+  // BLOCKED PROVINCES
+  // ==========================================
+  enableBlockedProvinces Boolean  @default(false)
+  blockedProvinces       String[] @default([])
+  blockedProvinceMessage String   @default("Lo sentimos, no realizamos envíos a esta provincia")
+
+  // ==========================================
   // ADVANCED SETTINGS
   // ==========================================
   autoRedirectWhatsApp Boolean @default(true)
