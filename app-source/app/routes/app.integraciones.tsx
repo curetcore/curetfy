@@ -15,11 +15,12 @@ import {
   Box,
   InlineStack,
   Badge,
-  Tabs,
   Select,
   Divider,
   RadioButton,
   Link,
+  ButtonGroup,
+  Button,
 } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
@@ -402,12 +403,7 @@ export default function Integraciones() {
     setTimeout(() => setShowSaved(false), 3000);
   }, [formState, submit]);
 
-  const tabs = [
-    { id: "whatsapp", content: "WhatsApp", accessibilityLabel: "WhatsApp" },
-    { id: "visibility", content: "Visibilidad", accessibilityLabel: "Visibilidad" },
-    { id: "config", content: "Configuración", accessibilityLabel: "Configuración" },
-    { id: "integrations", content: "Integraciones", accessibilityLabel: "Integraciones" },
-  ];
+  const tabLabels = ["WhatsApp", "Visibilidad", "Configuración", "Integraciones"];
 
   const whatsappPlaceholders = [
     { code: "{products_summary_with_quantity}", desc: "para insertar todos los productos en el pedido con sus respectivas cantidades" },
@@ -449,8 +445,21 @@ export default function Integraciones() {
         </Box>
       )}
 
-      <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab}>
-        <Box paddingBlockStart="400">
+      <Box paddingBlockEnd="400">
+        <ButtonGroup variant="segmented">
+          {tabLabels.map((label, index) => (
+            <Button
+              key={index}
+              pressed={selectedTab === index}
+              onClick={() => setSelectedTab(index)}
+            >
+              {label}
+            </Button>
+          ))}
+        </ButtonGroup>
+      </Box>
+
+      <Box>
           {/* TAB: WhatsApp */}
           {selectedTab === 0 && (
             <Layout>
@@ -567,23 +576,7 @@ export default function Integraciones() {
                     <BlockStack gap="400">
                       <InlineStack align="space-between">
                         <Text as="h2" variant="headingSm">Vista previa</Text>
-                        <InlineStack gap="100" blockAlign="center">
-                          <span style={{
-                            width: "8px",
-                            height: "8px",
-                            borderRadius: "50%",
-                            background: "#22c55e",
-                            display: "inline-block",
-                            animation: "pulse 2s infinite",
-                          }} />
-                          <Text as="span" variant="bodySm" tone="success">En vivo</Text>
-                          <style>{`
-                            @keyframes pulse {
-                              0%, 100% { opacity: 1; transform: scale(1); }
-                              50% { opacity: 0.5; transform: scale(1.2); }
-                            }
-                          `}</style>
-                        </InlineStack>
+                        <Badge tone="success">En vivo</Badge>
                       </InlineStack>
                       <WhatsAppPreview
                         template={formState.messageTemplate}
@@ -986,8 +979,7 @@ export default function Integraciones() {
               </Layout.Section>
             </Layout>
           )}
-        </Box>
-      </Tabs>
+      </Box>
     </Page>
   );
 }

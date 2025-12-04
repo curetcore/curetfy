@@ -14,7 +14,6 @@ import {
   Banner,
   Select,
   Checkbox,
-  Tabs,
   InlineStack,
   Divider,
   Badge,
@@ -1183,11 +1182,7 @@ export default function Settings() {
     });
   }, []);
 
-  const tabs = [
-    { id: "form-builder", content: "Formulario", accessibilityLabel: "Formulario" },
-    { id: "shipping", content: "Envíos", accessibilityLabel: "Envíos" },
-    { id: "orders", content: "Pedidos", accessibilityLabel: "Pedidos" },
-  ];
+  const tabLabels = ["Formulario", "Envíos", "Pedidos"];
 
   // Field labels for drag and drop
   const fieldLabels: Record<string, string> = {
@@ -1226,8 +1221,21 @@ export default function Settings() {
       )}
 
 
-      <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab}>
-        <Box paddingBlockStart="400">
+      <Box paddingBlockEnd="400">
+        <ButtonGroup variant="segmented">
+          {tabLabels.map((label, index) => (
+            <Button
+              key={index}
+              pressed={selectedTab === index}
+              onClick={() => setSelectedTab(index)}
+            >
+              {label}
+            </Button>
+          ))}
+        </ButtonGroup>
+      </Box>
+
+      <Box>
           {/* TAB: Unified Form Builder */}
           {selectedTab === 0 && (() => {
             // All elements from customFields
@@ -1917,9 +1925,7 @@ export default function Settings() {
               </Layout.Section>
             </Layout>
           )}
-
-                  </Box>
-      </Tabs>
+      </Box>
     </Page>
   );
 }
