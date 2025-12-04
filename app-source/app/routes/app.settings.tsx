@@ -2126,6 +2126,37 @@ export default function Settings() {
                   <Text as="span" variant="bodySm">Precio del producto</Text>
                 </InlineStack>
               </BlockStack>
+              <Divider />
+              <Text as="p" variant="headingSm">Formato de texto</Text>
+              <Text as="p" variant="bodySm" tone="subdued">
+                WhatsApp soporta estos estilos de formato:
+              </Text>
+              <BlockStack gap="200">
+                <InlineStack gap="300" align="start" blockAlign="center">
+                  <Box minWidth="120px">
+                    <Text as="span" variant="bodySm" fontWeight="medium">*texto*</Text>
+                  </Box>
+                  <Text as="span" variant="bodySm"><strong>Negrita</strong></Text>
+                </InlineStack>
+                <InlineStack gap="300" align="start" blockAlign="center">
+                  <Box minWidth="120px">
+                    <Text as="span" variant="bodySm" fontWeight="medium">_texto_</Text>
+                  </Box>
+                  <Text as="span" variant="bodySm"><em>Cursiva</em></Text>
+                </InlineStack>
+                <InlineStack gap="300" align="start" blockAlign="center">
+                  <Box minWidth="120px">
+                    <Text as="span" variant="bodySm" fontWeight="medium">~texto~</Text>
+                  </Box>
+                  <Text as="span" variant="bodySm"><s>Tachado</s></Text>
+                </InlineStack>
+                <InlineStack gap="300" align="start" blockAlign="center">
+                  <Box minWidth="120px">
+                    <Text as="span" variant="bodySm" fontWeight="medium">```texto```</Text>
+                  </Box>
+                  <Text as="span" variant="bodySm"><code style={{ background: "#f1f1f1", padding: "2px 4px", borderRadius: "3px" }}>Monoespaciado</code></Text>
+                </InlineStack>
+              </BlockStack>
             </BlockStack>
           </BlockStack>
         </Modal.Section>
