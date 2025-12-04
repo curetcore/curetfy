@@ -22,6 +22,7 @@ export default function App() {
       <NavMenu>
         <Link to="/app" rel="home">Dashboard</Link>
         <Link to="/app/settings">Diseño del formulario</Link>
+        <Link to="/app/integraciones">Integraciones</Link>
         <Link to="/app/billing">Plan de facturación</Link>
       </NavMenu>
       <Outlet />

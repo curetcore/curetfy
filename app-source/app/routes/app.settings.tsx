@@ -1105,7 +1105,6 @@ export default function Settings() {
     { id: "form-builder", content: "Formulario", accessibilityLabel: "Formulario" },
     { id: "shipping", content: "Envíos", accessibilityLabel: "Envíos" },
     { id: "orders", content: "Pedidos", accessibilityLabel: "Pedidos" },
-    { id: "advanced", content: "Avanzado", accessibilityLabel: "Avanzado" },
   ];
 
   // Field labels for drag and drop
@@ -2003,82 +2002,7 @@ export default function Settings() {
             </Layout>
           )}
 
-          {/* TAB: Advanced */}
-          {selectedTab === 4 && (
-            <Layout>
-              <Layout.Section>
-                <Card>
-                  <BlockStack gap="400" inlineAlign="start">
-                    <Text as="h2" variant="headingSm">Redirección a WhatsApp</Text>
-                    <FormLayout>
-                      <Checkbox
-                        label="Redirigir automáticamente a WhatsApp"
-                        helpText="Al enviar el formulario, el cliente será redirigido a WhatsApp automáticamente."
-                        checked={formState.autoRedirectWhatsApp}
-                        onChange={handleChange("autoRedirectWhatsApp")}
-                      />
-                      <TextField
-                        label="Tiempo de espera (ms)"
-                        value={formState.redirectDelay}
-                        onChange={handleChange("redirectDelay")}
-                        type="number"
-                        helpText="Milisegundos a esperar antes de redirigir (2000 = 2 segundos)"
-                        autoComplete="off"
-                      />
-                    </FormLayout>
-                  </BlockStack>
-                </Card>
-
-                <Box paddingBlockStart="400">
-                  <Card>
-                    <BlockStack gap="400" inlineAlign="start">
-                      <Text as="h2" variant="headingSm">Analytics y Tracking</Text>
-                      <FormLayout>
-                        <Checkbox
-                          label="Habilitar analytics interno"
-                          helpText="Registra estadísticas de uso del formulario."
-                          checked={formState.enableAnalytics}
-                          onChange={handleChange("enableAnalytics")}
-                        />
-                        <Checkbox
-                          label="Habilitar Facebook Pixel"
-                          helpText="Envía eventos de conversión a Facebook."
-                          checked={formState.enablePixel}
-                          onChange={handleChange("enablePixel")}
-                        />
-                        {formState.enablePixel && (
-                          <TextField
-                            label="Facebook Pixel ID"
-                            value={formState.pixelId}
-                            onChange={handleChange("pixelId")}
-                            placeholder="123456789012345"
-                            autoComplete="off"
-                          />
-                        )}
-                      </FormLayout>
-                    </BlockStack>
-                  </Card>
-                </Box>
-
-                <Box paddingBlockStart="400">
-                  <Card>
-                    <BlockStack gap="400" inlineAlign="start">
-                      <Text as="h2" variant="headingSm">Productos</Text>
-                      <FormLayout>
-                        <Checkbox
-                          label="Habilitar en todos los productos"
-                          helpText="Si está desactivado, deberás seleccionar productos específicos."
-                          checked={formState.enableAllProducts}
-                          onChange={handleChange("enableAllProducts")}
-                        />
-                      </FormLayout>
-                    </BlockStack>
-                  </Card>
-                </Box>
-              </Layout.Section>
-            </Layout>
-          )}
-        </Box>
+                  </Box>
       </Tabs>
 
       {/* Variables Modal */}
