@@ -23,7 +23,6 @@ import {
   ResourceItem,
   ResourceList,
   ButtonGroup,
-  Modal,
 } from "@shopify/polaris";
 import {
   PersonIcon,
@@ -309,195 +308,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 // ============================================
 // PREVIEW COMPONENTS
 // ============================================
-
-// WhatsApp Message Preview
-function WhatsAppPreview({ template, shopName }: { template: string; shopName: string }) {
-  const sampleData = {
-    orderNumber: "COD-001",
-    name: "Juan Pérez",
-    phone: "+1 809 555 1234",
-    email: "juan@email.com",
-    address: "Calle Principal #123, Sector Centro",
-    city: "Santo Domingo",
-    province: "Distrito Nacional",
-    country: "República Dominicana",
-    postalCode: "10101",
-    notes: "Entregar después de las 5pm",
-    total: "RD$ 2,500.00",
-  };
-
-  // Sample products for the template
-  const sampleProducts = [
-    { title: "Camiseta Premium Negra", quantity: 2, price: "RD$ 1,250.00" },
-    { title: "Pantalón Jogger Gris", quantity: 1, price: "RD$ 1,890.00" },
-  ];
-
-  let preview = template;
-
-  // Handle products block - replace entire block with expanded products
-  const productsBlockRegex = /\{\{#products\}\}([\s\S]*?)\{\{\/products\}\}/g;
-  const productsMatch = template.match(productsBlockRegex);
-
-  if (productsMatch) {
-    // Get the template inside the products block
-    const blockContent = productsMatch[0]
-      .replace(/\{\{#products\}\}/, '')
-      .replace(/\{\{\/products\}\}/, '');
-
-    // Generate output for each sample product
-    const productsOutput = sampleProducts.map(product => {
-      return blockContent
-        .replace(/\{\{title\}\}/g, product.title)
-        .replace(/\{\{quantity\}\}/g, String(product.quantity))
-        .replace(/\{\{price\}\}/g, product.price);
-    }).join('');
-
-    preview = preview.replace(productsBlockRegex, productsOutput);
-  }
-
-  // Replace simple variables (outside products block)
-  preview = preview
-    .replace(/\{\{orderNumber\}\}/g, sampleData.orderNumber)
-    .replace(/\{\{name\}\}/g, sampleData.name)
-    .replace(/\{\{phone\}\}/g, sampleData.phone)
-    .replace(/\{\{email\}\}/g, sampleData.email)
-    .replace(/\{\{address\}\}/g, sampleData.address)
-    .replace(/\{\{city\}\}/g, sampleData.city)
-    .replace(/\{\{province\}\}/g, sampleData.province)
-    .replace(/\{\{country\}\}/g, sampleData.country)
-    .replace(/\{\{postalCode\}\}/g, sampleData.postalCode)
-    .replace(/\{\{notes\}\}/g, sampleData.notes)
-    .replace(/\{\{total\}\}/g, sampleData.total)
-    // Also handle legacy single product variables
-    .replace(/\{\{product\}\}/g, "Camiseta Premium Negra")
-    .replace(/\{\{quantity\}\}/g, "2")
-    .replace(/\{\{price\}\}/g, "RD$ 1,250.00");
-
-  // Convert WhatsApp formatting to HTML
-  // *text* -> bold, _text_ -> italic
-  const formatWhatsAppToHtml = (text: string) => {
-    return text
-      .replace(/\*([^*]+)\*/g, '<strong>$1</strong>')
-      .replace(/_([^_]+)_/g, '<em>$1</em>')
-      .replace(/\n/g, '<br/>');
-  };
-
-  const formattedPreview = formatWhatsAppToHtml(preview);
-
-  // Format shop name for display
-  const displayName = shopName.replace('.myshopify.com', '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-
-  return (
-    <div style={{
-      background: "#f0f2f5",
-      borderRadius: "12px",
-      overflow: "hidden",
-      maxHeight: "450px",
-      border: "1px solid #e0e0e0",
-    }}>
-      {/* WhatsApp Header */}
-      <div style={{
-        background: "#008069",
-        padding: "10px 16px",
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-      }}>
-        <div style={{
-          width: "40px",
-          height: "40px",
-          borderRadius: "50%",
-          background: "#25D366",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-          </svg>
-        </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ color: "#ffffff", fontWeight: "500", fontSize: "16px" }}>{displayName}</div>
-          <div style={{ color: "rgba(255,255,255,0.8)", fontSize: "13px" }}>en linea</div>
-        </div>
-      </div>
-
-      {/* Chat Area */}
-      <div style={{
-        background: "#efeae2",
-        padding: "16px",
-        minHeight: "280px",
-        overflowY: "auto",
-      }}>
-        {/* Message Bubble */}
-        <div style={{
-          background: "#ffffff",
-          borderRadius: "8px",
-          borderTopLeftRadius: "0",
-          padding: "8px 12px",
-          maxWidth: "85%",
-          boxShadow: "0 1px 1px rgba(0,0,0,0.1)",
-          fontSize: "14.2px",
-          lineHeight: "1.5",
-          color: "#111b21",
-        }}>
-          <span dangerouslySetInnerHTML={{ __html: formattedPreview }} />
-          <div style={{
-            fontSize: "11px",
-            color: "#667781",
-            textAlign: "right",
-            marginTop: "4px",
-            display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "center",
-            gap: "4px",
-          }}>
-            12:30
-            <svg width="16" height="11" viewBox="0 0 16 11" fill="#53bdeb">
-              <path d="M11.071.653a.457.457 0 00-.304-.102.493.493 0 00-.381.178l-6.19 7.636-2.405-2.272a.463.463 0 00-.336-.146.47.47 0 00-.343.146l-.311.31a.445.445 0 00-.14.337c0 .136.047.25.14.343l2.996 2.996a.724.724 0 00.502.203.697.697 0 00.546-.266l6.646-8.417a.497.497 0 00.108-.299.441.441 0 00-.14-.337l-.388-.31zm4 0a.457.457 0 00-.303-.102.493.493 0 00-.382.178l-6.19 7.636-1.028-.97-.686.654 1.54 1.54a.724.724 0 00.501.203.697.697 0 00.547-.266l6.646-8.417a.497.497 0 00.108-.299.441.441 0 00-.14-.337l-.388-.31z"/>
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      {/* Input Area */}
-      <div style={{
-        background: "#f0f2f5",
-        padding: "10px 16px",
-        display: "flex",
-        alignItems: "center",
-        gap: "10px",
-        borderTop: "1px solid #e0e0e0",
-      }}>
-        <div style={{
-          flex: 1,
-          background: "#ffffff",
-          borderRadius: "8px",
-          padding: "9px 12px",
-          color: "#667781",
-          fontSize: "15px",
-          border: "1px solid #e0e0e0",
-        }}>
-          Escribe un mensaje
-        </div>
-        <div style={{
-          width: "40px",
-          height: "40px",
-          borderRadius: "50%",
-          background: "#008069",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-          </svg>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // Form/Modal Preview Component
 function FormModalPreview({
@@ -955,7 +765,6 @@ export default function Settings() {
   const isSubmitting = navigation.state === "submitting";
   const [selectedTab, setSelectedTab] = useState(0);
   const [showSaved, setShowSaved] = useState(false);
-  const [showVariablesModal, setShowVariablesModal] = useState(false);
   const [previewMode, setPreviewMode] = useState<"form" | "success">("form");
 
   const [formState, setFormState] = useState({
@@ -1101,7 +910,6 @@ export default function Settings() {
   }, []);
 
   const tabs = [
-    { id: "whatsapp", content: "WhatsApp", accessibilityLabel: "WhatsApp" },
     { id: "form-builder", content: "Formulario", accessibilityLabel: "Formulario" },
     { id: "shipping", content: "Envíos", accessibilityLabel: "Envíos" },
     { id: "orders", content: "Pedidos", accessibilityLabel: "Pedidos" },
@@ -1121,7 +929,7 @@ export default function Settings() {
   };
 
   // Determine if we should show preview
-  const showPreview = selectedTab <= 2; // WhatsApp, Formulario, Modal
+  const showPreview = selectedTab === 0; // Solo Formulario muestra preview
 
   return (
     <Page
@@ -1143,83 +951,11 @@ export default function Settings() {
         </Box>
       )}
 
-      {!shop?.whatsappNumber && (
-        <Box paddingBlockEnd="400">
-          <Banner tone="warning">
-            Configura tu número de WhatsApp para empezar a recibir pedidos.
-          </Banner>
-        </Box>
-      )}
 
       <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab}>
         <Box paddingBlockStart="400">
-          {/* TAB: WhatsApp */}
-          {selectedTab === 0 && (
-            <Layout>
-              <Layout.Section>
-                <Card>
-                  <BlockStack gap="400" inlineAlign="start">
-                    <Text as="h2" variant="headingSm">Configuración de WhatsApp</Text>
-                    <FormLayout>
-                      <TextField
-                        label="Número de WhatsApp"
-                        value={formState.whatsappNumber}
-                        onChange={handleChange("whatsappNumber")}
-                        placeholder="+1 809 555 1234"
-                        helpText="Incluye el código de país. Los pedidos se enviarán a este número."
-                        autoComplete="tel"
-                      />
-                      <TextField
-                        label="Plantilla de mensaje"
-                        value={formState.messageTemplate}
-                        onChange={handleChange("messageTemplate")}
-                        multiline={8}
-                        autoComplete="off"
-                      />
-                    </FormLayout>
-                  </BlockStack>
-                </Card>
-
-                <Box paddingBlockStart="200">
-                  <Button variant="plain" onClick={() => setShowVariablesModal(true)}>
-                    Ver variables disponibles
-                  </Button>
-                </Box>
-              </Layout.Section>
-
-              {/* PREVIEW: WhatsApp */}
-              <Layout.Section variant="oneThird">
-                <Card>
-                  <BlockStack gap="400" inlineAlign="start">
-                    <InlineStack align="space-between">
-                      <Text as="h2" variant="headingSm">Vista previa</Text>
-                      <InlineStack gap="100" blockAlign="center">
-                        <span style={{
-                          width: "8px",
-                          height: "8px",
-                          borderRadius: "50%",
-                          background: "#22c55e",
-                          display: "inline-block",
-                          animation: "pulse 2s infinite",
-                        }} />
-                        <Text as="span" variant="bodySm" tone="success">En vivo</Text>
-                        <style>{`
-                          @keyframes pulse {
-                            0%, 100% { opacity: 1; transform: scale(1); }
-                            50% { opacity: 0.5; transform: scale(1.2); }
-                          }
-                        `}</style>
-                      </InlineStack>
-                    </InlineStack>
-                    <WhatsAppPreview template={formState.messageTemplate} shopName={shop?.shopDomain || "Mi Tienda"} />
-                  </BlockStack>
-                </Card>
-              </Layout.Section>
-            </Layout>
-          )}
-
           {/* TAB: Unified Form Builder */}
-          {selectedTab === 1 && (() => {
+          {selectedTab === 0 && (() => {
             // All elements from customFields
             const allElements = formState.customFields as any[];
 
@@ -1809,7 +1545,7 @@ export default function Settings() {
           })()}
 
           {/* TAB: Shipping Rates */}
-          {selectedTab === 2 && (() => {
+          {selectedTab === 1 && (() => {
             const shippingRates = (formState.customShippingRates as any[]) || [];
 
             const addShippingRate = () => {
@@ -1950,7 +1686,7 @@ export default function Settings() {
           })()}
 
           {/* TAB: Order Configuration */}
-          {selectedTab === 3 && (
+          {selectedTab === 2 && (
             <Layout>
               <Layout.Section>
                 <Card>
@@ -2004,118 +1740,6 @@ export default function Settings() {
 
                   </Box>
       </Tabs>
-
-      {/* Variables Modal */}
-      <Modal
-        open={showVariablesModal}
-        onClose={() => setShowVariablesModal(false)}
-        title="Variables disponibles"
-      >
-        <Modal.Section>
-          <BlockStack gap="400">
-            <Text as="p" variant="bodySm" tone="subdued">
-              Usa estas variables en tu plantilla de mensaje. Se reemplazarán automáticamente con los datos del pedido.
-            </Text>
-            <BlockStack gap="300">
-              <InlineStack gap="200" align="start">
-                <Badge tone="info">{"{{orderNumber}}"}</Badge>
-                <Text as="span" variant="bodySm">Número de orden (ej: COD-00001)</Text>
-              </InlineStack>
-              <InlineStack gap="200" align="start">
-                <Badge tone="info">{"{{name}}"}</Badge>
-                <Text as="span" variant="bodySm">Nombre del cliente</Text>
-              </InlineStack>
-              <InlineStack gap="200" align="start">
-                <Badge tone="info">{"{{phone}}"}</Badge>
-                <Text as="span" variant="bodySm">Teléfono del cliente</Text>
-              </InlineStack>
-              <InlineStack gap="200" align="start">
-                <Badge tone="info">{"{{email}}"}</Badge>
-                <Text as="span" variant="bodySm">Email del cliente</Text>
-              </InlineStack>
-              <InlineStack gap="200" align="start">
-                <Badge tone="info">{"{{address}}"}</Badge>
-                <Text as="span" variant="bodySm">Dirección de entrega</Text>
-              </InlineStack>
-              <InlineStack gap="200" align="start">
-                <Badge tone="info">{"{{city}}"}</Badge>
-                <Text as="span" variant="bodySm">Ciudad</Text>
-              </InlineStack>
-              <InlineStack gap="200" align="start">
-                <Badge tone="info">{"{{province}}"}</Badge>
-                <Text as="span" variant="bodySm">Provincia o estado</Text>
-              </InlineStack>
-              <InlineStack gap="200" align="start">
-                <Badge tone="info">{"{{notes}}"}</Badge>
-                <Text as="span" variant="bodySm">Notas del pedido</Text>
-              </InlineStack>
-              <InlineStack gap="200" align="start">
-                <Badge tone="info">{"{{total}}"}</Badge>
-                <Text as="span" variant="bodySm">Total del pedido</Text>
-              </InlineStack>
-              <Divider />
-              <Text as="p" variant="headingSm">Bloque de productos</Text>
-              <Text as="p" variant="bodySm" tone="subdued">
-                Para mostrar múltiples productos, usa este bloque:
-              </Text>
-              <Box background="bg-surface-secondary" padding="300" borderRadius="200">
-                <Text as="p" variant="bodySm" fontWeight="medium">
-                  {"{{#products}}"}<br/>
-                  {"  *Producto:* {{title}}"}<br/>
-                  {"  *Cantidad:* {{quantity}}"}<br/>
-                  {"  *Precio:* {{price}}"}<br/>
-                  {"{{/products}}"}
-                </Text>
-              </Box>
-              <BlockStack gap="200">
-                <InlineStack gap="200" align="start">
-                  <Badge>{"{{title}}"}</Badge>
-                  <Text as="span" variant="bodySm">Nombre del producto</Text>
-                </InlineStack>
-                <InlineStack gap="200" align="start">
-                  <Badge>{"{{quantity}}"}</Badge>
-                  <Text as="span" variant="bodySm">Cantidad</Text>
-                </InlineStack>
-                <InlineStack gap="200" align="start">
-                  <Badge>{"{{price}}"}</Badge>
-                  <Text as="span" variant="bodySm">Precio del producto</Text>
-                </InlineStack>
-              </BlockStack>
-              <Divider />
-              <Text as="p" variant="headingSm">Formato de texto</Text>
-              <Text as="p" variant="bodySm" tone="subdued">
-                WhatsApp soporta estos estilos de formato:
-              </Text>
-              <BlockStack gap="200">
-                <InlineStack gap="300" align="start" blockAlign="center">
-                  <Box minWidth="120px">
-                    <Text as="span" variant="bodySm" fontWeight="medium">*texto*</Text>
-                  </Box>
-                  <Text as="span" variant="bodySm"><strong>Negrita</strong></Text>
-                </InlineStack>
-                <InlineStack gap="300" align="start" blockAlign="center">
-                  <Box minWidth="120px">
-                    <Text as="span" variant="bodySm" fontWeight="medium">_texto_</Text>
-                  </Box>
-                  <Text as="span" variant="bodySm"><em>Cursiva</em></Text>
-                </InlineStack>
-                <InlineStack gap="300" align="start" blockAlign="center">
-                  <Box minWidth="120px">
-                    <Text as="span" variant="bodySm" fontWeight="medium">~texto~</Text>
-                  </Box>
-                  <Text as="span" variant="bodySm"><s>Tachado</s></Text>
-                </InlineStack>
-                <InlineStack gap="300" align="start" blockAlign="center">
-                  <Box minWidth="120px">
-                    <Text as="span" variant="bodySm" fontWeight="medium">```texto```</Text>
-                  </Box>
-                  <Text as="span" variant="bodySm"><code style={{ background: "#f1f1f1", padding: "2px 4px", borderRadius: "3px" }}>Monoespaciado</code></Text>
-                </InlineStack>
-              </BlockStack>
-            </BlockStack>
-          </BlockStack>
-        </Modal.Section>
-      </Modal>
     </Page>
   );
 }
