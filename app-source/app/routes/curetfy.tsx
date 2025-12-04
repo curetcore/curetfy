@@ -1,6 +1,18 @@
 import type { MetaFunction } from "@remix-run/node";
 import { Link } from "@remix-run/react";
 import { useState } from "react";
+import { Dialog, DialogPanel } from "@headlessui/react";
+import {
+  Bars3Icon,
+  XMarkIcon,
+  CheckIcon,
+  ChatBubbleLeftRightIcon,
+  CursorArrowRaysIcon,
+  TruckIcon,
+  ChartBarIcon,
+  CreditCardIcon,
+  BoltIcon,
+} from "@heroicons/react/24/outline";
 
 export const meta: MetaFunction = () => {
   return [
@@ -14,511 +26,597 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-function WhatsAppIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-    </svg>
-  );
+const navigation = [
+  { name: "Funciones", href: "#features" },
+  { name: "Precios", href: "#pricing" },
+  { name: "Testimonios", href: "#testimonials" },
+  { name: "FAQ", href: "#faq" },
+];
+
+const features = [
+  {
+    name: "Integracion WhatsApp",
+    description: "Recibe pedidos directamente en WhatsApp con todos los detalles del cliente, productos y totales. Sin intermediarios.",
+    icon: ChatBubbleLeftRightIcon,
+  },
+  {
+    name: "Constructor Drag & Drop",
+    description: "Crea formularios personalizados arrastrando campos. Nombre, telefono, direccion, ciudad y campos custom.",
+    icon: CursorArrowRaysIcon,
+  },
+  {
+    name: "Zonas de Envio",
+    description: "Configura costos de envio por ciudad, provincia o pais. Ofrece envio gratis a partir de cierto monto automaticamente.",
+    icon: TruckIcon,
+  },
+  {
+    name: "Analiticas en Tiempo Real",
+    description: "Dashboard con pedidos por dia, productos top, ciudades con mas ventas y metricas de conversion.",
+    icon: ChartBarIcon,
+  },
+  {
+    name: "Cupones de Descuento",
+    description: "Valida automaticamente los cupones de Shopify. Tus clientes pueden aplicar descuentos al momento.",
+    icon: CreditCardIcon,
+  },
+  {
+    name: "Draft Orders en Shopify",
+    description: "Crea borradores de pedido automaticamente en tu panel de Shopify. Todo centralizado en un solo lugar.",
+    icon: BoltIcon,
+  },
+];
+
+const tiers = [
+  {
+    name: "Gratis",
+    id: "tier-free",
+    href: "https://apps.shopify.com/curetfy-cod-form",
+    priceMonthly: "$0",
+    description: "Perfecto para tiendas que estan comenzando con COD.",
+    features: [
+      "100 pedidos por mes",
+      "Integracion WhatsApp",
+      "Formulario basico",
+      "1 zona de envio",
+      "Soporte por email",
+    ],
+    featured: false,
+  },
+  {
+    name: "Pro",
+    id: "tier-pro",
+    href: "https://apps.shopify.com/curetfy-cod-form",
+    priceMonthly: "$9",
+    description: "Para tiendas en crecimiento que necesitan todas las funciones.",
+    features: [
+      "Pedidos ilimitados",
+      "Constructor de formularios",
+      "Zonas de envio ilimitadas",
+      "Cupones de descuento",
+      "Analiticas completas",
+      "Draft orders en Shopify",
+      "Soporte prioritario",
+      "Sin marca de agua",
+    ],
+    featured: true,
+  },
+];
+
+const stats = [
+  { id: 1, name: "Tiendas activas", value: "500+" },
+  { id: 2, name: "Pedidos procesados", value: "50K+" },
+  { id: 3, name: "Aumento en conversiones", value: "35%" },
+];
+
+const testimonials = [
+  [
+    {
+      body: "Desde que instalamos Curetfy, nuestras conversiones aumentaron un 40%. Los clientes prefieren pagar contra entrega y el proceso es super facil.",
+      author: {
+        name: "Maria Castillo",
+        handle: "mariacastillo",
+        location: "Tienda de Ropa - Colombia",
+      },
+    },
+    {
+      body: "La integracion con WhatsApp es perfecta. Recibo el pedido con todos los datos y puedo confirmar inmediatamente con el cliente.",
+      author: {
+        name: "Juan Rodriguez",
+        handle: "juanrodriguez",
+        location: "Dropshipping - Mexico",
+      },
+    },
+  ],
+  [
+    {
+      body: "Probamos varias apps de COD y esta es la mejor. El constructor de formularios y las zonas de envio son exactamente lo que necesitabamos.",
+      author: {
+        name: "Laura Perez",
+        handle: "lauraperez",
+        location: "Cosmeticos - Peru",
+      },
+    },
+    {
+      body: "El soporte es increible. Me ayudaron a configurar todo en menos de 10 minutos. Muy recomendado para tiendas en Latinoamerica.",
+      author: {
+        name: "Carlos Mendez",
+        handle: "carlosmendez",
+        location: "Electronica - Ecuador",
+      },
+    },
+  ],
+];
+
+const faqs = [
+  {
+    question: "Funciona con mi tema de Shopify?",
+    answer: "Si, Curetfy funciona con todos los temas de Shopify 2.0 (la mayoria de temas modernos). Se instala como un bloque que puedes agregar a cualquier pagina de producto.",
+  },
+  {
+    question: "Necesito saber programar?",
+    answer: "No, todo se configura visualmente desde el panel de la app y el editor de tema de Shopify. No se requiere ningun codigo.",
+  },
+  {
+    question: "Como recibo los pedidos?",
+    answer: "Los pedidos llegan directamente a tu WhatsApp con todos los detalles: nombre, telefono, direccion, productos y total. Tambien puedes verlos en el panel de la app y crear draft orders en Shopify.",
+  },
+  {
+    question: "Puedo probar antes de pagar?",
+    answer: "Si, el plan gratuito incluye 100 pedidos por mes. Puedes probar todas las funciones basicas sin pagar nada.",
+  },
+  {
+    question: "Que pasa si cancelo?",
+    answer: "Puedes cancelar en cualquier momento sin penalizacion. Tus datos se mantienen por 48 horas y luego se eliminan permanentemente.",
+  },
+  {
+    question: "Tienen soporte en espanol?",
+    answer: "Si, todo nuestro soporte es en espanol. Respondemos en menos de 24 horas por email o WhatsApp.",
+  },
+];
+
+const footerNavigation = {
+  main: [
+    { name: "Funciones", href: "#features" },
+    { name: "Precios", href: "#pricing" },
+    { name: "FAQ", href: "#faq" },
+    { name: "Soporte", href: "mailto:soporte@curetcore.com" },
+  ],
+  legal: [
+    { name: "Privacidad", href: "/privacy" },
+    { name: "Terminos", href: "/terms" },
+  ],
+  social: [
+    {
+      name: "Instagram",
+      href: "https://instagram.com/curetcore",
+      icon: (props: React.SVGProps<SVGSVGElement>) => (
+        <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
+          <path fillRule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" clipRule="evenodd" />
+        </svg>
+      ),
+    },
+    {
+      name: "X",
+      href: "https://twitter.com/curetcore",
+      icon: (props: React.SVGProps<SVGSVGElement>) => (
+        <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
+          <path d="M13.6823 10.6218L20.2391 3H18.6854L12.9921 9.61788L8.44486 3H3.2002L10.0765 13.0074L3.2002 21H4.75404L10.7663 14.0113L15.5685 21H20.8131L13.6819 10.6218H13.6823ZM11.5541 13.0956L10.8574 12.0991L5.31391 4.16971H7.70053L12.1742 10.5689L12.8709 11.5655L18.6861 19.8835H16.2995L11.5541 13.096V13.0956Z" />
+        </svg>
+      ),
+    },
+    {
+      name: "WhatsApp",
+      href: "https://wa.me/573001234567",
+      icon: (props: React.SVGProps<SVGSVGElement>) => (
+        <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+        </svg>
+      ),
+    },
+  ],
+};
+
+function classNames(...classes: string[]) {
+  return classes.filter(Boolean).join(" ");
 }
 
-function CheckIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 20 20" fill="currentColor">
-      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-    </svg>
-  );
-}
-
-function FAQItem({ question, answer }: { question: string; answer: string }) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function CuretfyLanding() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="rounded-xl bg-slate-50 p-6">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between text-left"
-      >
-        <h4 className="text-lg/7 font-bold text-slate-900">{question}</h4>
-        <span className={`ml-4 shrink-0 text-2xl text-violet-600 transition-transform duration-200 ${isOpen ? 'rotate-45' : ''}`}>
-          +
-        </span>
-      </button>
-      {isOpen && (
-        <p className="mt-4 text-base/7 text-slate-600">{answer}</p>
-      )}
-    </div>
-  );
-}
-
-export default function LandingPage() {
-  return (
-    <div className="min-h-dvh font-sans text-slate-900">
-      {/* Navigation */}
-      <nav className="fixed inset-x-0 top-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 lg:px-8">
-          <span className="bg-linear-to-r from-violet-600 to-purple-600 bg-clip-text text-2xl font-extrabold text-transparent">
-            Curetfy
-          </span>
-          <div className="hidden items-center gap-8 md:flex">
-            <a href="#features" className="text-sm/6 font-medium text-slate-600 transition-colors hover:text-violet-600">Funciones</a>
-            <a href="#how-it-works" className="text-sm/6 font-medium text-slate-600 transition-colors hover:text-violet-600">Como funciona</a>
-            <a href="#pricing" className="text-sm/6 font-medium text-slate-600 transition-colors hover:text-violet-600">Precios</a>
-            <a href="#faq" className="text-sm/6 font-medium text-slate-600 transition-colors hover:text-violet-600">FAQ</a>
-          </div>
-          <a
-            href="https://apps.shopify.com/curetfy-cod-form"
-            className="rounded-lg bg-linear-to-r from-violet-600 to-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-violet-500/25"
-          >
-            Instalar Gratis
-          </a>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <section className="bg-linear-to-b from-slate-50 to-white pb-24 pt-32 lg:pb-32 lg:pt-40">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
-          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-            <div>
-              <span className="inline-block rounded-full bg-violet-100 px-4 py-1.5 text-sm/6 font-semibold text-violet-700">
-                App #1 de COD para Shopify
-              </span>
-              <h1 className="mt-6 text-4xl/tight font-extrabold tracking-tight text-slate-900 sm:text-5xl/tight lg:text-6xl/tight">
-                Vende mas con{' '}
-                <span className="bg-linear-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-                  Pago Contra Entrega
-                </span>
-              </h1>
-              <p className="mt-6 text-lg/8 text-slate-600">
-                Formularios optimizados para WhatsApp que convierten visitantes en clientes.
-                Perfecto para dropshipping y e-commerce en Latinoamerica.
-              </p>
-              <div className="mt-8 flex flex-wrap gap-4">
-                <a
-                  href="https://apps.shopify.com/curetfy-cod-form"
-                  className="rounded-xl bg-linear-to-r from-violet-600 to-purple-600 px-8 py-4 text-lg font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-500/30"
-                >
-                  Comenzar Gratis
-                </a>
-                <a
-                  href="#how-it-works"
-                  className="rounded-xl border-2 border-violet-600 px-8 py-4 text-lg font-semibold text-violet-600 transition-all hover:-translate-y-0.5 hover:bg-violet-50"
-                >
-                  Ver Demo
-                </a>
+    <div className="bg-gray-900">
+      {/* Header */}
+      <header className="absolute inset-x-0 top-0 z-50">
+        <nav aria-label="Global" className="flex items-center justify-between p-6 lg:px-8">
+          <div className="flex lg:flex-1">
+            <Link to="/home" className="-m-1.5 flex items-center gap-2 p-1.5">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-indigo-500">
+                <svg className="size-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+                </svg>
               </div>
-            </div>
-
-            {/* Hero Mockup */}
-            <div className="relative">
-              <div className="rounded-2xl bg-linear-to-br from-violet-600 to-purple-700 p-8 shadow-2xl shadow-violet-500/30 lg:p-10">
-                <div className="rounded-xl bg-white p-6 shadow-lg">
-                  <div className="space-y-4">
-                    <div>
-                      <div className="mb-2 h-3 w-20 rounded-sm bg-slate-200"></div>
-                      <div className="h-11 rounded-lg bg-slate-100"></div>
-                    </div>
-                    <div>
-                      <div className="mb-2 h-3 w-24 rounded-sm bg-slate-200"></div>
-                      <div className="h-11 rounded-lg bg-slate-100"></div>
-                    </div>
-                    <div>
-                      <div className="mb-2 h-3 w-16 rounded-sm bg-slate-200"></div>
-                      <div className="h-11 rounded-lg bg-slate-100"></div>
-                    </div>
-                    <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-green-500 to-emerald-600 py-4 text-base font-semibold text-white">
-                      <WhatsAppIcon className="size-5" />
-                      Pedir por WhatsApp
-                    </button>
-                  </div>
+              <span className="text-lg font-bold text-white">Curetfy</span>
+            </Link>
+          </div>
+          <div className="flex lg:hidden">
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-200"
+            >
+              <span className="sr-only">Abrir menu</span>
+              <Bars3Icon aria-hidden="true" className="size-6" />
+            </button>
+          </div>
+          <div className="hidden lg:flex lg:gap-x-12">
+            {navigation.map((item) => (
+              <a key={item.name} href={item.href} className="text-sm/6 font-semibold text-white">
+                {item.name}
+              </a>
+            ))}
+          </div>
+          <div className="hidden lg:flex lg:flex-1 lg:justify-end">
+            <a
+              href="https://apps.shopify.com/curetfy-cod-form"
+              className="rounded-md bg-indigo-500 px-3.5 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-400"
+            >
+              Instalar Gratis
+            </a>
+          </div>
+        </nav>
+        <Dialog open={mobileMenuOpen} onClose={setMobileMenuOpen} className="lg:hidden">
+          <div className="fixed inset-0 z-50" />
+          <DialogPanel className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-gray-900 p-6 sm:max-w-sm sm:ring-1 sm:ring-gray-100/10">
+            <div className="flex items-center justify-between">
+              <Link to="/home" className="-m-1.5 flex items-center gap-2 p-1.5">
+                <div className="flex size-8 items-center justify-center rounded-lg bg-indigo-500">
+                  <svg className="size-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+                  </svg>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="mt-20 grid gap-8 sm:grid-cols-3">
-            <div className="text-center">
-              <div className="bg-linear-to-r from-violet-600 to-purple-600 bg-clip-text text-5xl font-extrabold text-transparent">
-                500+
-              </div>
-              <div className="mt-2 text-base/7 text-slate-600">Tiendas Activas</div>
-            </div>
-            <div className="text-center">
-              <div className="bg-linear-to-r from-violet-600 to-purple-600 bg-clip-text text-5xl font-extrabold text-transparent">
-                50K+
-              </div>
-              <div className="mt-2 text-base/7 text-slate-600">Pedidos Procesados</div>
-            </div>
-            <div className="text-center">
-              <div className="bg-linear-to-r from-violet-600 to-purple-600 bg-clip-text text-5xl font-extrabold text-transparent">
-                35%
-              </div>
-              <div className="mt-2 text-base/7 text-slate-600">Aumento en Conversiones</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section id="features" className="bg-white py-24 lg:py-32">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
-              Todo lo que necesitas para{' '}
-              <span className="bg-linear-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-                vender mas
-              </span>
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg/8 text-slate-600">
-              Funciones disenadas especificamente para el mercado latinoamericano
-            </p>
-          </div>
-
-          <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                icon: <WhatsAppIcon className="size-7 text-green-500" />,
-                iconBg: 'bg-green-100',
-                title: 'Integracion WhatsApp',
-                description: 'Recibe pedidos directamente en WhatsApp con todos los detalles del cliente y productos.',
-              },
-              {
-                icon: <svg className="size-7 text-violet-600" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>,
-                iconBg: 'bg-violet-100',
-                title: 'Constructor de Formularios',
-                description: 'Arrastra y suelta campos para crear el formulario perfecto. Nombre, telefono, direccion y mas.',
-              },
-              {
-                icon: <svg className="size-7 text-pink-500" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>,
-                iconBg: 'bg-pink-100',
-                title: 'Zonas de Envio',
-                description: 'Configura costos de envio por ciudad, provincia o pais. Ofrece envio gratis automaticamente.',
-              },
-              {
-                icon: <svg className="size-7 text-amber-500" fill="currentColor" viewBox="0 0 24 24"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>,
-                iconBg: 'bg-amber-100',
-                title: 'Cupones de Descuento',
-                description: 'Valida automaticamente los cupones de Shopify. Tus clientes aplican descuentos al momento.',
-              },
-              {
-                icon: <svg className="size-7 text-emerald-500" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>,
-                iconBg: 'bg-emerald-100',
-                title: 'Analiticas Completas',
-                description: 'Ve pedidos por dia, productos mas vendidos, ciudades top y el rendimiento del formulario.',
-              },
-              {
-                icon: <svg className="size-7 text-purple-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>,
-                iconBg: 'bg-purple-100',
-                title: 'Totalmente Personalizable',
-                description: 'Cambia colores, textos, iconos y animaciones. El boton se adapta perfectamente a tu marca.',
-              },
-            ].map((feature, idx) => (
-              <div
-                key={idx}
-                className="group rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-200/50"
+                <span className="text-lg font-bold text-white">Curetfy</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="-m-2.5 rounded-md p-2.5 text-gray-200"
               >
-                <div className={`inline-flex size-14 items-center justify-center rounded-xl ${feature.iconBg}`}>
-                  {feature.icon}
+                <span className="sr-only">Cerrar menu</span>
+                <XMarkIcon aria-hidden="true" className="size-6" />
+              </button>
+            </div>
+            <div className="mt-6 flow-root">
+              <div className="-my-6 divide-y divide-white/10">
+                <div className="space-y-2 py-6">
+                  {navigation.map((item) => (
+                    <a
+                      key={item.name}
+                      href={item.href}
+                      className="-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-white hover:bg-white/5"
+                    >
+                      {item.name}
+                    </a>
+                  ))}
                 </div>
-                <h3 className="mt-5 text-xl font-bold text-slate-900">{feature.title}</h3>
-                <p className="mt-2 text-base/7 text-slate-600">{feature.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How it Works */}
-      <section id="how-it-works" className="bg-linear-to-b from-white to-slate-50 py-24 lg:py-32">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
-              Como{' '}
-              <span className="bg-linear-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-                funciona
-              </span>
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg/8 text-slate-600">
-              Comienza a recibir pedidos COD en menos de 5 minutos
-            </p>
-          </div>
-
-          <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { step: '1', title: 'Instala la App', desc: 'Instalacion con un clic desde la App Store de Shopify.' },
-              { step: '2', title: 'Configura WhatsApp', desc: 'Agrega tu numero de WhatsApp donde quieres recibir pedidos.' },
-              { step: '3', title: 'Agrega el Boton', desc: 'Arrastra el bloque COD a tu pagina de producto.' },
-              { step: '4', title: 'Recibe Pedidos', desc: 'Los clientes completan el formulario y tu recibes el pedido.' },
-            ].map((item, idx) => (
-              <div key={idx} className="text-center">
-                <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-linear-to-br from-violet-600 to-purple-600 text-2xl font-extrabold text-white shadow-lg shadow-violet-500/25">
-                  {item.step}
+                <div className="py-6">
+                  <a
+                    href="https://apps.shopify.com/curetfy-cod-form"
+                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base/7 font-semibold text-white hover:bg-white/5"
+                  >
+                    Instalar Gratis
+                  </a>
                 </div>
-                <h4 className="mt-5 text-lg font-bold text-slate-900">{item.title}</h4>
-                <p className="mt-2 text-base/7 text-slate-600">{item.desc}</p>
               </div>
-            ))}
-          </div>
+            </div>
+          </DialogPanel>
+        </Dialog>
+      </header>
+
+      {/* Hero */}
+      <div className="relative isolate px-6 pt-14 lg:px-8">
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
+        >
+          <div
+            style={{
+              clipPath:
+                "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
+            }}
+            className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-linear-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
+          />
         </div>
-      </section>
-
-      {/* Pricing */}
-      <section id="pricing" className="bg-slate-900 py-24 lg:py-32">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
-              Precios simples y transparentes
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg/8 text-slate-400">
-              Sin costos ocultos. Cancela cuando quieras.
-            </p>
+        <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
+          <div className="hidden sm:mb-8 sm:flex sm:justify-center">
+            <div className="relative rounded-full px-3 py-1 text-sm/6 text-gray-400 ring-1 ring-white/10 hover:ring-white/20">
+              App #1 de COD para Shopify en LATAM{" "}
+              <a href="#features" className="font-semibold text-indigo-400">
+                <span aria-hidden="true" className="absolute inset-0" />
+                Ver funciones <span aria-hidden="true">&rarr;</span>
+              </a>
+            </div>
           </div>
-
-          <div className="mt-16 grid gap-8 lg:grid-cols-3">
-            {/* Starter */}
-            <div className="rounded-2xl border border-slate-700 bg-slate-800/50 p-8 lg:p-10">
-              <h3 className="text-2xl font-bold text-white">Starter</h3>
-              <p className="mt-1 text-base/7 text-slate-400">Para tiendas nuevas</p>
-              <div className="mt-6">
-                <span className="text-5xl font-extrabold text-white">$0</span>
-                <span className="text-lg text-slate-400">/mes</span>
-              </div>
-              <ul className="mt-8 space-y-4">
-                {['50 pedidos/mes', 'Integracion WhatsApp', 'Formulario basico', 'Soporte por email'].map((item, idx) => (
-                  <li key={idx} className="flex items-center gap-3 text-base/7 text-slate-300">
-                    <CheckIcon className="size-5 shrink-0 text-green-400" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
+          <div className="text-center">
+            <h1 className="text-balance text-5xl font-semibold tracking-tight text-white sm:text-7xl">
+              Vende mas con Pago Contra Entrega
+            </h1>
+            <p className="mt-8 text-pretty text-lg font-medium text-gray-400 sm:text-xl/8">
+              Formularios optimizados para WhatsApp que convierten visitantes en clientes.
+              Perfecto para dropshipping y e-commerce en Latinoamerica.
+            </p>
+            <div className="mt-10 flex items-center justify-center gap-x-6">
               <a
                 href="https://apps.shopify.com/curetfy-cod-form"
-                className="mt-8 block w-full rounded-xl border-2 border-violet-500 py-4 text-center text-base font-semibold text-violet-400 transition-all hover:bg-violet-500/10"
+                className="rounded-md bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
               >
                 Comenzar Gratis
               </a>
-            </div>
-
-            {/* Pro - Featured */}
-            <div className="relative scale-105 rounded-2xl bg-linear-to-br from-violet-600 to-purple-600 p-8 shadow-2xl shadow-violet-500/30 lg:p-10">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-amber-400 px-4 py-1 text-sm font-bold text-slate-900">
-                Mas popular
-              </div>
-              <h3 className="text-2xl font-bold text-white">Pro</h3>
-              <p className="mt-1 text-base/7 text-violet-200">Para tiendas en crecimiento</p>
-              <div className="mt-6">
-                <span className="text-5xl font-extrabold text-white">$19</span>
-                <span className="text-lg text-violet-200">/mes</span>
-              </div>
-              <ul className="mt-8 space-y-4">
-                {['Pedidos ilimitados', 'Constructor de formularios', 'Zonas de envio', 'Cupones de descuento', 'Analiticas completas', 'Soporte prioritario'].map((item, idx) => (
-                  <li key={idx} className="flex items-center gap-3 text-base/7 text-white">
-                    <CheckIcon className="size-5 shrink-0 text-green-300" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <a
-                href="https://apps.shopify.com/curetfy-cod-form"
-                className="mt-8 block w-full rounded-xl bg-white py-4 text-center text-base font-semibold text-violet-600 transition-all hover:bg-violet-50"
-              >
-                Prueba 14 dias gratis
-              </a>
-            </div>
-
-            {/* Enterprise */}
-            <div className="rounded-2xl border border-slate-700 bg-slate-800/50 p-8 lg:p-10">
-              <h3 className="text-2xl font-bold text-white">Enterprise</h3>
-              <p className="mt-1 text-base/7 text-slate-400">Para grandes volumenes</p>
-              <div className="mt-6">
-                <span className="text-5xl font-extrabold text-white">$49</span>
-                <span className="text-lg text-slate-400">/mes</span>
-              </div>
-              <ul className="mt-8 space-y-4">
-                {['Todo en Pro', 'Multiples numeros WhatsApp', 'API access', 'Webhooks personalizados', 'Soporte dedicado', 'Onboarding personalizado'].map((item, idx) => (
-                  <li key={idx} className="flex items-center gap-3 text-base/7 text-slate-300">
-                    <CheckIcon className="size-5 shrink-0 text-green-400" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <a
-                href="mailto:ventas@curetcore.com"
-                className="mt-8 block w-full rounded-xl border-2 border-violet-500 py-4 text-center text-base font-semibold text-violet-400 transition-all hover:bg-violet-500/10"
-              >
-                Contactar Ventas
+              <a href="#pricing" className="text-sm/6 font-semibold text-white">
+                Ver precios <span aria-hidden="true">→</span>
               </a>
             </div>
           </div>
         </div>
-      </section>
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]"
+        >
+          <div
+            style={{
+              clipPath:
+                "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
+            }}
+            className="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-linear-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]"
+          />
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="bg-gray-900 py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <dl className="grid grid-cols-1 gap-x-8 gap-y-16 text-center lg:grid-cols-3">
+            {stats.map((stat) => (
+              <div key={stat.id} className="mx-auto flex max-w-xs flex-col gap-y-4">
+                <dt className="text-base/7 text-gray-400">{stat.name}</dt>
+                <dd className="order-first text-3xl font-semibold tracking-tight text-white sm:text-5xl">{stat.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </div>
+
+      {/* Features */}
+      <div id="features" className="bg-gray-900 py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl lg:text-center">
+            <h2 className="text-base/7 font-semibold text-indigo-400">Todo incluido</h2>
+            <p className="mt-2 text-pretty text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-balance">
+              Todo lo que necesitas para vender con COD
+            </p>
+            <p className="mt-6 text-lg/8 text-gray-300">
+              Funciones disenadas especificamente para el mercado latinoamericano. Sin complicaciones, sin codigo.
+            </p>
+          </div>
+          <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+            <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
+              {features.map((feature) => (
+                <div key={feature.name} className="flex flex-col">
+                  <dt className="flex items-center gap-x-3 text-base/7 font-semibold text-white">
+                    <feature.icon aria-hidden="true" className="size-5 flex-none text-indigo-400" />
+                    {feature.name}
+                  </dt>
+                  <dd className="mt-4 flex flex-auto flex-col text-base/7 text-gray-400">
+                    <p className="flex-auto">{feature.description}</p>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      {/* Pricing */}
+      <div id="pricing" className="relative isolate bg-gray-900 px-6 py-24 sm:py-32 lg:px-8">
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 -top-3 -z-10 transform-gpu overflow-hidden px-36 blur-3xl"
+        >
+          <div
+            style={{
+              clipPath:
+                "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
+            }}
+            className="mx-auto aspect-[1155/678] w-[72.1875rem] bg-linear-to-tr from-[#ff80b5] to-[#9089fc] opacity-20"
+          />
+        </div>
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="text-base/7 font-semibold text-indigo-400">Precios</h2>
+          <p className="mt-2 text-balance text-5xl font-semibold tracking-tight text-white sm:text-6xl">
+            Simple y transparente
+          </p>
+        </div>
+        <p className="mx-auto mt-6 max-w-2xl text-pretty text-center text-lg font-medium text-gray-400 sm:text-xl/8">
+          Sin costos ocultos. Cancela cuando quieras. Comienza gratis hoy.
+        </p>
+        <div className="mx-auto mt-16 grid max-w-lg grid-cols-1 items-center gap-y-6 sm:mt-20 sm:gap-y-0 lg:max-w-4xl lg:grid-cols-2">
+          {tiers.map((tier, tierIdx) => (
+            <div
+              key={tier.id}
+              className={classNames(
+                tier.featured ? "relative bg-gray-800" : "bg-white/5 sm:mx-8 lg:mx-0",
+                tier.featured
+                  ? ""
+                  : tierIdx === 0
+                    ? "rounded-t-3xl sm:rounded-b-none lg:rounded-bl-3xl lg:rounded-tr-none"
+                    : "sm:rounded-t-none lg:rounded-bl-none lg:rounded-tr-3xl",
+                "rounded-3xl p-8 ring-1 ring-white/10 sm:p-10"
+              )}
+            >
+              <h3
+                id={tier.id}
+                className="text-base/7 font-semibold text-indigo-400"
+              >
+                {tier.name}
+              </h3>
+              <p className="mt-4 flex items-baseline gap-x-2">
+                <span className="text-5xl font-semibold tracking-tight text-white">
+                  {tier.priceMonthly}
+                </span>
+                <span className="text-base text-gray-400">/mes</span>
+              </p>
+              <p className="mt-6 text-base/7 text-gray-300">
+                {tier.description}
+              </p>
+              <ul role="list" className="mt-8 space-y-3 text-sm/6 text-gray-300 sm:mt-10">
+                {tier.features.map((feature) => (
+                  <li key={feature} className="flex gap-x-3">
+                    <CheckIcon
+                      aria-hidden="true"
+                      className="h-6 w-5 flex-none text-indigo-400"
+                    />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+              <a
+                href={tier.href}
+                aria-describedby={tier.id}
+                className={classNames(
+                  tier.featured
+                    ? "bg-indigo-500 text-white hover:bg-indigo-400 focus-visible:outline-indigo-500"
+                    : "bg-white/10 text-white hover:bg-white/20 focus-visible:outline-white",
+                  "mt-8 block rounded-md px-3.5 py-2.5 text-center text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 sm:mt-10"
+                )}
+              >
+                {tier.featured ? "Comenzar Ahora" : "Probar Gratis"}
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Testimonials */}
-      <section className="bg-linear-to-b from-slate-50 to-white py-24 lg:py-32">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
-              Lo que dicen nuestros{' '}
-              <span className="bg-linear-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-                clientes
-              </span>
-            </h2>
+      <div id="testimonials" className="relative isolate bg-gray-900 py-24 sm:py-32">
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 top-1/2 -z-10 -translate-y-1/2 transform-gpu overflow-hidden opacity-30 blur-3xl"
+        >
+          <div
+            style={{
+              clipPath:
+                "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
+            }}
+            className="ml-[max(50%,38rem)] aspect-[1313/771] w-[82.0625rem] bg-linear-to-tr from-[#ff80b5] to-[#9089fc]"
+          />
+        </div>
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-base/7 font-semibold text-indigo-400">Testimonios</h2>
+            <p className="mt-2 text-balance text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+              Lo que dicen nuestros clientes
+            </p>
           </div>
-
-          <div className="mt-16 grid gap-8 md:grid-cols-3">
-            {[
-              {
-                text: '"Desde que instalamos Curetfy, nuestras conversiones aumentaron un 40%. Los clientes prefieren pagar contra entrega y el proceso es super facil."',
-                name: 'Maria Castillo',
-                role: 'Tienda de Ropa - Colombia',
-                initials: 'MC',
-              },
-              {
-                text: '"La integracion con WhatsApp es perfecta. Recibo el pedido con todos los datos y puedo confirmar inmediatamente con el cliente."',
-                name: 'Juan Rodriguez',
-                role: 'Dropshipping - Mexico',
-                initials: 'JR',
-              },
-              {
-                text: '"Probamos varias apps de COD y esta es la mejor. El constructor de formularios y las zonas de envio son exactamente lo que necesitabamos."',
-                name: 'Laura Perez',
-                role: 'Cosmeticos - Peru',
-                initials: 'LP',
-              },
-            ].map((testimonial, idx) => (
-              <div key={idx} className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
-                <p className="text-lg/8 italic text-slate-700">{testimonial.text}</p>
-                <div className="mt-6 flex items-center gap-4">
-                  <div className="flex size-12 items-center justify-center rounded-full bg-linear-to-br from-violet-600 to-purple-600 text-lg font-bold text-white">
-                    {testimonial.initials}
-                  </div>
-                  <div>
-                    <div className="font-bold text-slate-900">{testimonial.name}</div>
-                    <div className="text-sm/6 text-slate-500">{testimonial.role}</div>
-                  </div>
-                </div>
+          <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 sm:mt-20 lg:mx-0 lg:max-w-none lg:grid-cols-2">
+            {testimonials.map((column, columnIdx) => (
+              <div key={columnIdx} className="space-y-8">
+                {column.map((testimonial) => (
+                  <figure
+                    key={testimonial.author.handle}
+                    className="rounded-2xl bg-gray-800/50 p-6 ring-1 ring-white/10"
+                  >
+                    <blockquote className="text-white">
+                      <p>{`"${testimonial.body}"`}</p>
+                    </blockquote>
+                    <figcaption className="mt-6 flex items-center gap-x-4">
+                      <div className="flex size-10 items-center justify-center rounded-full bg-indigo-500 text-sm font-bold text-white">
+                        {testimonial.author.name.split(" ").map(n => n[0]).join("")}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-white">{testimonial.author.name}</div>
+                        <div className="text-gray-400">{testimonial.author.location}</div>
+                      </div>
+                    </figcaption>
+                  </figure>
+                ))}
               </div>
             ))}
           </div>
         </div>
-      </section>
+      </div>
 
       {/* FAQ */}
-      <section id="faq" className="bg-white py-24 lg:py-32">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
-              Preguntas{' '}
-              <span className="bg-linear-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-                frecuentes
-              </span>
-            </h2>
+      <div id="faq" className="bg-gray-900 py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-base/7 font-semibold text-indigo-400">FAQ</h2>
+            <p className="mt-2 text-balance text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+              Preguntas frecuentes
+            </p>
           </div>
-
-          <div className="mx-auto mt-16 grid max-w-4xl gap-4 md:grid-cols-2">
-            <FAQItem
-              question="Funciona con mi tema de Shopify?"
-              answer="Si, Curetfy funciona con todos los temas de Shopify 2.0 (la mayoria de temas modernos). Se instala como un bloque que puedes agregar a cualquier pagina."
-            />
-            <FAQItem
-              question="Necesito saber programar?"
-              answer="No, todo se configura visualmente desde el panel de la app y el editor de tema de Shopify. No se requiere codigo."
-            />
-            <FAQItem
-              question="Como recibo los pedidos?"
-              answer="Los pedidos llegan directamente a tu WhatsApp con todos los detalles: nombre, telefono, direccion, productos y total. Tambien puedes verlos en el panel de la app."
-            />
-            <FAQItem
-              question="Puedo probar antes de pagar?"
-              answer="Si, ofrecemos un plan gratuito con 50 pedidos al mes y una prueba de 14 dias del plan Pro sin compromiso."
-            />
-            <FAQItem
-              question="Los pedidos se crean en Shopify?"
-              answer="Si, puedes activar la opcion para crear borradores de pedido automaticamente en Shopify. Asi tienes todo centralizado."
-            />
-            <FAQItem
-              question="Que pasa si cancelo?"
-              answer="Puedes cancelar en cualquier momento sin penalizacion. Tus datos se mantienen por 48 horas y luego se eliminan permanentemente."
-            />
+          <div className="mx-auto mt-16 max-w-3xl">
+            <dl className="space-y-8">
+              {faqs.map((faq) => (
+                <div key={faq.question} className="rounded-2xl bg-gray-800/50 p-6 ring-1 ring-white/10">
+                  <dt className="text-base/7 font-semibold text-white">{faq.question}</dt>
+                  <dd className="mt-2 text-base/7 text-gray-400">{faq.answer}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
         </div>
-      </section>
+      </div>
 
       {/* CTA */}
-      <section className="bg-linear-to-b from-white to-slate-50 py-24 lg:py-32">
-        <div className="mx-auto max-w-4xl px-4 text-center lg:px-8">
-          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
-            Listo para aumentar tus ventas?
-          </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-lg/8 text-slate-600">
-            Unete a cientos de tiendas que ya usan Curetfy para procesar pedidos COD de forma eficiente.
-          </p>
-          <a
-            href="https://apps.shopify.com/curetfy-cod-form"
-            className="mt-8 inline-block rounded-xl bg-linear-to-r from-violet-600 to-purple-600 px-10 py-5 text-lg font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-500/30"
-          >
-            Instalar Gratis en Shopify
-          </a>
+      <div className="bg-gray-900 py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-balance text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+              Listo para aumentar tus ventas?
+            </h2>
+            <p className="mx-auto mt-6 max-w-xl text-lg/8 text-gray-300">
+              Unete a cientos de tiendas que ya usan Curetfy para procesar pedidos COD de forma eficiente.
+            </p>
+            <div className="mt-10 flex items-center justify-center gap-x-6">
+              <a
+                href="https://apps.shopify.com/curetfy-cod-form"
+                className="rounded-md bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+              >
+                Instalar Gratis en Shopify
+              </a>
+              <a href="mailto:soporte@curetcore.com" className="text-sm/6 font-semibold text-white">
+                Contactar Soporte <span aria-hidden="true">→</span>
+              </a>
+            </div>
+          </div>
         </div>
-      </section>
+      </div>
 
       {/* Footer */}
-      <footer className="bg-slate-900 py-16 lg:py-20">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
-          <div className="grid gap-12 md:grid-cols-4">
-            <div className="md:col-span-1">
-              <span className="bg-linear-to-r from-violet-400 to-purple-400 bg-clip-text text-2xl font-extrabold text-transparent">
-                Curetfy
-              </span>
-              <p className="mt-4 text-base/7 text-slate-400">
-                La mejor solucion de Pago Contra Entrega para Shopify. Disenada para el mercado latinoamericano.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="text-sm font-bold uppercase tracking-wider text-white">Producto</h4>
-              <ul className="mt-4 space-y-3">
-                <li><a href="#features" className="text-base/7 text-slate-400 transition-colors hover:text-white">Funciones</a></li>
-                <li><a href="#pricing" className="text-base/7 text-slate-400 transition-colors hover:text-white">Precios</a></li>
-                <li><a href="#faq" className="text-base/7 text-slate-400 transition-colors hover:text-white">FAQ</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-sm font-bold uppercase tracking-wider text-white">Recursos</h4>
-              <ul className="mt-4 space-y-3">
-                <li><a href="mailto:soporte@curetcore.com" className="text-base/7 text-slate-400 transition-colors hover:text-white">Soporte</a></li>
-                <li><a href="https://wa.me/573001234567" className="text-base/7 text-slate-400 transition-colors hover:text-white">WhatsApp</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-sm font-bold uppercase tracking-wider text-white">Legal</h4>
-              <ul className="mt-4 space-y-3">
-                <li><Link to="/privacy" className="text-base/7 text-slate-400 transition-colors hover:text-white">Privacidad</Link></li>
-                <li><Link to="/terms" className="text-base/7 text-slate-400 transition-colors hover:text-white">Terminos</Link></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-slate-800 pt-8 md:flex-row">
-            <p className="text-sm/6 text-slate-500">
-              2024 CURET / Curetcore. Todos los derechos reservados.
-            </p>
-            <div className="flex gap-4">
-              <a href="https://instagram.com/curetcore" className="text-slate-400 transition-colors hover:text-white">
-                <svg className="size-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                </svg>
+      <footer className="bg-gray-900">
+        <div className="mx-auto max-w-7xl overflow-hidden px-6 py-20 sm:py-24 lg:px-8">
+          <nav aria-label="Footer" className="-mb-6 flex flex-wrap justify-center gap-x-12 gap-y-3 text-sm/6">
+            {footerNavigation.main.map((item) => (
+              <a key={item.name} href={item.href} className="text-gray-400 hover:text-white">
+                {item.name}
               </a>
-              <a href="https://twitter.com/curetcore" className="text-slate-400 transition-colors hover:text-white">
-                <svg className="size-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                </svg>
+            ))}
+            {footerNavigation.legal.map((item) => (
+              <Link key={item.name} to={item.href} className="text-gray-400 hover:text-white">
+                {item.name}
+              </Link>
+            ))}
+          </nav>
+          <div className="mt-16 flex justify-center gap-x-10">
+            {footerNavigation.social.map((item) => (
+              <a key={item.name} href={item.href} className="text-gray-400 hover:text-white">
+                <span className="sr-only">{item.name}</span>
+                <item.icon aria-hidden="true" className="size-6" />
               </a>
-            </div>
+            ))}
           </div>
+          <p className="mt-10 text-center text-sm/6 text-gray-400">
+            &copy; 2024 Curetcore. Todos los derechos reservados.
+          </p>
         </div>
       </footer>
     </div>
