@@ -1,6 +1,7 @@
 /**
  * Curetfy COD Form
- * @version 1.0.0
+ * Professional WhatsApp Order System
+ * @version 2.0.0
  */
 (function() {
   'use strict';
@@ -48,56 +49,62 @@
       formTitle: 'Completa tu pedido',
       name: 'Nombre completo',
       namePlaceholder: 'Tu nombre',
-      phone: 'Teléfono',
+      phone: 'Teléfono / WhatsApp',
       phonePlaceholder: '+1 809 555 1234',
       address: 'Dirección de entrega',
       addressPlaceholder: 'Calle, número, sector...',
       province: 'Provincia',
-      selectProvince: 'Selecciona provincia',
+      selectProvince: 'Seleccionar',
       quantity: 'Cantidad',
-      total: 'Total',
-      submit: 'Confirmar Pedido',
+      total: 'Total a pagar',
+      submit: 'Confirmar pedido',
       close: 'Cerrar',
-      successTitle: '¡Pedido Creado!',
-      successMessage: 'Tu pedido ha sido registrado. Envía el mensaje por WhatsApp para confirmarlo.',
+      successTitle: '¡Pedido registrado!',
+      successMessage: 'Haz clic para enviar tu pedido por WhatsApp',
       openWhatsapp: 'Enviar por WhatsApp',
-      errorRequired: 'Este campo es requerido',
+      errorRequired: 'Campo requerido',
       errorPhone: 'Teléfono inválido',
-      errorGeneric: 'Error al crear el pedido. Intenta de nuevo.',
-      loading: 'Procesando...'
+      errorGeneric: 'Error al procesar. Intenta de nuevo.',
+      loading: 'Procesando...',
+      items: 'productos',
+      item: 'producto'
     },
     en: {
       formTitle: 'Complete your order',
       name: 'Full name',
       namePlaceholder: 'Your name',
-      phone: 'Phone',
+      phone: 'Phone / WhatsApp',
       phonePlaceholder: '+1 809 555 1234',
       address: 'Delivery address',
-      addressPlaceholder: 'Street, number, sector...',
+      addressPlaceholder: 'Street, number, area...',
       province: 'Province',
-      selectProvince: 'Select province',
+      selectProvince: 'Select',
       quantity: 'Quantity',
       total: 'Total',
-      submit: 'Confirm Order',
+      submit: 'Confirm order',
       close: 'Close',
-      successTitle: 'Order Created!',
-      successMessage: 'Your order has been registered. Send the WhatsApp message to confirm.',
+      successTitle: 'Order registered!',
+      successMessage: 'Click to send your order via WhatsApp',
       openWhatsapp: 'Send via WhatsApp',
-      errorRequired: 'This field is required',
+      errorRequired: 'Required field',
       errorPhone: 'Invalid phone',
-      errorGeneric: 'Error creating order. Try again.',
-      loading: 'Processing...'
+      errorGeneric: 'Processing error. Try again.',
+      loading: 'Processing...',
+      items: 'items',
+      item: 'item'
     }
   };
 
   let currentModal = null;
   let texts = TEXTS.es;
 
+  // Initialize
   function init() {
     document.querySelectorAll('.curetfy-cod-container').forEach(container => {
       const btn = container.querySelector('.curetfy-cod-button');
-      if (btn && !btn.disabled) {
-        btn.addEventListener('click', () => openModal(container));
+      if (btn && !btn.dataset.curetfyInit) {
+        btn.dataset.curetfyInit = 'true';
+        btn.addEventListener('click', () => handleButtonClick(container));
       }
     });
 
@@ -107,108 +114,199 @@
     });
   }
 
-  function openModal(container) {
+  // Handle button click - check mode (product or cart)
+  async function handleButtonClick(container) {
     const data = container.dataset;
+    const mode = data.mode || 'product';
     const locale = data.locale?.startsWith('es') ? 'es' : 'en';
     texts = TEXTS[locale] || TEXTS.es;
 
-    const modal = createModal(data);
+    if (mode === 'cart') {
+      // Fetch cart items
+      try {
+        const cart = await fetchCart();
+        if (cart.items && cart.items.length > 0) {
+          openCartModal(cart, data);
+        } else {
+          // Cart empty, use product data
+          openProductModal(data);
+        }
+      } catch (err) {
+        console.error('Cart fetch error:', err);
+        openProductModal(data);
+      }
+    } else {
+      openProductModal(data);
+    }
+  }
+
+  // Fetch Shopify cart
+  async function fetchCart() {
+    const res = await fetch('/cart.js');
+    return res.json();
+  }
+
+  // Open modal for single product
+  function openProductModal(data) {
+    const items = [{
+      id: data.productId,
+      title: data.productTitle,
+      price: parseFloat(data.productPrice) || 0,
+      priceFormatted: data.productPriceFormatted,
+      image: data.productImage,
+      variantId: data.variantId,
+      quantity: 1
+    }];
+
+    openModal(items, data);
+  }
+
+  // Open modal for cart items
+  function openCartModal(cart, data) {
+    const items = cart.items.map(item => ({
+      id: item.product_id,
+      title: item.product_title,
+      price: item.price / 100,
+      priceFormatted: formatCurrency(item.price / 100, cart.currency),
+      image: item.image,
+      variantId: item.variant_id,
+      variantTitle: item.variant_title !== 'Default Title' ? item.variant_title : null,
+      quantity: item.quantity
+    }));
+
+    openModal(items, {
+      ...data,
+      currency: cart.currency,
+      totalPrice: cart.total_price / 100
+    });
+  }
+
+  // Open modal
+  function openModal(items, data) {
+    const isMultiple = items.length > 1;
+    const totalPrice = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const currency = data.currency || 'DOP';
+
+    const modal = createModal(items, {
+      shop: data.shop,
+      currency,
+      totalPrice,
+      isMultiple
+    });
+
     document.body.appendChild(modal);
     document.body.style.overflow = 'hidden';
     currentModal = modal;
 
-    setTimeout(() => modal.querySelector('#curetfy-name').focus(), 100);
+    // Focus first input
+    requestAnimationFrame(() => {
+      const firstInput = modal.querySelector('#curetfy-name');
+      if (firstInput) firstInput.focus();
+    });
   }
 
+  // Close modal
   function closeModal() {
     if (currentModal) {
-      currentModal.remove();
-      currentModal = null;
-      document.body.style.overflow = '';
+      currentModal.classList.add('curetfy-closing');
+      setTimeout(() => {
+        if (currentModal) {
+          currentModal.remove();
+          currentModal = null;
+          document.body.style.overflow = '';
+        }
+      }, 150);
     }
   }
 
-  function createModal(data) {
+  // Create modal HTML
+  function createModal(items, options) {
+    const { shop, currency, totalPrice, isMultiple } = options;
+
     const overlay = document.createElement('div');
     overlay.className = 'curetfy-modal-overlay';
+
+    const itemsHTML = isMultiple
+      ? createCartItemsHTML(items, currency)
+      : createSingleItemHTML(items[0]);
+
+    const quantitySection = !isMultiple ? `
+      <div class="curetfy-form-group curetfy-form-half">
+        <label for="curetfy-quantity">${texts.quantity}</label>
+        <div class="curetfy-quantity-wrap">
+          <button type="button" class="curetfy-qty-btn" data-action="decrease">−</button>
+          <input type="number" id="curetfy-quantity" name="quantity" min="1" max="99" value="1" readonly>
+          <button type="button" class="curetfy-qty-btn" data-action="increase">+</button>
+        </div>
+      </div>
+    ` : '';
+
     overlay.innerHTML = `
       <div class="curetfy-modal">
         <div class="curetfy-modal-header">
           <h2 class="curetfy-modal-title">${texts.formTitle}</h2>
           <button type="button" class="curetfy-modal-close" aria-label="${texts.close}">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
             </svg>
           </button>
         </div>
 
-        <div class="curetfy-product-summary">
-          <img class="curetfy-product-image" src="${data.productImage}" alt="${data.productTitle}">
-          <div class="curetfy-product-info">
-            <p class="curetfy-product-title">${data.productTitle}</p>
-            <p class="curetfy-product-price">${data.productPriceFormatted}</p>
-          </div>
-        </div>
+        <div class="curetfy-modal-content">
+          ${itemsHTML}
 
-        <form class="curetfy-form" id="curetfy-form">
-          <div class="curetfy-form-group">
-            <label for="curetfy-name">${texts.name}</label>
-            <input type="text" id="curetfy-name" name="name" required autocomplete="name" placeholder="${texts.namePlaceholder}">
-            <span class="curetfy-error"></span>
-          </div>
-
-          <div class="curetfy-form-group">
-            <label for="curetfy-phone">${texts.phone}</label>
-            <input type="tel" id="curetfy-phone" name="phone" required autocomplete="tel" placeholder="${texts.phonePlaceholder}">
-            <span class="curetfy-error"></span>
-          </div>
-
-          <div class="curetfy-form-group">
-            <label for="curetfy-address">${texts.address}</label>
-            <textarea id="curetfy-address" name="address" required autocomplete="street-address" placeholder="${texts.addressPlaceholder}" rows="2"></textarea>
-            <span class="curetfy-error"></span>
-          </div>
-
-          <div class="curetfy-form-row">
-            <div class="curetfy-form-group curetfy-form-half">
-              <label for="curetfy-province">${texts.province}</label>
-              <select id="curetfy-province" name="province" required>
-                <option value="">${texts.selectProvince}</option>
-                ${(PROVINCES.DO || []).map(p => `<option value="${p.name}">${p.name}</option>`).join('')}
-              </select>
+          <form class="curetfy-form" id="curetfy-form">
+            <div class="curetfy-form-group">
+              <label for="curetfy-name">${texts.name}</label>
+              <input type="text" id="curetfy-name" name="name" required autocomplete="name" placeholder="${texts.namePlaceholder}">
               <span class="curetfy-error"></span>
             </div>
 
-            <div class="curetfy-form-group curetfy-form-half">
-              <label for="curetfy-quantity">${texts.quantity}</label>
-              <div class="curetfy-quantity-wrap">
-                <button type="button" class="curetfy-qty-btn" data-action="decrease">−</button>
-                <input type="number" id="curetfy-quantity" name="quantity" min="1" max="99" value="1" readonly>
-                <button type="button" class="curetfy-qty-btn" data-action="increase">+</button>
-              </div>
+            <div class="curetfy-form-group">
+              <label for="curetfy-phone">${texts.phone}</label>
+              <input type="tel" id="curetfy-phone" name="phone" required autocomplete="tel" placeholder="${texts.phonePlaceholder}">
+              <span class="curetfy-error"></span>
             </div>
-          </div>
 
-          <div class="curetfy-total-row">
-            <span>${texts.total}:</span>
-            <span class="curetfy-total-amount">${data.productPriceFormatted}</span>
-          </div>
+            <div class="curetfy-form-group">
+              <label for="curetfy-address">${texts.address}</label>
+              <textarea id="curetfy-address" name="address" required autocomplete="street-address" placeholder="${texts.addressPlaceholder}" rows="2"></textarea>
+              <span class="curetfy-error"></span>
+            </div>
 
-          <button type="submit" class="curetfy-submit-btn">
-            <span class="curetfy-submit-text">${texts.submit}</span>
-            <span class="curetfy-submit-loading" style="display:none;">
-              <svg class="curetfy-spinner" viewBox="0 0 24 24" width="20" height="20">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4 31.4"/>
-              </svg>
-              ${texts.loading}
-            </span>
-          </button>
-        </form>
+            <div class="curetfy-form-row">
+              <div class="curetfy-form-group ${isMultiple ? '' : 'curetfy-form-half'}">
+                <label for="curetfy-province">${texts.province}</label>
+                <select id="curetfy-province" name="province" required>
+                  <option value="">${texts.selectProvince}</option>
+                  ${(PROVINCES.DO || []).map(p => `<option value="${p.name}">${p.name}</option>`).join('')}
+                </select>
+                <span class="curetfy-error"></span>
+              </div>
+              ${quantitySection}
+            </div>
+
+            <div class="curetfy-total-row">
+              <span>${texts.total}</span>
+              <span class="curetfy-total-amount">${formatCurrency(totalPrice, currency)}</span>
+            </div>
+
+            <button type="submit" class="curetfy-submit-btn">
+              <span class="curetfy-submit-text">${texts.submit}</span>
+              <span class="curetfy-submit-loading" style="display:none;">
+                <svg class="curetfy-spinner" viewBox="0 0 24 24" width="18" height="18">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" fill="none" stroke-dasharray="31.4 31.4" stroke-linecap="round"/>
+                </svg>
+                ${texts.loading}
+              </span>
+            </button>
+          </form>
+        </div>
 
         <div class="curetfy-success" style="display:none;">
-          <svg class="curetfy-success-icon" viewBox="0 0 24 24" width="64" height="64">
-            <circle cx="12" cy="12" r="11" fill="#25D366"/>
-            <path d="M7 12l3 3 7-7" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg class="curetfy-success-icon" viewBox="0 0 64 64" width="64" height="64">
+            <circle cx="32" cy="32" r="30" fill="#25D366"/>
+            <path d="M20 32l8 8 16-16" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           <h3>${texts.successTitle}</h3>
           <p>${texts.successMessage}</p>
@@ -223,44 +321,94 @@
     `;
 
     // Store data
-    overlay.dataset.shop = data.shop;
-    overlay.dataset.productId = data.productId;
-    overlay.dataset.productTitle = data.productTitle;
-    overlay.dataset.productPrice = data.productPrice;
-    overlay.dataset.variantId = data.variantId;
-    overlay.dataset.currency = data.currency;
-    overlay.dataset.productPriceFormatted = data.productPriceFormatted;
+    overlay.dataset.shop = shop;
+    overlay.dataset.currency = currency;
+    overlay.dataset.items = JSON.stringify(items);
+    overlay.dataset.totalPrice = totalPrice;
+    overlay.dataset.isMultiple = isMultiple;
 
-    // Quantity controls
-    const qtyInput = overlay.querySelector('#curetfy-quantity');
-    overlay.querySelectorAll('.curetfy-qty-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const current = parseInt(qtyInput.value) || 1;
-        if (btn.dataset.action === 'increase' && current < 99) {
-          qtyInput.value = current + 1;
-        } else if (btn.dataset.action === 'decrease' && current > 1) {
-          qtyInput.value = current - 1;
-        }
-        updateTotal(overlay);
-      });
-    });
-
-    // Form submit
-    const form = overlay.querySelector('#curetfy-form');
-    form.addEventListener('submit', e => handleSubmit(e, overlay));
+    // Setup event listeners
+    setupModalEvents(overlay, items, currency);
 
     return overlay;
   }
 
-  function updateTotal(modal) {
-    const price = parseFloat(modal.dataset.productPrice) || 0;
-    const quantity = parseInt(modal.querySelector('#curetfy-quantity').value) || 1;
-    const currency = modal.dataset.currency || 'DOP';
-    const total = price * quantity;
-
-    modal.querySelector('.curetfy-total-amount').textContent = formatCurrency(total, currency);
+  // Create single item HTML
+  function createSingleItemHTML(item) {
+    return `
+      <div class="curetfy-product-summary">
+        <img class="curetfy-product-image" src="${item.image || ''}" alt="${item.title}" loading="lazy">
+        <div class="curetfy-product-info">
+          <p class="curetfy-product-title">${item.title}</p>
+          <p class="curetfy-product-price">${item.priceFormatted}</p>
+        </div>
+      </div>
+    `;
   }
 
+  // Create cart items HTML
+  function createCartItemsHTML(items, currency) {
+    const count = items.reduce((sum, item) => sum + item.quantity, 0);
+    const label = count === 1 ? texts.item : texts.items;
+
+    return `
+      <div class="curetfy-cart-items">
+        ${items.map(item => `
+          <div class="curetfy-cart-item">
+            <img class="curetfy-cart-item-image" src="${item.image || ''}" alt="${item.title}" loading="lazy">
+            <div class="curetfy-cart-item-info">
+              <p class="curetfy-cart-item-title">${item.title}</p>
+              <p class="curetfy-cart-item-details">
+                ${item.variantTitle ? `${item.variantTitle} · ` : ''}${item.quantity}x ${item.priceFormatted}
+              </p>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  // Setup modal events
+  function setupModalEvents(modal, items, currency) {
+    const isMultiple = items.length > 1;
+
+    // Quantity controls (only for single product)
+    if (!isMultiple) {
+      const qtyInput = modal.querySelector('#curetfy-quantity');
+      if (qtyInput) {
+        modal.querySelectorAll('.curetfy-qty-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const current = parseInt(qtyInput.value) || 1;
+            if (btn.dataset.action === 'increase' && current < 99) {
+              qtyInput.value = current + 1;
+            } else if (btn.dataset.action === 'decrease' && current > 1) {
+              qtyInput.value = current - 1;
+            }
+            updateTotal(modal, items[0].price, currency);
+          });
+        });
+      }
+    }
+
+    // Form submit
+    const form = modal.querySelector('#curetfy-form');
+    if (form) {
+      form.addEventListener('submit', e => handleSubmit(e, modal));
+    }
+  }
+
+  // Update total
+  function updateTotal(modal, unitPrice, currency) {
+    const quantity = parseInt(modal.querySelector('#curetfy-quantity')?.value) || 1;
+    const total = unitPrice * quantity;
+    const totalEl = modal.querySelector('.curetfy-total-amount');
+    if (totalEl) {
+      totalEl.textContent = formatCurrency(total, currency);
+    }
+    modal.dataset.totalPrice = total;
+  }
+
+  // Format currency
   function formatCurrency(amount, currency) {
     try {
       return new Intl.NumberFormat('es-DO', { style: 'currency', currency }).format(amount);
@@ -269,6 +417,7 @@
     }
   }
 
+  // Handle form submit
   async function handleSubmit(e, modal) {
     e.preventDefault();
 
@@ -312,15 +461,21 @@
     submitText.style.display = 'none';
     submitLoading.style.display = 'inline-flex';
 
-    const quantity = parseInt(form.querySelector('#curetfy-quantity').value) || 1;
+    const items = JSON.parse(modal.dataset.items || '[]');
+    const isMultiple = modal.dataset.isMultiple === 'true';
+    const quantity = isMultiple ? null : parseInt(form.querySelector('#curetfy-quantity')?.value) || 1;
+
     const payload = {
       shop: modal.dataset.shop,
-      productId: modal.dataset.productId,
-      productTitle: modal.dataset.productTitle,
-      variantId: modal.dataset.variantId,
-      quantity,
-      price: modal.dataset.productPrice,
+      items: items.map(item => ({
+        productId: item.id,
+        productTitle: item.title,
+        variantId: item.variantId,
+        quantity: isMultiple ? item.quantity : quantity,
+        price: item.price
+      })),
       currency: modal.dataset.currency,
+      total: parseFloat(modal.dataset.totalPrice),
       customer: {
         name: name.value.trim(),
         phone: phone.value.trim(),
@@ -340,39 +495,53 @@
       const result = await res.json();
 
       if (result.success) {
-        form.style.display = 'none';
+        // Hide form, show success
+        modal.querySelector('.curetfy-modal-content').style.display = 'none';
         const success = modal.querySelector('.curetfy-success');
         const waLink = success.querySelector('.curetfy-whatsapp-link');
         waLink.href = result.data.whatsappLink;
         success.style.display = 'block';
 
-        setTimeout(() => window.open(result.data.whatsappLink, '_blank'), 800);
+        // Auto open WhatsApp after brief delay
+        setTimeout(() => window.open(result.data.whatsappLink, '_blank'), 600);
       } else {
-        alert(result.error || texts.errorGeneric);
-        submitBtn.disabled = false;
-        submitText.style.display = 'inline';
-        submitLoading.style.display = 'none';
+        showError(result.error || texts.errorGeneric);
+        resetSubmitButton();
       }
     } catch (err) {
       console.error('Curetfy error:', err);
-      alert(texts.errorGeneric);
+      showError(texts.errorGeneric);
+      resetSubmitButton();
+    }
+
+    function resetSubmitButton() {
       submitBtn.disabled = false;
       submitText.style.display = 'inline';
       submitLoading.style.display = 'none';
     }
+
+    function showError(msg) {
+      alert(msg);
+    }
   }
 
+  // Show field error
   function showFieldError(input, message) {
     const group = input.closest('.curetfy-form-group');
-    group.classList.add('curetfy-form-group--error');
-    group.querySelector('.curetfy-error').textContent = message;
+    if (group) {
+      group.classList.add('curetfy-form-group--error');
+      const errorEl = group.querySelector('.curetfy-error');
+      if (errorEl) errorEl.textContent = message;
+    }
   }
 
+  // Validate phone
   function isValidPhone(phone) {
     const cleaned = phone.replace(/\D/g, '');
     return cleaned.length >= 10 && cleaned.length <= 15;
   }
 
+  // Handle global clicks
   function handleGlobalClick(e) {
     if (e.target.closest('.curetfy-modal-close')) {
       closeModal();
@@ -381,10 +550,21 @@
     }
   }
 
-  // Init
+  // Initialize on load
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
+
+  // Re-init on dynamic content (for SPAs)
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      if (mutation.addedNodes.length > 0) {
+        init();
+      }
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
 })();

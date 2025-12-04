@@ -1,17 +1,18 @@
 api_version = "2024-10"
 
 [[extensions]]
-uid = "44936ccc-b956-c576-fc37-de61fd1c94fc848ecf01"
 type = "theme"
 name = "Curetfy COD Form"
 handle = "curetfy-cod-form"
 
+  # Manual placement block
   [[extensions.blocks]]
-  type = "@app"
+  type = "product"
   name = "COD Buy Button"
   template = "blocks/cod-button.liquid"
 
+  # App Embed for auto-installation
   [[extensions.blocks]]
-  type = "product"
-  name = "COD Buy Button (Product)"
-  template = "blocks/cod-button.liquid"
+  type = "@app"
+  name = "COD Auto Button"
+  template = "blocks/auto-button.liquid"

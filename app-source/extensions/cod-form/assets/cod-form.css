@@ -1,146 +1,321 @@
 /**
- * Curetfy COD Form Styles
- * @version 1.0.0
+ * Curetfy COD Form - Professional Styles
+ * Version: 2.0.0
+ * Design: Shopify-style clean and modern
  */
 
-/* Button */
+/* ============================================
+   CSS Variables
+   ============================================ */
+:root {
+  --curetfy-primary: #000;
+  --curetfy-text: #1a1a1a;
+  --curetfy-text-secondary: #6b7177;
+  --curetfy-border: #e1e3e5;
+  --curetfy-bg: #fff;
+  --curetfy-bg-secondary: #fafbfb;
+  --curetfy-success: #008060;
+  --curetfy-error: #d72c0d;
+  --curetfy-focus: rgba(0, 0, 0, 0.15);
+  --curetfy-radius: 8px;
+  --curetfy-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+  --curetfy-shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* ============================================
+   Button Base
+   ============================================ */
+.curetfy-cod-container {
+  width: 100%;
+}
+
 .curetfy-cod-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   border: none;
-  font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.1s;
-  font-family: inherit;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.4;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 
 .curetfy-cod-button:hover:not(:disabled) {
-  opacity: 0.9;
+  opacity: 0.92;
+  transform: translateY(-1px);
 }
 
 .curetfy-cod-button:active:not(:disabled) {
-  transform: scale(0.98);
+  transform: translateY(0);
+  opacity: 0.88;
 }
 
 .curetfy-cod-button:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
+  transform: none;
 }
 
-.curetfy-whatsapp-icon {
+.curetfy-cod-button:focus-visible {
+  outline: 2px solid var(--curetfy-primary);
+  outline-offset: 2px;
+}
+
+.curetfy-btn-icon {
   flex-shrink: 0;
 }
 
-/* Modal Overlay */
+.curetfy-btn-text {
+  white-space: nowrap;
+}
+
+/* ============================================
+   Button Animations
+   ============================================ */
+
+/* Pulse Animation */
+.curetfy-animate-pulse {
+  animation: curetfy-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes curetfy-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+/* Glow Animation */
+.curetfy-animate-glow {
+  animation: curetfy-glow 2s ease-in-out infinite;
+}
+
+@keyframes curetfy-glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(0, 0, 0, 0.2); }
+  50% { box-shadow: 0 0 20px rgba(0, 0, 0, 0.4), 0 0 30px rgba(0, 0, 0, 0.2); }
+}
+
+/* Shake Animation */
+.curetfy-animate-shake {
+  animation: curetfy-shake 4s ease-in-out infinite;
+}
+
+@keyframes curetfy-shake {
+  0%, 85%, 100% { transform: translateX(0); }
+  87% { transform: translateX(-4px); }
+  89% { transform: translateX(4px); }
+  91% { transform: translateX(-4px); }
+  93% { transform: translateX(4px); }
+  95% { transform: translateX(-2px); }
+  97% { transform: translateX(2px); }
+}
+
+/* Bounce Animation */
+.curetfy-animate-bounce {
+  animation: curetfy-bounce 2s ease infinite;
+}
+
+@keyframes curetfy-bounce {
+  0%, 100% { transform: translateY(0); }
+  10% { transform: translateY(-6px); }
+  20% { transform: translateY(0); }
+  30% { transform: translateY(-4px); }
+  40% { transform: translateY(0); }
+}
+
+/* ============================================
+   Modal Overlay
+   ============================================ */
 .curetfy-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
   z-index: 999999;
-  animation: curetfy-fade-in 0.2s ease;
+  animation: curetfy-overlay-in 0.15s ease;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
 
-@keyframes curetfy-fade-in {
+@keyframes curetfy-overlay-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-/* Modal */
+/* ============================================
+   Modal
+   ============================================ */
 .curetfy-modal {
-  background: #fff;
+  background: var(--curetfy-bg);
   border-radius: 12px;
   width: 100%;
-  max-width: 420px;
+  max-width: 480px;
   max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: curetfy-slide-up 0.3s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: curetfy-modal-in 0.2s ease;
 }
 
-@keyframes curetfy-slide-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes curetfy-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
-/* Header */
+/* ============================================
+   Modal Header
+   ============================================ */
 .curetfy-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: 1px solid var(--curetfy-border);
+  background: var(--curetfy-bg);
 }
 
 .curetfy-modal-title {
   margin: 0;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
-  color: #111;
+  color: var(--curetfy-text);
+  letter-spacing: -0.01em;
 }
 
 .curetfy-modal-close {
-  background: none;
+  background: transparent;
   border: none;
   padding: 8px;
+  margin: -8px;
   cursor: pointer;
-  color: #666;
-  border-radius: 50%;
-  transition: background 0.2s;
+  color: var(--curetfy-text-secondary);
+  border-radius: 8px;
+  transition: all 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .curetfy-modal-close:hover {
-  background: #f5f5f5;
+  background: var(--curetfy-bg-secondary);
+  color: var(--curetfy-text);
 }
 
-/* Product Summary */
+/* ============================================
+   Modal Content
+   ============================================ */
+.curetfy-modal-content {
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* ============================================
+   Product Summary
+   ============================================ */
 .curetfy-product-summary {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   padding: 16px 20px;
-  background: #f9f9f9;
-  border-bottom: 1px solid #e5e5e5;
+  background: var(--curetfy-bg-secondary);
+  border-bottom: 1px solid var(--curetfy-border);
 }
 
 .curetfy-product-image {
-  width: 60px;
-  height: 60px;
+  width: 64px;
+  height: 64px;
   object-fit: cover;
   border-radius: 8px;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--curetfy-border);
+  background: var(--curetfy-bg);
 }
 
 .curetfy-product-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .curetfy-product-title {
   margin: 0 0 4px;
   font-size: 14px;
   font-weight: 500;
-  color: #111;
+  color: var(--curetfy-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.curetfy-product-price {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--curetfy-text);
+}
+
+/* Multiple items in cart */
+.curetfy-cart-items {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.curetfy-cart-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--curetfy-border);
+}
+
+.curetfy-cart-item:last-child {
+  border-bottom: none;
+}
+
+.curetfy-cart-item-image {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--curetfy-border);
+}
+
+.curetfy-cart-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.curetfy-cart-item-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--curetfy-text);
+  margin: 0 0 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.curetfy-product-price {
+.curetfy-cart-item-details {
+  font-size: 12px;
+  color: var(--curetfy-text-secondary);
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #25D366;
 }
 
-/* Form */
+/* ============================================
+   Form
+   ============================================ */
 .curetfy-form {
   padding: 20px;
 }
@@ -149,58 +324,77 @@
   margin-bottom: 16px;
 }
 
+.curetfy-form-group:last-of-type {
+  margin-bottom: 20px;
+}
+
 .curetfy-form-group label {
   display: block;
   margin-bottom: 6px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  color: #333;
+  color: var(--curetfy-text);
 }
 
 .curetfy-form-group input,
 .curetfy-form-group select,
 .curetfy-form-group textarea {
   width: 100%;
-  padding: 12px;
-  font-size: 16px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  padding: 10px 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  border: 1px solid var(--curetfy-border);
+  border-radius: var(--curetfy-radius);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
   font-family: inherit;
   box-sizing: border-box;
+  background: var(--curetfy-bg);
+  color: var(--curetfy-text);
+}
+
+.curetfy-form-group input::placeholder,
+.curetfy-form-group textarea::placeholder {
+  color: var(--curetfy-text-secondary);
 }
 
 .curetfy-form-group input:focus,
 .curetfy-form-group select:focus,
 .curetfy-form-group textarea:focus {
   outline: none;
-  border-color: #25D366;
-  box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
+  border-color: var(--curetfy-primary);
+  box-shadow: 0 0 0 2px var(--curetfy-focus);
 }
 
 .curetfy-form-group textarea {
   resize: vertical;
-  min-height: 60px;
+  min-height: 72px;
 }
 
 .curetfy-form-group select {
-  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right 12px center;
+  background: var(--curetfy-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7177' d='M6 8L1.5 3.5h9z'/%3E%3C/svg%3E") no-repeat right 12px center;
   padding-right: 36px;
   appearance: none;
+  cursor: pointer;
 }
 
-/* Error */
+/* Error states */
 .curetfy-form-group--error input,
 .curetfy-form-group--error select,
 .curetfy-form-group--error textarea {
-  border-color: #dc3545;
+  border-color: var(--curetfy-error);
+}
+
+.curetfy-form-group--error input:focus,
+.curetfy-form-group--error select:focus,
+.curetfy-form-group--error textarea:focus {
+  box-shadow: 0 0 0 2px rgba(215, 44, 13, 0.15);
 }
 
 .curetfy-error {
   display: block;
   margin-top: 4px;
   font-size: 12px;
-  color: #dc3545;
+  color: var(--curetfy-error);
   min-height: 16px;
 }
 
@@ -212,42 +406,51 @@
 
 .curetfy-form-half {
   flex: 1;
+  min-width: 0;
 }
 
-/* Quantity */
+/* ============================================
+   Quantity Control
+   ============================================ */
 .curetfy-quantity-wrap {
   display: flex;
-  align-items: center;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  align-items: stretch;
+  border: 1px solid var(--curetfy-border);
+  border-radius: var(--curetfy-radius);
   overflow: hidden;
 }
 
 .curetfy-qty-btn {
   width: 40px;
-  height: 44px;
-  background: #f5f5f5;
+  background: var(--curetfy-bg-secondary);
   border: none;
   font-size: 18px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--curetfy-text);
+  user-select: none;
 }
 
 .curetfy-qty-btn:hover {
-  background: #e5e5e5;
+  background: var(--curetfy-border);
+}
+
+.curetfy-qty-btn:active {
+  background: #d4d6d8;
 }
 
 .curetfy-quantity-wrap input {
   flex: 1;
   text-align: center;
   border: none;
-  border-left: 1px solid #ddd;
-  border-right: 1px solid #ddd;
+  border-left: 1px solid var(--curetfy-border);
+  border-right: 1px solid var(--curetfy-border);
   border-radius: 0;
-  padding: 12px 8px;
+  padding: 10px 8px;
+  font-weight: 500;
   -moz-appearance: textfield;
 }
 
@@ -257,46 +460,60 @@
   margin: 0;
 }
 
-/* Total */
+.curetfy-quantity-wrap input:focus {
+  box-shadow: none;
+}
+
+/* ============================================
+   Total Row
+   ============================================ */
 .curetfy-total-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 16px 0;
-  margin-bottom: 16px;
-  border-top: 1px solid #e5e5e5;
-  font-size: 18px;
+  margin-bottom: 4px;
+  border-top: 1px solid var(--curetfy-border);
+  font-size: 15px;
   font-weight: 600;
+  color: var(--curetfy-text);
 }
 
 .curetfy-total-amount {
-  color: #25D366;
+  font-size: 17px;
 }
 
-/* Submit */
+/* ============================================
+   Submit Button
+   ============================================ */
 .curetfy-submit-btn {
   width: 100%;
-  padding: 16px;
-  font-size: 16px;
+  padding: 14px 20px;
+  font-size: 15px;
   font-weight: 600;
   color: #fff;
-  background: #25D366;
+  background: var(--curetfy-primary);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--curetfy-radius);
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: all 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  font-family: inherit;
 }
 
 .curetfy-submit-btn:hover:not(:disabled) {
   opacity: 0.9;
 }
 
+.curetfy-submit-btn:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
 .curetfy-submit-btn:disabled {
-  opacity: 0.7;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -307,7 +524,7 @@
 }
 
 .curetfy-spinner {
-  animation: curetfy-spin 1s linear infinite;
+  animation: curetfy-spin 0.8s linear infinite;
 }
 
 @keyframes curetfy-spin {
@@ -315,9 +532,11 @@
   to { transform: rotate(360deg); }
 }
 
-/* Success */
+/* ============================================
+   Success State
+   ============================================ */
 .curetfy-success {
-  padding: 40px 20px;
+  padding: 48px 24px;
   text-align: center;
 }
 
@@ -327,45 +546,68 @@
 
 .curetfy-success h3 {
   margin: 0 0 8px;
-  font-size: 20px;
-  color: #111;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--curetfy-text);
 }
 
 .curetfy-success p {
-  margin: 0 0 20px;
-  color: #666;
+  margin: 0 0 24px;
+  color: var(--curetfy-text-secondary);
   font-size: 14px;
+  line-height: 1.5;
 }
 
 .curetfy-whatsapp-link {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 14px 28px;
+  padding: 12px 24px;
   background: #25D366;
   color: #fff;
   text-decoration: none;
-  border-radius: 8px;
+  border-radius: var(--curetfy-radius);
   font-weight: 600;
-  font-size: 16px;
-  transition: opacity 0.2s;
+  font-size: 15px;
+  transition: all 0.15s ease;
 }
 
 .curetfy-whatsapp-link:hover {
   opacity: 0.9;
   color: #fff;
+  text-decoration: none;
 }
 
-/* Responsive */
-@media (max-width: 480px) {
+/* ============================================
+   Responsive
+   ============================================ */
+@media (max-width: 540px) {
+  .curetfy-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
   .curetfy-modal {
-    max-height: 100vh;
-    height: 100%;
-    border-radius: 0;
+    max-height: 95vh;
+    border-radius: 16px 16px 0 0;
+    animation: curetfy-modal-slide-up 0.25s ease;
+  }
+
+  @keyframes curetfy-modal-slide-up {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
   }
 
   .curetfy-form-row {
     flex-direction: column;
     gap: 16px;
   }
+}
+
+/* ============================================
+   Auto-install positioning
+   ============================================ */
+.curetfy-auto-installed {
+  margin-top: var(--curetfy-auto-margin-top, 0);
+  margin-bottom: var(--curetfy-auto-margin-bottom, 16px);
 }
