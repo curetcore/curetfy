@@ -5,13 +5,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
   const hostname = url.hostname;
 
-  // Show landing page for curetfy.curetcore.com subdomain
-  if (hostname === "curetfy.curetcore.com" || hostname === "localhost") {
-    // Check if it's a Shopify OAuth request (has shop parameter)
-    const hasShopParam = url.searchParams.has("shop");
-    if (!hasShopParam) {
-      return redirect("/landing");
-    }
+  // Show app landing page if no shop parameter (public access)
+  const hasShopParam = url.searchParams.has("shop");
+  if (!hasShopParam && !url.pathname.startsWith("/app")) {
+    return redirect("/curetfy");
   }
 
   // Preserve query parameters for Shopify OAuth
