@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData, useSubmit, useNavigation } from "@remix-run/react";
@@ -23,6 +23,8 @@ import {
   ResourceItem,
   ResourceList,
   ButtonGroup,
+  Collapsible,
+  Tooltip,
 } from "@shopify/polaris";
 import {
   PersonIcon,
@@ -45,10 +47,47 @@ import {
   ChevronUpIcon,
   ChevronDownIcon,
   AlertCircleIcon,
+  DragHandleIcon,
+  UndoIcon,
+  RedoIcon,
+  ChevronRightIcon,
 } from "@shopify/polaris-icons";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
+
+// Category colors for form fields
+const CATEGORY_COLORS = {
+  essential: { bg: "#f0fdf4", border: "#22c55e", badge: "success" as const },
+  custom: { bg: "#eff6ff", border: "#3b82f6", badge: "info" as const },
+  decorative: { bg: "#faf5ff", border: "#a855f7", badge: "attention" as const },
+};
+
+// Field category mapping
+const getFieldCategory = (type: string): "essential" | "custom" | "decorative" => {
+  const essentialFields = ["name", "phone", "email", "address", "city", "province", "postalCode", "notes", "quantity"];
+  const decorativeFields = ["heading", "image", "html", "link_button"];
+  if (essentialFields.includes(type)) return "essential";
+  if (decorativeFields.includes(type)) return "decorative";
+  return "custom";
+};
 
 // Default provinces by country
 const PROVINCES_BY_COUNTRY: Record<string, { value: string; label: string }[]> = {
@@ -304,6 +343,266 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   return json({ success: true });
 };
+
+// ============================================
+// FORM BUILDER COMPONENTS
+// ============================================
+
+// Field type configuration
+const FIELD_TYPES: Record<string, { label: string; icon: any; maxCount: number }> = {
+  // Essential COD fields
+  name: { label: "Nombre", icon: PersonIcon, maxCount: 1 },
+  phone: { label: "Teléfono", icon: PhoneIcon, maxCount: 1 },
+  email: { label: "Email", icon: EmailIcon, maxCount: 1 },
+  address: { label: "Dirección", icon: LocationIcon, maxCount: 1 },
+  city: { label: "Ciudad", icon: GlobeIcon, maxCount: 1 },
+  province: { label: "Provincia", icon: GlobeIcon, maxCount: 1 },
+  postalCode: { label: "Código postal", icon: LocationIcon, maxCount: 1 },
+  notes: { label: "Notas", icon: NoteIcon, maxCount: 1 },
+  quantity: { label: "Cantidad", icon: HashtagIcon, maxCount: 1 },
+  // Custom input fields
+  text: { label: "Texto", icon: TextIcon, maxCount: 99 },
+  textarea: { label: "Área de texto", icon: TextAlignLeftIcon, maxCount: 99 },
+  select: { label: "Desplegable", icon: ListBulletedIcon, maxCount: 99 },
+  radio: { label: "Opción única", icon: CheckIcon, maxCount: 99 },
+  checkbox: { label: "Casilla", icon: CheckIcon, maxCount: 99 },
+  number: { label: "Número", icon: HashtagIcon, maxCount: 99 },
+  date: { label: "Fecha", icon: CalendarIcon, maxCount: 99 },
+  // Decorative elements
+  heading: { label: "Título", icon: TextIcon, maxCount: 99 },
+  image: { label: "Imagen", icon: ImageIcon, maxCount: 99 },
+  html: { label: "HTML", icon: CodeIcon, maxCount: 99 },
+  link_button: { label: "Botón", icon: LinkIcon, maxCount: 99 },
+};
+
+// Sortable Field Card Component
+interface SortableFieldCardProps {
+  element: any;
+  index: number;
+  isExpanded: boolean;
+  onToggle: () => void;
+  onUpdate: (updates: any) => void;
+  onRemove: () => void;
+}
+
+function SortableFieldCard({ element, index, isExpanded, onToggle, onUpdate, onRemove }: SortableFieldCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: element.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 1,
+  };
+
+  const config = FIELD_TYPES[element.type] || { label: element.type, icon: TextIcon };
+  const category = getFieldCategory(element.type);
+  const colors = CATEGORY_COLORS[category];
+  const isDecorative = category === "decorative";
+
+  const categoryLabels = {
+    essential: "Esencial",
+    custom: "Personalizado",
+    decorative: "Decorativo",
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <div style={{
+        borderRadius: "12px",
+        border: `1px solid ${isDragging ? colors.border : "#e3e3e3"}`,
+        borderLeft: `4px solid ${colors.border}`,
+        background: isDragging ? colors.bg : "#ffffff",
+        overflow: "hidden",
+        transition: "all 0.2s ease",
+        boxShadow: isDragging ? "0 8px 24px rgba(0,0,0,0.15)" : "0 1px 3px rgba(0,0,0,0.08)",
+      }}>
+        {/* Header - Always visible */}
+        <div
+          style={{
+            padding: "12px 16px",
+            cursor: "pointer",
+            background: isExpanded ? colors.bg : "transparent",
+            transition: "background 0.2s ease",
+          }}
+          onClick={onToggle}
+        >
+          <InlineStack align="space-between" blockAlign="center">
+            <InlineStack gap="300" blockAlign="center">
+              {/* Drag Handle */}
+              <div
+                {...attributes}
+                {...listeners}
+                style={{
+                  cursor: "grab",
+                  padding: "4px",
+                  borderRadius: "4px",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Icon source={DragHandleIcon} tone="subdued" />
+              </div>
+
+              {/* Index */}
+              <div style={{
+                width: "24px",
+                height: "24px",
+                borderRadius: "6px",
+                background: colors.bg,
+                border: `1px solid ${colors.border}`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "12px",
+                fontWeight: "600",
+                color: colors.border,
+              }}>
+                {index + 1}
+              </div>
+
+              {/* Icon & Label */}
+              <Icon source={config.icon} tone="base" />
+              <BlockStack gap="0">
+                <Text as="span" variant="bodyMd" fontWeight="semibold">
+                  {element.label || config.label}
+                </Text>
+                <InlineStack gap="100">
+                  <Text as="span" variant="bodySm" tone="subdued">{config.label}</Text>
+                  {element.required && <Badge tone="critical" size="small">Requerido</Badge>}
+                </InlineStack>
+              </BlockStack>
+            </InlineStack>
+
+            <InlineStack gap="200" blockAlign="center">
+              <Badge tone={colors.badge} size="small">{categoryLabels[category]}</Badge>
+              <div style={{
+                transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
+                transition: "transform 0.2s ease",
+              }}>
+                <Icon source={ChevronRightIcon} tone="subdued" />
+              </div>
+            </InlineStack>
+          </InlineStack>
+        </div>
+
+        {/* Expandable Content */}
+        <Collapsible open={isExpanded} id={`field-${element.id}`}>
+          <div style={{
+            padding: "0 16px 16px 16px",
+            borderTop: `1px solid ${colors.border}20`,
+          }}>
+            <BlockStack gap="300">
+              {/* Label Field */}
+              {element.type !== "html" && (
+                <TextField
+                  label={element.type === "heading" ? "Texto" : "Etiqueta"}
+                  value={element.label || ""}
+                  onChange={(value) => onUpdate({ label: value })}
+                  autoComplete="off"
+                  size="slim"
+                />
+              )}
+
+              {/* Placeholder Field */}
+              {["text", "textarea", "number", "name", "phone", "email", "address", "city", "postalCode", "notes"].includes(element.type) && (
+                <TextField
+                  label="Placeholder"
+                  value={element.placeholder || ""}
+                  onChange={(value) => onUpdate({ placeholder: value })}
+                  autoComplete="off"
+                  size="slim"
+                />
+              )}
+
+              {/* Options for select/radio */}
+              {["select", "radio"].includes(element.type) && (
+                <TextField
+                  label="Opciones"
+                  value={(element.options || []).join(", ")}
+                  onChange={(value) => onUpdate({
+                    options: value.split(",").map((o: string) => o.trim()).filter(Boolean)
+                  })}
+                  autoComplete="off"
+                  size="slim"
+                  helpText="Separadas por coma: Opción 1, Opción 2"
+                />
+              )}
+
+              {/* HTML content */}
+              {element.type === "html" && (
+                <TextField
+                  label="Código HTML"
+                  value={element.content || ""}
+                  onChange={(value) => onUpdate({ content: value })}
+                  multiline={3}
+                  autoComplete="off"
+                  monospaced
+                />
+              )}
+
+              {/* Image URL */}
+              {element.type === "image" && (
+                <TextField
+                  label="URL de imagen"
+                  value={element.imageUrl || ""}
+                  onChange={(value) => onUpdate({ imageUrl: value })}
+                  autoComplete="off"
+                  size="slim"
+                />
+              )}
+
+              {/* Link Button URL */}
+              {element.type === "link_button" && (
+                <TextField
+                  label="URL del enlace"
+                  value={element.url || ""}
+                  onChange={(value) => onUpdate({ url: value })}
+                  autoComplete="off"
+                  size="slim"
+                />
+              )}
+
+              {/* Actions Row */}
+              <InlineStack align="space-between" blockAlign="center">
+                {/* Required Checkbox */}
+                {!isDecorative && (
+                  <Checkbox
+                    label="Campo obligatorio"
+                    checked={element.required || false}
+                    onChange={(value) => onUpdate({ required: value })}
+                  />
+                )}
+                {isDecorative && <div />}
+
+                {/* Delete Button */}
+                <Button
+                  icon={DeleteIcon}
+                  tone="critical"
+                  variant="plain"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemove();
+                  }}
+                >
+                  Eliminar
+                </Button>
+              </InlineStack>
+            </BlockStack>
+          </div>
+        </Collapsible>
+      </div>
+    </div>
+  );
+}
 
 // ============================================
 // PREVIEW COMPONENTS
@@ -767,6 +1066,23 @@ export default function Settings() {
   const [showSaved, setShowSaved] = useState(false);
   const [previewMode, setPreviewMode] = useState<"form" | "success">("form");
 
+  // Form builder state
+  const [expandedFields, setExpandedFields] = useState<Set<string>>(new Set());
+  const [fieldHistory, setFieldHistory] = useState<any[][]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   const [formState, setFormState] = useState({
     // WhatsApp
     whatsappNumber: shop?.whatsappNumber || "",
@@ -968,33 +1284,6 @@ export default function Settings() {
             // Fields that can only be added once
             const singleUseFields = ["name", "phone", "address", "email", "city", "province", "postalCode", "notes", "quantity"];
 
-            // Field type configuration with Polaris icons
-            const fieldTypes: Record<string, { label: string; icon: any; maxCount: number }> = {
-              // Essential COD
-              name: { label: "Nombre", icon: PersonIcon, maxCount: 1 },
-              phone: { label: "Teléfono", icon: PhoneIcon, maxCount: 1 },
-              email: { label: "Email", icon: EmailIcon, maxCount: 1 },
-              address: { label: "Dirección", icon: LocationIcon, maxCount: 1 },
-              city: { label: "Ciudad", icon: GlobeIcon, maxCount: 1 },
-              province: { label: "Provincia", icon: GlobeIcon, maxCount: 1 },
-              postalCode: { label: "Código postal", icon: LocationIcon, maxCount: 1 },
-              notes: { label: "Notas", icon: NoteIcon, maxCount: 1 },
-              quantity: { label: "Cantidad", icon: HashtagIcon, maxCount: 1 },
-              // Custom inputs
-              text: { label: "Campo de texto", icon: TextIcon, maxCount: 99 },
-              textarea: { label: "Área de texto", icon: TextAlignLeftIcon, maxCount: 99 },
-              select: { label: "Desplegable", icon: ListBulletedIcon, maxCount: 99 },
-              radio: { label: "Opción única", icon: CheckIcon, maxCount: 99 },
-              checkbox: { label: "Casilla", icon: CheckIcon, maxCount: 99 },
-              date: { label: "Fecha", icon: CalendarIcon, maxCount: 99 },
-              number: { label: "Número", icon: HashtagIcon, maxCount: 99 },
-              // Decorative
-              heading: { label: "Título/Texto", icon: TextIcon, maxCount: 99 },
-              image: { label: "Imagen", icon: ImageIcon, maxCount: 99 },
-              html: { label: "HTML", icon: CodeIcon, maxCount: 99 },
-              link_button: { label: "Botón enlace", icon: LinkIcon, maxCount: 99 },
-            };
-
             // Default values for COD fields
             const fieldDefaults: Record<string, { label: string; placeholder: string; required: boolean }> = {
               name: { label: "Nombre completo", placeholder: "Ej: Juan Pérez", required: true },
@@ -1009,11 +1298,15 @@ export default function Settings() {
             };
 
             const addElement = (type: string) => {
-              const typeConfig = fieldTypes[type];
+              const typeConfig = FIELD_TYPES[type];
               if (typeConfig && typeCounts[type] >= typeConfig.maxCount) return;
 
+              // Save to history for undo
+              setFieldHistory(prev => [...prev.slice(0, historyIndex + 1), allElements]);
+              setHistoryIndex(prev => prev + 1);
+
               const defaults = fieldDefaults[type] || {
-                label: fieldTypes[type]?.label || "Nuevo elemento",
+                label: FIELD_TYPES[type]?.label || "Nuevo elemento",
                 placeholder: "",
                 required: false
               };
@@ -1030,12 +1323,13 @@ export default function Settings() {
                 url: "",
               };
 
-              setFormState(prev => ({
-                ...prev,
-                customFields: [...(prev.customFields as any[]), newField]
-              }));
+              const newFields = [...allElements, newField];
+              setFormState(prev => ({ ...prev, customFields: newFields }));
 
-              // Auto-scroll to new element after a short delay
+              // Auto-expand the new field
+              setExpandedFields(prev => new Set([...prev, newField.id]));
+
+              // Auto-scroll to new element
               setTimeout(() => {
                 const elements = document.querySelectorAll('[data-field-id]');
                 const lastElement = elements[elements.length - 1];
@@ -1052,59 +1346,108 @@ export default function Settings() {
             };
 
             const removeElement = (index: number) => {
+              // Save to history for undo
+              setFieldHistory(prev => [...prev.slice(0, historyIndex + 1), allElements]);
+              setHistoryIndex(prev => prev + 1);
+
               const newFields = allElements.filter((_, i) => i !== index);
               setFormState(prev => ({ ...prev, customFields: newFields }));
             };
 
-            const moveElement = (index: number, direction: "up" | "down") => {
-              const newFields = [...allElements];
-              const newIndex = direction === "up" ? index - 1 : index + 1;
-              if (newIndex < 0 || newIndex >= newFields.length) return;
-              [newFields[index], newFields[newIndex]] = [newFields[newIndex], newFields[index]];
-              setFormState(prev => ({ ...prev, customFields: newFields }));
+            const handleDragEnd = (event: DragEndEvent) => {
+              const { active, over } = event;
+              if (over && active.id !== over.id) {
+                // Save to history for undo
+                setFieldHistory(prev => [...prev.slice(0, historyIndex + 1), allElements]);
+                setHistoryIndex(prev => prev + 1);
+
+                const oldIndex = allElements.findIndex((el: any) => el.id === active.id);
+                const newIndex = allElements.findIndex((el: any) => el.id === over.id);
+                const newFields = arrayMove(allElements, oldIndex, newIndex);
+                setFormState(prev => ({ ...prev, customFields: newFields }));
+              }
             };
+
+            const handleUndo = () => {
+              if (historyIndex >= 0) {
+                const previousState = fieldHistory[historyIndex];
+                setFormState(prev => ({ ...prev, customFields: previousState }));
+                setHistoryIndex(prev => prev - 1);
+              }
+            };
+
+            const handleRedo = () => {
+              if (historyIndex < fieldHistory.length - 1) {
+                const nextState = fieldHistory[historyIndex + 2] || allElements;
+                setFormState(prev => ({ ...prev, customFields: nextState }));
+                setHistoryIndex(prev => prev + 1);
+              }
+            };
+
+            const toggleExpanded = (fieldId: string) => {
+              setExpandedFields(prev => {
+                const newSet = new Set(prev);
+                if (newSet.has(fieldId)) {
+                  newSet.delete(fieldId);
+                } else {
+                  newSet.add(fieldId);
+                }
+                return newSet;
+              });
+            };
+
+            const collapseAll = () => setExpandedFields(new Set());
+            const expandAll = () => setExpandedFields(new Set(allElements.map((el: any) => el.id)));
 
             // Render an add button with counter
             const AddFieldButton = ({ type, variant = "secondary" }: { type: string; variant?: "primary" | "secondary" }) => {
-              const config = fieldTypes[type];
+              const config = FIELD_TYPES[type];
               if (!config) return null;
               const count = typeCounts[type] || 0;
               const isAtLimit = count >= config.maxCount;
               const isSingleUse = singleUseFields.includes(type);
+              const category = getFieldCategory(type);
+              const colors = CATEGORY_COLORS[category];
 
               return (
-                <Button
-                  onClick={() => addElement(type)}
-                  size="slim"
-                  variant={isAtLimit ? "secondary" : variant === "primary" ? "primary" : "secondary"}
-                  disabled={isAtLimit}
-                  icon={config.icon}
-                >
-                  {config.label}
-                  {isSingleUse && count > 0 && (
-                    <span style={{ marginLeft: "4px", opacity: 0.7 }}>✓</span>
-                  )}
-                </Button>
+                <div style={{
+                  display: "inline-block",
+                  borderRadius: "8px",
+                  background: isAtLimit ? "#f3f3f3" : colors.bg,
+                  border: `1px solid ${isAtLimit ? "#ddd" : colors.border}`,
+                  overflow: "hidden",
+                }}>
+                  <Button
+                    onClick={() => addElement(type)}
+                    size="slim"
+                    variant="tertiary"
+                    disabled={isAtLimit}
+                    icon={config.icon}
+                  >
+                    {config.label}
+                    {isSingleUse && count > 0 && " ✓"}
+                  </Button>
+                </div>
               );
             };
 
             return (
               <Layout>
                 <Layout.Section>
-                  {/* HEADER */}
+                  {/* HEADER - Add Field Buttons */}
                   <Card>
-                    <BlockStack gap="400" inlineAlign="start">
-                      <BlockStack gap="100" inlineAlign="start">
+                    <BlockStack gap="400">
+                      <BlockStack gap="100">
                         <Text as="h2" variant="headingSm">Constructor de formulario</Text>
                         <Text as="p" variant="bodySm" tone="subdued">
-                          Agrega campos y ordenalos como quieras. Los campos esenciales solo pueden agregarse una vez.
+                          Arrastra para reordenar. Haz clic para expandir y editar.
                         </Text>
                       </BlockStack>
 
                       {/* Essential COD fields */}
-                      <BlockStack gap="200" inlineAlign="start">
+                      <BlockStack gap="200">
                         <InlineStack gap="200" blockAlign="center">
-                          <Icon source={PersonIcon} tone="base" />
+                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: CATEGORY_COLORS.essential.border }} />
                           <Text as="span" variant="headingSm">Campos esenciales</Text>
                         </InlineStack>
                         <InlineStack gap="200" wrap>
@@ -1115,16 +1458,18 @@ export default function Settings() {
                           <AddFieldButton type="province" />
                           <AddFieldButton type="email" />
                           <AddFieldButton type="notes" />
+                          <AddFieldButton type="quantity" />
+                          <AddFieldButton type="postalCode" />
                         </InlineStack>
                       </BlockStack>
 
                       <Divider />
 
                       {/* Custom input fields */}
-                      <BlockStack gap="200" inlineAlign="start">
+                      <BlockStack gap="200">
                         <InlineStack gap="200" blockAlign="center">
-                          <Icon source={TextIcon} tone="base" />
-                          <Text as="span" variant="headingSm">Campos de entrada</Text>
+                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: CATEGORY_COLORS.custom.border }} />
+                          <Text as="span" variant="headingSm">Campos personalizados</Text>
                         </InlineStack>
                         <InlineStack gap="200" wrap>
                           <AddFieldButton type="text" />
@@ -1140,9 +1485,9 @@ export default function Settings() {
                       <Divider />
 
                       {/* Decorative elements */}
-                      <BlockStack gap="200" inlineAlign="start">
+                      <BlockStack gap="200">
                         <InlineStack gap="200" blockAlign="center">
-                          <Icon source={ImageIcon} tone="base" />
+                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: CATEGORY_COLORS.decorative.border }} />
                           <Text as="span" variant="headingSm">Elementos decorativos</Text>
                         </InlineStack>
                         <InlineStack gap="200" wrap>
@@ -1155,185 +1500,101 @@ export default function Settings() {
                     </BlockStack>
                   </Card>
 
-                  {/* ELEMENTS LIST */}
+                  {/* ELEMENTS LIST with Drag & Drop */}
                   <Box paddingBlockStart="400">
                     <BlockStack gap="300">
-                      <InlineStack align="space-between">
+                      {/* Header with actions */}
+                      <InlineStack align="space-between" blockAlign="center">
                         <Text as="h3" variant="headingSm">
                           Campos del formulario ({allElements.length})
                         </Text>
+                        <InlineStack gap="200">
+                          <Tooltip content="Deshacer">
+                            <Button
+                              icon={UndoIcon}
+                              size="slim"
+                              variant="tertiary"
+                              onClick={handleUndo}
+                              disabled={historyIndex < 0}
+                              accessibilityLabel="Deshacer"
+                            />
+                          </Tooltip>
+                          <Tooltip content="Rehacer">
+                            <Button
+                              icon={RedoIcon}
+                              size="slim"
+                              variant="tertiary"
+                              onClick={handleRedo}
+                              disabled={historyIndex >= fieldHistory.length - 1}
+                              accessibilityLabel="Rehacer"
+                            />
+                          </Tooltip>
+                          {allElements.length > 0 && (
+                            <>
+                              <Button size="slim" variant="tertiary" onClick={collapseAll}>
+                                Colapsar
+                              </Button>
+                              <Button size="slim" variant="tertiary" onClick={expandAll}>
+                                Expandir
+                              </Button>
+                            </>
+                          )}
+                        </InlineStack>
                       </InlineStack>
 
                       {allElements.length === 0 ? (
-                        <Card>
-                          <BlockStack gap="400" inlineAlign="center">
-                            <Box padding="400">
-                              <Icon source={AlertCircleIcon} tone="subdued" />
-                            </Box>
-                            <Text as="p" tone="subdued" alignment="center">
-                              Tu formulario no tiene campos. Agrega elementos usando los botones de arriba.
+                        <div style={{
+                          border: "2px dashed #e3e3e3",
+                          borderRadius: "12px",
+                          padding: "48px 24px",
+                          textAlign: "center",
+                          background: "#fafafa",
+                        }}>
+                          <BlockStack gap="300" inlineAlign="center">
+                            <div style={{
+                              width: "64px",
+                              height: "64px",
+                              borderRadius: "50%",
+                              background: "#f0f0f0",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}>
+                              <Icon source={PlusIcon} tone="subdued" />
+                            </div>
+                            <Text as="p" variant="bodyMd" tone="subdued">
+                              Tu formulario está vacío
+                            </Text>
+                            <Text as="p" variant="bodySm" tone="subdued">
+                              Agrega campos usando los botones de arriba
                             </Text>
                           </BlockStack>
-                        </Card>
+                        </div>
                       ) : (
-                        allElements.map((element, index) => {
-                          const config = fieldTypes[element.type] || { label: element.type, icon: TextIcon };
-                          const isDecorative = ["heading", "image", "html", "link_button"].includes(element.type);
-                          const isCODField = singleUseFields.includes(element.type);
-
-                          return (
-                            <Card key={element.id}>
-                              <div data-field-id={element.id}>
-                                <BlockStack gap="400">
-                                  {/* Header */}
-                                  <InlineStack align="space-between" blockAlign="center">
-                                    <InlineStack gap="300" blockAlign="center">
-                                      <Text as="span" variant="bodyMd" tone="subdued">#{index + 1}</Text>
-                                      <Icon source={config.icon} tone="base" />
-                                      <BlockStack gap="0">
-                                        <Text as="span" variant="bodyMd" fontWeight="semibold">
-                                          {element.label || config.label}
-                                        </Text>
-                                        <InlineStack gap="200">
-                                          <Text as="span" variant="bodySm" tone="subdued">{config.label}</Text>
-                                          {element.required && <Badge tone="attention" size="small">Requerido</Badge>}
-                                          {isCODField && <Badge tone="info" size="small">Esencial</Badge>}
-                                        </InlineStack>
-                                      </BlockStack>
-                                    </InlineStack>
-                                    <ButtonGroup>
-                                      <Button
-                                        icon={ChevronUpIcon}
-                                        size="slim"
-                                        onClick={() => moveElement(index, "up")}
-                                        disabled={index === 0}
-                                        accessibilityLabel="Mover arriba"
-                                      />
-                                      <Button
-                                        icon={ChevronDownIcon}
-                                        size="slim"
-                                        onClick={() => moveElement(index, "down")}
-                                        disabled={index === allElements.length - 1}
-                                        accessibilityLabel="Mover abajo"
-                                      />
-                                      <Button
-                                        icon={DeleteIcon}
-                                        size="slim"
-                                        tone="critical"
-                                        onClick={() => removeElement(index)}
-                                        accessibilityLabel="Eliminar"
-                                      />
-                                    </ButtonGroup>
-                                  </InlineStack>
-
-                                  <Divider />
-
-                                  {/* Config */}
-                                  <FormLayout>
-                                    <FormLayout.Group>
-                                      <Select
-                                        label="Tipo"
-                                        options={[
-                                          { label: "─ Esenciales ─", value: "", disabled: true },
-                                          { value: "name", label: "Nombre" },
-                                          { value: "phone", label: "Teléfono" },
-                                          { value: "email", label: "Email" },
-                                          { value: "address", label: "Dirección" },
-                                          { value: "city", label: "Ciudad" },
-                                          { value: "province", label: "Provincia" },
-                                          { value: "postalCode", label: "Código postal" },
-                                          { value: "notes", label: "Notas" },
-                                          { value: "quantity", label: "Cantidad" },
-                                          { label: "─ Personalizados ─", value: "_", disabled: true },
-                                          { value: "text", label: "Campo de texto" },
-                                          { value: "textarea", label: "Área de texto" },
-                                          { value: "number", label: "Número" },
-                                          { value: "select", label: "Desplegable" },
-                                          { value: "radio", label: "Opción única" },
-                                          { value: "checkbox", label: "Casilla" },
-                                          { value: "date", label: "Fecha" },
-                                          { label: "─ Decorativos ─", value: "__", disabled: true },
-                                          { value: "heading", label: "Título/Texto" },
-                                          { value: "image", label: "Imagen" },
-                                          { value: "html", label: "HTML" },
-                                          { value: "link_button", label: "Botón enlace" },
-                                        ]}
-                                        value={element.type}
-                                        onChange={(value) => updateElement(index, { type: value })}
-                                      />
-                                      {element.type !== "html" && (
-                                        <TextField
-                                          label={element.type === "heading" ? "Texto" : "Etiqueta"}
-                                          value={element.label || ""}
-                                          onChange={(value) => updateElement(index, { label: value })}
-                                          autoComplete="off"
-                                        />
-                                      )}
-                                    </FormLayout.Group>
-
-                                    {["text", "textarea", "number", "name", "phone", "email", "address", "city", "postalCode", "notes"].includes(element.type) && (
-                                      <TextField
-                                        label="Placeholder"
-                                        value={element.placeholder || ""}
-                                        onChange={(value) => updateElement(index, { placeholder: value })}
-                                        autoComplete="off"
-                                      />
-                                    )}
-
-                                    {["select", "radio"].includes(element.type) && (
-                                      <TextField
-                                        label="Opciones (separadas por coma)"
-                                        value={(element.options || []).join(", ")}
-                                        onChange={(value) => updateElement(index, {
-                                          options: value.split(",").map((o: string) => o.trim()).filter(Boolean)
-                                        })}
-                                        autoComplete="off"
-                                        helpText="Ejemplo: Opción 1, Opción 2, Opción 3"
-                                      />
-                                    )}
-
-                                    {element.type === "html" && (
-                                      <TextField
-                                        label="Código HTML"
-                                        value={element.content || ""}
-                                        onChange={(value) => updateElement(index, { content: value })}
-                                        multiline={3}
-                                        autoComplete="off"
-                                        monospaced
-                                      />
-                                    )}
-
-                                    {element.type === "image" && (
-                                      <TextField
-                                        label="URL de la imagen"
-                                        value={element.imageUrl || ""}
-                                        onChange={(value) => updateElement(index, { imageUrl: value })}
-                                        autoComplete="off"
-                                      />
-                                    )}
-
-                                    {element.type === "link_button" && (
-                                      <TextField
-                                        label="URL del enlace"
-                                        value={element.url || ""}
-                                        onChange={(value) => updateElement(index, { url: value })}
-                                        autoComplete="off"
-                                      />
-                                    )}
-
-                                    {!isDecorative && (
-                                      <Checkbox
-                                        label="Campo obligatorio"
-                                        checked={element.required || false}
-                                        onChange={(value) => updateElement(index, { required: value })}
-                                      />
-                                    )}
-                                  </FormLayout>
-                                </BlockStack>
-                              </div>
-                            </Card>
-                          );
-                        })
+                        <DndContext
+                          sensors={sensors}
+                          collisionDetection={closestCenter}
+                          onDragEnd={handleDragEnd}
+                        >
+                          <SortableContext
+                            items={allElements.map((el: any) => el.id)}
+                            strategy={verticalListSortingStrategy}
+                          >
+                            <BlockStack gap="200">
+                              {allElements.map((element: any, index: number) => (
+                                <SortableFieldCard
+                                  key={element.id}
+                                  element={element}
+                                  index={index}
+                                  isExpanded={expandedFields.has(element.id)}
+                                  onToggle={() => toggleExpanded(element.id)}
+                                  onUpdate={(updates) => updateElement(index, updates)}
+                                  onRemove={() => removeElement(index)}
+                                />
+                              ))}
+                            </BlockStack>
+                          </SortableContext>
+                        </DndContext>
                       )}
                     </BlockStack>
                   </Box>
