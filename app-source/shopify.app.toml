@@ -1,6 +1,7 @@
 # Curetfy - COD Form
 # Shopify App Configuration
 
+client_id = "f111f17bd25329a09376d46941b6532e"
 name = "Curetfy - COD Form"
 handle = "curetfy-cod-form"
 application_url = "https://app.curetcore.com"
