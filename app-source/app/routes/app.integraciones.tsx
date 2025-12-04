@@ -16,7 +16,6 @@ import {
   InlineStack,
   Badge,
   Tabs,
-  Divider,
 } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
@@ -211,6 +210,12 @@ export default function Integraciones() {
                         checked={formState.saveUtmParams}
                         onChange={handleChange("saveUtmParams")}
                       />
+                      <Checkbox
+                        label="Agregar la etiqueta curetfy_cod_form a los pedidos del formulario COD"
+                        helpText="Se añadirá automáticamente la etiqueta 'curetfy_cod_form' a todos los pedidos creados."
+                        checked={formState.addCodFormTag}
+                        onChange={handleChange("addCodFormTag")}
+                      />
                     </BlockStack>
                   </BlockStack>
                 </Card>
@@ -240,10 +245,37 @@ export default function Integraciones() {
                           onChange={handleChange("removeLeadingZeroPhone")}
                         />
                         <Checkbox
-                          label="Agregar la etiqueta curetfy_cod_form a los pedidos del formulario COD"
-                          helpText="Se añadirá automáticamente la etiqueta 'curetfy_cod_form' a todos los pedidos creados."
-                          checked={formState.addCodFormTag}
-                          onChange={handleChange("addCodFormTag")}
+                          label="Redirigir automáticamente a WhatsApp"
+                          helpText="Al enviar el formulario, el cliente será redirigido a WhatsApp automáticamente."
+                          checked={formState.autoRedirectWhatsApp}
+                          onChange={handleChange("autoRedirectWhatsApp")}
+                        />
+                        {formState.autoRedirectWhatsApp && (
+                          <TextField
+                            label="Tiempo de espera antes de redirigir (ms)"
+                            value={formState.redirectDelay}
+                            onChange={handleChange("redirectDelay")}
+                            type="number"
+                            helpText="Milisegundos a esperar antes de redirigir (2000 = 2 segundos)"
+                            autoComplete="off"
+                          />
+                        )}
+                      </BlockStack>
+                    </BlockStack>
+                  </Card>
+                </Box>
+
+                {/* Productos */}
+                <Box paddingBlockStart="400">
+                  <Card>
+                    <BlockStack gap="400">
+                      <Text as="h2" variant="headingMd">Productos habilitados</Text>
+                      <BlockStack gap="300">
+                        <Checkbox
+                          label="Habilitar en todos los productos"
+                          helpText="Si está desactivado, deberás seleccionar productos específicos donde mostrar el formulario."
+                          checked={formState.enableAllProducts}
+                          onChange={handleChange("enableAllProducts")}
                         />
                       </BlockStack>
                     </BlockStack>
@@ -313,50 +345,6 @@ export default function Integraciones() {
                           helpText="Registra aberturas del formulario, pedidos completados y tasas de conversión."
                           checked={formState.enableAnalytics}
                           onChange={handleChange("enableAnalytics")}
-                        />
-                      </FormLayout>
-                    </BlockStack>
-                  </Card>
-                </Box>
-
-                {/* WhatsApp Redirect */}
-                <Box paddingBlockStart="400">
-                  <Card>
-                    <BlockStack gap="400">
-                      <Text as="h2" variant="headingMd">Redirección a WhatsApp</Text>
-                      <FormLayout>
-                        <Checkbox
-                          label="Redirigir automáticamente a WhatsApp"
-                          helpText="Al enviar el formulario, el cliente será redirigido a WhatsApp automáticamente."
-                          checked={formState.autoRedirectWhatsApp}
-                          onChange={handleChange("autoRedirectWhatsApp")}
-                        />
-                        {formState.autoRedirectWhatsApp && (
-                          <TextField
-                            label="Tiempo de espera (ms)"
-                            value={formState.redirectDelay}
-                            onChange={handleChange("redirectDelay")}
-                            type="number"
-                            helpText="Milisegundos a esperar antes de redirigir (2000 = 2 segundos)"
-                            autoComplete="off"
-                          />
-                        )}
-                      </FormLayout>
-                    </BlockStack>
-                  </Card>
-                </Box>
-
-                {/* Products */}
-                <Box paddingBlockStart="400">
-                  <Card>
-                    <BlockStack gap="400">
-                      <Text as="h2" variant="headingMd">Productos habilitados</Text>
-                      <FormLayout>
-                        <Checkbox
-                          label="Habilitar en todos los productos"
-                          helpText="Si está desactivado, deberás seleccionar productos específicos donde mostrar el formulario."
-                          checked={formState.enableAllProducts}
-                          onChange={handleChange("enableAllProducts")}
                         />
                       </FormLayout>
                     </BlockStack>
