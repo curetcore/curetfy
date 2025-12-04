@@ -24,6 +24,7 @@ export default function App() {
         <Link to="/app/settings">Diseño del formulario</Link>
         <Link to="/app/integraciones">Integraciones</Link>
         <Link to="/app/billing">Plan de facturación</Link>
+        <Link to="/app/help">Ayuda</Link>
       </NavMenu>
       <Outlet />
     </AppProvider>
