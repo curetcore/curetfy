@@ -222,6 +222,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     },
   });
 
+  // Get form opens last 7 days (REAL DATA)
+  const formOpensLast7Days = await prisma.formOpen.count({
+    where: {
+      shopId: shop.id,
+      createdAt: { gte: sevenDaysAgo },
+    },
+  });
+
   // Get revenue last 7 days
   const revenueData = await prisma.order.aggregate({
     where: {
@@ -244,6 +252,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+  // Get daily orders for charts
   const dailyOrders = await prisma.order.groupBy({
     by: ['createdAt'],
     where: {
@@ -252,6 +261,16 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     },
     _count: true,
     _sum: { total: true },
+  });
+
+  // Get daily form opens for charts (REAL DATA)
+  const dailyFormOpens = await prisma.formOpen.groupBy({
+    by: ['createdAt'],
+    where: {
+      shopId: shop.id,
+      createdAt: { gte: thirtyDaysAgo },
+    },
+    _count: true,
   });
 
   // Generate chart data
@@ -270,16 +289,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     return dayData.reduce((sum, d) => sum + Number(d._sum.total || 0), 0);
   });
 
-  // Calculate stats
-  const orderLimit = PLAN_LIMITS[shop.plan] || 60;
-  const usagePercentage = orderLimit === Infinity ? 0 : Math.round((ordersThisMonth / orderLimit) * 100);
-
-  // Mock form opens for now (would need real tracking)
-  const formOpensLast7Days = Math.round(ordersLast7Days * 10) || 118; // Estimate ~10% conversion
-  const conversionRate = formOpensLast7Days > 0 ? ((ordersLast7Days / formOpensLast7Days) * 100).toFixed(1) : "10.2";
-
-  // Form opens chart data (mock - would need real tracking)
-  const formOpensChartData = ordersChartData.map(orders => orders * 10 + Math.floor(Math.random() * 5));
+  // Form opens chart data (REAL DATA)
+  const formOpensChartData = last30Days.map(date => {
+    const dayData = dailyFormOpens.filter(d =>
+      d.createdAt.toISOString().split('T')[0] === date
+    );
+    return dayData.reduce((sum, d) => sum + d._count, 0);
+  });
 
   // Conversion rate chart data
   const conversionChartData = ordersChartData.map((orders, i) => {
@@ -287,17 +303,75 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     return opens > 0 ? (orders / opens) * 100 : 0;
   });
 
+  // Calculate stats
+  const orderLimit = PLAN_LIMITS[shop.plan] || 60;
+  const usagePercentage = orderLimit === Infinity ? 0 : Math.round((ordersThisMonth / orderLimit) * 100);
+
+  // Calculate conversion rate (REAL DATA)
+  const conversionRate = formOpensLast7Days > 0 ? ((ordersLast7Days / formOpensLast7Days) * 100).toFixed(1) : "0.0";
+
   // Average order value
   const avgOrderValue = ordersLast7Days > 0 ? Number(revenueLast7Days) / ordersLast7Days : 0;
 
-  // Mock UTM data (would need real tracking)
-  const utmData = [
-    { source: "Facebook", medium: "paid", campaign: "Venta/Catalogo/Web", opens: 102, orders: 11, conversion: "10.8%" },
-    { source: "linktree", medium: "instagram", campaign: "catálogos+y+precios", opens: 37, orders: 9, conversion: "24.3%" },
-    { source: "linktree", medium: "instagram", campaign: "ofertas+blackweek", opens: 40, orders: 4, conversion: "10.0%" },
-    { source: "facebook", medium: "paid", campaign: "Venta/Catalogo/Web", opens: 34, orders: 2, conversion: "5.9%" },
-    { source: "facebook", medium: "none", campaign: "none", opens: 18, orders: 0, conversion: "0.0%" },
-  ];
+  // Get UTM data from form opens (REAL DATA)
+  const utmFromOpens = await prisma.formOpen.groupBy({
+    by: ['utmSource', 'utmMedium', 'utmCampaign'],
+    where: {
+      shopId: shop.id,
+      createdAt: { gte: sevenDaysAgo },
+      utmSource: { not: null },
+    },
+    _count: true,
+  });
+
+  // Get UTM data from orders
+  const utmFromOrders = await prisma.order.groupBy({
+    by: ['utmSource', 'utmMedium', 'utmCampaign'],
+    where: {
+      shopId: shop.id,
+      createdAt: { gte: sevenDaysAgo },
+      utmSource: { not: null },
+    },
+    _count: true,
+  });
+
+  // Combine UTM data
+  const utmMap = new Map<string, { source: string; medium: string; campaign: string; opens: number; orders: number }>();
+
+  utmFromOpens.forEach(item => {
+    const key = `${item.utmSource || 'direct'}|${item.utmMedium || 'none'}|${item.utmCampaign || 'none'}`;
+    utmMap.set(key, {
+      source: item.utmSource || 'direct',
+      medium: item.utmMedium || 'none',
+      campaign: item.utmCampaign || 'none',
+      opens: item._count,
+      orders: 0,
+    });
+  });
+
+  utmFromOrders.forEach(item => {
+    const key = `${item.utmSource || 'direct'}|${item.utmMedium || 'none'}|${item.utmCampaign || 'none'}`;
+    const existing = utmMap.get(key);
+    if (existing) {
+      existing.orders = item._count;
+    } else {
+      utmMap.set(key, {
+        source: item.utmSource || 'direct',
+        medium: item.utmMedium || 'none',
+        campaign: item.utmCampaign || 'none',
+        opens: 0,
+        orders: item._count,
+      });
+    }
+  });
+
+  const utmData = Array.from(utmMap.values())
+    .map(item => ({
+      ...item,
+      conversion: item.opens > 0 ? `${((item.orders / item.opens) * 100).toFixed(1)}%` : "0.0%",
+    }))
+    .sort((a, b) => b.opens - a.opens)
+    .slice(0, 10);
 
   return json({
     shop: {

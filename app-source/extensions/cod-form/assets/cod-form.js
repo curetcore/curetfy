@@ -14,6 +14,39 @@
   let shopCountries = null;
   let currentModal = null;
 
+  // Get UTM parameters from URL
+  function getUTMParams() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      utmSource: params.get('utm_source') || null,
+      utmMedium: params.get('utm_medium') || null,
+      utmCampaign: params.get('utm_campaign') || null,
+      utmTerm: params.get('utm_term') || null,
+      utmContent: params.get('utm_content') || null,
+    };
+  }
+
+  // Track form open
+  async function trackFormOpen(shop, productId, productTitle) {
+    try {
+      const utm = getUTMParams();
+      await fetch(`${API_BASE}/api/track-open`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          shop,
+          productId,
+          productTitle,
+          ...utm,
+          pageUrl: window.location.href,
+        }),
+      });
+    } catch (err) {
+      // Silently fail - analytics shouldn't block user experience
+      console.warn('Curetfy: Failed to track form open', err);
+    }
+  }
+
   // Default config (fallback)
   const DEFAULT_CONFIG = {
     whatsappNumber: "",
@@ -199,6 +232,9 @@
     const totalPrice = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const currency = data.currency || 'DOP';
     const cfg = shopConfig || DEFAULT_CONFIG;
+
+    // Track form open (async, non-blocking)
+    trackFormOpen(data.shop, items[0]?.id, items[0]?.title);
 
     const modal = createModal(items, {
       shop: data.shop,
@@ -569,6 +605,9 @@
     const isMultiple = modal.dataset.isMultiple === 'true';
     const quantity = isMultiple ? null : parseInt(form.querySelector('#curetfy-quantity')?.value) || 1;
 
+    // Get UTM params for order tracking
+    const utm = getUTMParams();
+
     const payload = {
       shop: modal.dataset.shop,
       items: items.map(item => ({
@@ -591,7 +630,13 @@
         postalCode: form.querySelector('#curetfy-postal')?.value.trim() || '',
         notes: form.querySelector('#curetfy-notes')?.value.trim() || '',
         country: cfg.defaultCountry || 'DO'
-      }
+      },
+      // UTM tracking
+      utmSource: utm.utmSource,
+      utmMedium: utm.utmMedium,
+      utmCampaign: utm.utmCampaign,
+      utmTerm: utm.utmTerm,
+      utmContent: utm.utmContent
     };
 
     try {

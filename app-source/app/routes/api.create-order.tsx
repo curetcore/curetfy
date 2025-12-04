@@ -26,6 +26,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       price,
       currency = "DOP",
       customer,
+      // UTM tracking
+      utmSource,
+      utmMedium,
+      utmCampaign,
+      utmTerm,
+      utmContent,
     } = body;
 
     // Validate required fields
@@ -89,6 +95,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         total,
         currency,
         status: "PENDING",
+        // UTM tracking
+        utmSource: utmSource || null,
+        utmMedium: utmMedium || null,
+        utmCampaign: utmCampaign || null,
+        utmTerm: utmTerm || null,
+        utmContent: utmContent || null,
       },
     });
 

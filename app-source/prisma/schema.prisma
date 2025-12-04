@@ -187,6 +187,7 @@ model Shop {
 
   // Relations
   orders              Order[]
+  formOpens           FormOpen[]
 
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
@@ -236,12 +237,46 @@ model Order {
   ipAddress           String?
   userAgent           String?
 
+  // UTM Tracking
+  utmSource           String?
+  utmMedium           String?
+  utmCampaign         String?
+  utmTerm             String?
+  utmContent          String?
+
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
 
   @@index([shopId, createdAt(sort: Desc)])
   @@index([shopId, status])
   @@index([customerPhone])
+  @@index([shopId, utmSource, utmMedium, utmCampaign])
+}
+
+// Form Open Tracking
+model FormOpen {
+  id                  String      @id @default(cuid())
+  shopId              String
+  shop                Shop        @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  // Product context
+  productId           String?
+  productTitle        String?
+
+  // UTM Tracking
+  utmSource           String?
+  utmMedium           String?
+  utmCampaign         String?
+
+  // Metadata
+  ipAddress           String?
+  userAgent           String?
+  pageUrl             String?
+
+  createdAt           DateTime    @default(now())
+
+  @@index([shopId, createdAt(sort: Desc)])
+  @@index([shopId, utmSource, utmMedium, utmCampaign])
 }
 
 enum Plan {
