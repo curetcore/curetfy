@@ -506,9 +506,9 @@ export default function Dashboard() {
         {/* Stats Summary - Last 7 Days */}
         <Text as="h2" variant="headingMd">Últimos 7 días</Text>
         <Card>
-          <InlineStack align="space-between" wrap={false}>
-            <Box paddingInlineEnd="400">
-              <BlockStack gap="100">
+          <InlineStack align="space-around" wrap={false}>
+            <Box minWidth="120px">
+              <BlockStack gap="100" inlineAlign="center">
                 <Text as="p" variant="headingLg" fontWeight="bold">
                   {stats.formOpensLast7Days}
                 </Text>
@@ -516,8 +516,8 @@ export default function Dashboard() {
               </BlockStack>
             </Box>
             <div style={{ width: "1px", background: "#e1e3e5", alignSelf: "stretch" }} />
-            <Box paddingInline="400">
-              <BlockStack gap="100">
+            <Box minWidth="120px">
+              <BlockStack gap="100" inlineAlign="center">
                 <Text as="p" variant="headingLg" fontWeight="bold">
                   {stats.ordersLast7Days}
                 </Text>
@@ -525,8 +525,8 @@ export default function Dashboard() {
               </BlockStack>
             </Box>
             <div style={{ width: "1px", background: "#e1e3e5", alignSelf: "stretch" }} />
-            <Box paddingInline="400">
-              <BlockStack gap="100">
+            <Box minWidth="120px">
+              <BlockStack gap="100" inlineAlign="center">
                 <Text as="p" variant="headingLg" fontWeight="bold">
                   {currency} {stats.revenueLast7Days.toLocaleString()}
                 </Text>
@@ -534,8 +534,8 @@ export default function Dashboard() {
               </BlockStack>
             </Box>
             <div style={{ width: "1px", background: "#e1e3e5", alignSelf: "stretch" }} />
-            <Box paddingInlineStart="400">
-              <BlockStack gap="100">
+            <Box minWidth="120px">
+              <BlockStack gap="100" inlineAlign="center">
                 <Text as="p" variant="headingLg" fontWeight="bold">
                   {stats.conversionRate}%
                 </Text>
