@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData, useSubmit, useNavigation } from "@remix-run/react";
@@ -20,7 +20,32 @@ import {
   Badge,
   Box,
   Icon,
+  ResourceItem,
+  ResourceList,
+  ButtonGroup,
 } from "@shopify/polaris";
+import {
+  PersonIcon,
+  PhoneIcon,
+  EmailIcon,
+  LocationIcon,
+  GlobeIcon,
+  NoteIcon,
+  HashtagIcon,
+  TextIcon,
+  TextAlignLeftIcon,
+  ListBulletedIcon,
+  CalendarIcon,
+  CheckIcon,
+  ImageIcon,
+  CodeIcon,
+  LinkIcon,
+  PlusIcon,
+  DeleteIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+  AlertCircleIcon,
+} from "@shopify/polaris-icons";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
@@ -326,93 +351,68 @@ function FormModalPreview({
   previewType: "form" | "fields" | "modal";
 }) {
   const provinces = PROVINCES_BY_COUNTRY[formState.defaultCountry] || PROVINCES_BY_COUNTRY.DO;
-  const fieldOrder = formState.fieldOrder as string[] || ["name", "phone", "email", "address", "city", "province", "postalCode", "notes", "quantity"];
+  const customFields = formState.customFields as any[] || [];
 
-  // Helper to check if a field is visible
-  const isFieldVisible = (fieldId: string) => {
-    if (fieldId === "name" || fieldId === "phone" || fieldId === "address") return true;
-    if (fieldId === "email") return formState.showEmail;
-    if (fieldId === "city") return formState.showCity;
-    if (fieldId === "province") return formState.showProvince;
-    if (fieldId === "postalCode") return formState.showPostalCode;
-    if (fieldId === "notes") return formState.showNotes;
-    if (fieldId === "quantity") return formState.showQuantity;
-    return false;
+  const hideLabels = formState.hideFieldLabels;
+  const fieldStyle = { marginBottom: "16px" };
+  const labelStyle = {
+    display: hideLabels ? "none" : "block",
+    fontSize: "13px",
+    fontWeight: 500 as const,
+    marginBottom: "6px",
+    color: "#1a1a1a"
+  };
+  const inputStyle = {
+    width: "100%",
+    padding: "10px 12px",
+    border: "1px solid #e1e3e5",
+    borderRadius: "8px",
+    fontSize: "14px",
+    boxSizing: "border-box" as const,
   };
 
-  // Helper to check if a field is required
-  const isFieldRequired = (fieldId: string) => {
-    if (fieldId === "name" || fieldId === "phone" || fieldId === "address") return true;
-    if (fieldId === "email") return formState.requireEmail;
-    if (fieldId === "city") return formState.requireCity;
-    if (fieldId === "province") return formState.requireProvince;
-    if (fieldId === "postalCode") return formState.requirePostalCode;
-    if (fieldId === "notes") return formState.requireNotes;
-    return false;
-  };
-
-  // Render individual field
-  const renderField = (fieldId: string) => {
-    if (!isFieldVisible(fieldId)) return null;
-
-    const hideLabels = formState.hideFieldLabels;
-    const fieldStyle = { marginBottom: "16px" };
-    const labelStyle = {
-      display: hideLabels ? "none" : "block",
-      fontSize: "13px",
-      fontWeight: 500,
-      marginBottom: "6px",
-      color: "#1a1a1a"
-    };
-    const inputStyle = {
-      width: "100%",
-      padding: "10px 12px",
-      border: "1px solid #e1e3e5",
-      borderRadius: "8px",
-      fontSize: "14px",
-      boxSizing: "border-box" as const,
-    };
-
-    switch (fieldId) {
+  // Render any field from customFields
+  const renderCustomField = (field: any) => {
+    switch (field.type) {
       case "name":
         return (
-          <div key={fieldId} style={fieldStyle}>
-            <label style={labelStyle}>{formState.labelName || "Nombre completo"} *</label>
-            <input type="text" placeholder={formState.placeholderName || "Ej: Juan Pérez"} readOnly style={inputStyle} />
+          <div key={field.id} style={fieldStyle}>
+            <label style={labelStyle}>{field.label || "Nombre completo"} {field.required ? "*" : ""}</label>
+            <input type="text" placeholder={field.placeholder || "Ej: Juan Pérez"} readOnly style={inputStyle} />
           </div>
         );
       case "phone":
         return (
-          <div key={fieldId} style={fieldStyle}>
-            <label style={labelStyle}>{formState.labelPhone || "Teléfono / WhatsApp"} *</label>
-            <input type="text" placeholder={formState.placeholderPhone || "Ej: 809-555-1234"} readOnly style={inputStyle} />
+          <div key={field.id} style={fieldStyle}>
+            <label style={labelStyle}>{field.label || "Teléfono / WhatsApp"} {field.required ? "*" : ""}</label>
+            <input type="text" placeholder={field.placeholder || "Ej: 809-555-1234"} readOnly style={inputStyle} />
           </div>
         );
       case "email":
         return (
-          <div key={fieldId} style={fieldStyle}>
-            <label style={labelStyle}>{formState.labelEmail || "Email"} {isFieldRequired(fieldId) ? "*" : ""}</label>
-            <input type="text" placeholder={formState.placeholderEmail || "Ej: juan@email.com"} readOnly style={inputStyle} />
+          <div key={field.id} style={fieldStyle}>
+            <label style={labelStyle}>{field.label || "Email"} {field.required ? "*" : ""}</label>
+            <input type="text" placeholder={field.placeholder || "Ej: juan@email.com"} readOnly style={inputStyle} />
           </div>
         );
       case "address":
         return (
-          <div key={fieldId} style={fieldStyle}>
-            <label style={labelStyle}>{formState.labelAddress || "Dirección de entrega"} *</label>
-            <input type="text" placeholder={formState.placeholderAddress || "Calle, número, sector..."} readOnly style={inputStyle} />
+          <div key={field.id} style={fieldStyle}>
+            <label style={labelStyle}>{field.label || "Dirección de entrega"} {field.required ? "*" : ""}</label>
+            <input type="text" placeholder={field.placeholder || "Calle, número, sector..."} readOnly style={inputStyle} />
           </div>
         );
       case "city":
         return (
-          <div key={fieldId} style={fieldStyle}>
-            <label style={labelStyle}>{formState.labelCity || "Ciudad"} {isFieldRequired(fieldId) ? "*" : ""}</label>
-            <input type="text" placeholder={formState.placeholderCity || "Ej: Santo Domingo"} readOnly style={inputStyle} />
+          <div key={field.id} style={fieldStyle}>
+            <label style={labelStyle}>{field.label || "Ciudad"} {field.required ? "*" : ""}</label>
+            <input type="text" placeholder={field.placeholder || "Ej: Santo Domingo"} readOnly style={inputStyle} />
           </div>
         );
       case "province":
         return (
-          <div key={fieldId} style={fieldStyle}>
-            <label style={labelStyle}>{formState.labelProvince || "Provincia"} {isFieldRequired(fieldId) ? "*" : ""}</label>
+          <div key={field.id} style={fieldStyle}>
+            <label style={labelStyle}>{field.label || "Provincia"} {field.required ? "*" : ""}</label>
             <select disabled style={{ ...inputStyle, background: "#fff" }}>
               <option>Seleccionar...</option>
               {provinces.slice(0, 3).map((p) => (<option key={p.value}>{p.label}</option>))}
@@ -421,27 +421,114 @@ function FormModalPreview({
         );
       case "postalCode":
         return (
-          <div key={fieldId} style={fieldStyle}>
-            <label style={labelStyle}>{formState.labelPostalCode || "Código postal"} {isFieldRequired(fieldId) ? "*" : ""}</label>
-            <input type="text" placeholder={formState.placeholderPostal || "Ej: 10101"} readOnly style={inputStyle} />
+          <div key={field.id} style={fieldStyle}>
+            <label style={labelStyle}>{field.label || "Código postal"} {field.required ? "*" : ""}</label>
+            <input type="text" placeholder={field.placeholder || "Ej: 10101"} readOnly style={inputStyle} />
           </div>
         );
       case "notes":
         return (
-          <div key={fieldId} style={fieldStyle}>
-            <label style={labelStyle}>{formState.labelNotes || "Notas del pedido"} {isFieldRequired(fieldId) ? "*" : ""}</label>
-            <textarea placeholder={formState.placeholderNotes || "Instrucciones especiales..."} readOnly style={{ ...inputStyle, minHeight: "60px", resize: "none" }} />
+          <div key={field.id} style={fieldStyle}>
+            <label style={labelStyle}>{field.label || "Notas del pedido"} {field.required ? "*" : ""}</label>
+            <textarea placeholder={field.placeholder || "Instrucciones especiales..."} readOnly style={{ ...inputStyle, minHeight: "60px", resize: "none" }} />
           </div>
         );
       case "quantity":
         return (
-          <div key={fieldId} style={fieldStyle}>
-            <label style={labelStyle}>{formState.labelQuantity || "Cantidad"}</label>
+          <div key={field.id} style={fieldStyle}>
+            <label style={labelStyle}>{field.label || "Cantidad"}</label>
             <div style={{ display: "flex", border: "1px solid #e1e3e5", borderRadius: "8px", overflow: "hidden", width: "fit-content" }}>
               <button style={{ width: "40px", border: "none", background: "#fafbfb", fontSize: "18px", cursor: "pointer" }}>−</button>
               <input type="text" value="1" readOnly style={{ width: "50px", textAlign: "center", border: "none", borderLeft: "1px solid #e1e3e5", borderRight: "1px solid #e1e3e5", fontSize: "14px", fontWeight: 500 }} />
               <button style={{ width: "40px", border: "none", background: "#fafbfb", fontSize: "18px", cursor: "pointer" }}>+</button>
             </div>
+          </div>
+        );
+      case "text":
+      case "number":
+        return (
+          <div key={field.id} style={fieldStyle}>
+            <label style={labelStyle}>{field.label} {field.required ? "*" : ""}</label>
+            <input type={field.type} placeholder={field.placeholder || ""} readOnly style={inputStyle} />
+          </div>
+        );
+      case "textarea":
+        return (
+          <div key={field.id} style={fieldStyle}>
+            <label style={labelStyle}>{field.label} {field.required ? "*" : ""}</label>
+            <textarea placeholder={field.placeholder || ""} readOnly style={{ ...inputStyle, minHeight: "60px", resize: "none" }} />
+          </div>
+        );
+      case "select":
+        return (
+          <div key={field.id} style={fieldStyle}>
+            <label style={labelStyle}>{field.label} {field.required ? "*" : ""}</label>
+            <select disabled style={{ ...inputStyle, background: "#fff" }}>
+              <option>Seleccionar...</option>
+              {(field.options || []).map((opt: string, i: number) => (<option key={i}>{opt}</option>))}
+            </select>
+          </div>
+        );
+      case "radio":
+        return (
+          <div key={field.id} style={fieldStyle}>
+            <label style={labelStyle}>{field.label} {field.required ? "*" : ""}</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
+              {(field.options || []).map((opt: string, i: number) => (
+                <label key={i} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", cursor: "pointer" }}>
+                  <input type="radio" name={field.id} disabled style={{ margin: 0 }} />
+                  {opt}
+                </label>
+              ))}
+            </div>
+          </div>
+        );
+      case "checkbox":
+        return (
+          <div key={field.id} style={{ ...fieldStyle, display: "flex", alignItems: "center", gap: "8px" }}>
+            <input type="checkbox" disabled style={{ margin: 0, width: "18px", height: "18px" }} />
+            <label style={{ fontSize: "14px", color: "#1a1a1a" }}>{field.label} {field.required ? "*" : ""}</label>
+          </div>
+        );
+      case "date":
+        return (
+          <div key={field.id} style={fieldStyle}>
+            <label style={labelStyle}>{field.label} {field.required ? "*" : ""}</label>
+            <input type="date" readOnly style={inputStyle} />
+          </div>
+        );
+      case "heading":
+        return (
+          <div key={field.id} style={{ ...fieldStyle, padding: "8px 0" }}>
+            <div style={{ fontSize: "15px", fontWeight: 600, color: "#1a1a1a" }}>{field.label}</div>
+          </div>
+        );
+      case "image":
+        return field.imageUrl ? (
+          <div key={field.id} style={{ ...fieldStyle, textAlign: "center" as const }}>
+            <img src={field.imageUrl} alt={field.label} style={{ maxWidth: "100%", maxHeight: "120px", borderRadius: "8px" }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          </div>
+        ) : null;
+      case "html":
+        return field.content ? (
+          <div key={field.id} style={{ ...fieldStyle, padding: "12px", background: "#f9fafb", borderRadius: "8px", fontSize: "13px" }} dangerouslySetInnerHTML={{ __html: field.content }} />
+        ) : null;
+      case "link_button":
+        return (
+          <div key={field.id} style={{ ...fieldStyle, textAlign: "center" as const }}>
+            <a href="#" style={{
+              display: "inline-block",
+              padding: "10px 20px",
+              background: "#f6f6f7",
+              color: "#1a1a1a",
+              textDecoration: "none",
+              borderRadius: "8px",
+              fontSize: "14px",
+              fontWeight: 500,
+              border: "1px solid #e1e3e5",
+            }}>
+              {field.label}
+            </a>
           </div>
         );
       default:
@@ -466,7 +553,6 @@ function FormModalPreview({
 
   // Check RTL and other modal options
   const isRTL = formState.enableRTL;
-  const hideLabels = formState.hideFieldLabels;
   const hideClose = formState.hideCloseButton;
 
   return (
@@ -573,116 +659,15 @@ function FormModalPreview({
           />
         )}
 
-        {/* Render fields in order */}
-        {fieldOrder.map((fieldId) => renderField(fieldId))}
+        {/* Render all fields from customFields in order */}
+        {customFields.length === 0 ? (
+          <div style={{ padding: "20px", textAlign: "center" as const, color: "#6b7177", fontSize: "13px" }}>
+            Agrega campos al formulario para ver la vista previa
+          </div>
+        ) : (
+          customFields.map((field) => renderCustomField(field))
+        )}
 
-        {/* Render custom fields */}
-        {(formState.customFields as any[] || []).map((field: any) => {
-          const fieldStyle = { marginBottom: "16px" };
-          const labelStyle = {
-            display: formState.hideFieldLabels ? "none" : "block",
-            fontSize: "13px",
-            fontWeight: 500,
-            marginBottom: "6px",
-            color: "#1a1a1a"
-          };
-          const inputStyle = {
-            width: "100%",
-            padding: "10px 12px",
-            border: "1px solid #e1e3e5",
-            borderRadius: "8px",
-            fontSize: "14px",
-            boxSizing: "border-box" as const,
-          };
-
-          switch (field.type) {
-            case "text":
-            case "number":
-              return (
-                <div key={field.id} style={fieldStyle}>
-                  <label style={labelStyle}>{field.label} {field.required ? "*" : ""}</label>
-                  <input type={field.type} placeholder={field.placeholder || ""} readOnly style={inputStyle} />
-                </div>
-              );
-            case "textarea":
-              return (
-                <div key={field.id} style={fieldStyle}>
-                  <label style={labelStyle}>{field.label} {field.required ? "*" : ""}</label>
-                  <textarea placeholder={field.placeholder || ""} readOnly style={{ ...inputStyle, minHeight: "60px", resize: "none" }} />
-                </div>
-              );
-            case "select":
-              return (
-                <div key={field.id} style={fieldStyle}>
-                  <label style={labelStyle}>{field.label} {field.required ? "*" : ""}</label>
-                  <select disabled style={{ ...inputStyle, background: "#fff" }}>
-                    <option>Seleccionar...</option>
-                    {(field.options || []).map((opt: string, i: number) => (<option key={i}>{opt}</option>))}
-                  </select>
-                </div>
-              );
-            case "radio":
-              return (
-                <div key={field.id} style={fieldStyle}>
-                  <label style={labelStyle}>{field.label} {field.required ? "*" : ""}</label>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
-                    {(field.options || []).map((opt: string, i: number) => (
-                      <label key={i} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", cursor: "pointer" }}>
-                        <input type="radio" name={field.id} disabled style={{ margin: 0 }} />
-                        {opt}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              );
-            case "checkbox":
-              return (
-                <div key={field.id} style={{ ...fieldStyle, display: "flex", alignItems: "center", gap: "8px" }}>
-                  <input type="checkbox" disabled style={{ margin: 0, width: "18px", height: "18px" }} />
-                  <label style={{ fontSize: "14px", color: "#1a1a1a" }}>{field.label} {field.required ? "*" : ""}</label>
-                </div>
-              );
-            case "date":
-              return (
-                <div key={field.id} style={fieldStyle}>
-                  <label style={labelStyle}>{field.label} {field.required ? "*" : ""}</label>
-                  <input type="date" readOnly style={inputStyle} />
-                </div>
-              );
-            case "heading":
-              return (
-                <div key={field.id} style={{ ...fieldStyle, padding: "8px 0" }}>
-                  <div style={{ fontSize: "15px", fontWeight: 600, color: "#1a1a1a" }}>{field.label}</div>
-                </div>
-              );
-            case "image":
-              return field.imageUrl ? (
-                <div key={field.id} style={{ ...fieldStyle, textAlign: "center" }}>
-                  <img src={field.imageUrl} alt={field.label} style={{ maxWidth: "100%", maxHeight: "120px", borderRadius: "8px" }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                </div>
-              ) : null;
-            case "link_button":
-              return (
-                <div key={field.id} style={{ ...fieldStyle, textAlign: "center" }}>
-                  <a href="#" style={{
-                    display: "inline-block",
-                    padding: "10px 20px",
-                    background: "#f6f6f7",
-                    color: "#1a1a1a",
-                    textDecoration: "none",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    fontWeight: 500,
-                    border: "1px solid #e1e3e5",
-                  }}>
-                    {field.label}
-                  </a>
-                </div>
-              );
-            default:
-              return null;
-          }
-        })}
 
         {/* Custom Image - Bottom */}
         {formState.customImagePosition === "bottom" && <CustomImage />}
@@ -888,6 +873,22 @@ export default function Settings() {
     customFields: shop?.customFields || [],
   });
 
+  // Auto-load default COD template if form is empty on first load
+  const hasInitialized = useRef(false);
+  useEffect(() => {
+    if (!hasInitialized.current && (formState.customFields as any[]).length === 0) {
+      hasInitialized.current = true;
+      const defaultCODTemplate = [
+        { id: `field_${Date.now()}_1`, type: "name", label: "Nombre completo", placeholder: "Ej: Juan Pérez", required: true, options: [], content: "", imageUrl: "", url: "" },
+        { id: `field_${Date.now()}_2`, type: "phone", label: "Teléfono / WhatsApp", placeholder: "Ej: 809-555-1234", required: true, options: [], content: "", imageUrl: "", url: "" },
+        { id: `field_${Date.now()}_3`, type: "address", label: "Dirección de entrega", placeholder: "Calle, número, sector...", required: true, options: [], content: "", imageUrl: "", url: "" },
+        { id: `field_${Date.now()}_4`, type: "city", label: "Ciudad", placeholder: "Ej: Santo Domingo", required: false, options: [], content: "", imageUrl: "", url: "" },
+        { id: `field_${Date.now()}_5`, type: "province", label: "Provincia / Estado", placeholder: "", required: false, options: [], content: "", imageUrl: "", url: "" },
+      ];
+      setFormState(prev => ({ ...prev, customFields: defaultCODTemplate }));
+    }
+  }, []);
+
   const handleChange = useCallback((field: string) => (value: string | boolean) => {
     setFormState((prev) => ({ ...prev, [field]: value }));
   }, []);
@@ -1037,55 +1038,67 @@ export default function Settings() {
 
           {/* TAB: Unified Form Builder */}
           {selectedTab === 1 && (() => {
-            // Build unified list of all elements
-            const allElements = (formState.customFields as any[]).map((field, idx) => ({
-              ...field,
-              _index: idx,
-              _isCustom: true,
-            }));
+            // All elements from customFields
+            const allElements = formState.customFields as any[];
 
-            // Element type labels and icons
-            const typeInfo: Record<string, { label: string; icon: string; color: string }> = {
-              // Input fields
-              name: { label: "Nombre", icon: "👤", color: "#5C6AC4" },
-              phone: { label: "Teléfono", icon: "📱", color: "#5C6AC4" },
-              email: { label: "Email", icon: "✉️", color: "#5C6AC4" },
-              address: { label: "Dirección", icon: "📍", color: "#5C6AC4" },
-              city: { label: "Ciudad", icon: "🏙️", color: "#5C6AC4" },
-              province: { label: "Provincia", icon: "🗺️", color: "#5C6AC4" },
-              postalCode: { label: "Código postal", icon: "📮", color: "#5C6AC4" },
-              notes: { label: "Notas", icon: "📝", color: "#5C6AC4" },
-              quantity: { label: "Cantidad", icon: "🔢", color: "#5C6AC4" },
-              // Custom types
-              text: { label: "Campo de texto", icon: "✏️", color: "#00A0AC" },
-              textarea: { label: "Área de texto", icon: "📄", color: "#00A0AC" },
-              select: { label: "Desplegable", icon: "📋", color: "#00A0AC" },
-              radio: { label: "Opción única", icon: "🔘", color: "#00A0AC" },
-              checkbox: { label: "Casilla", icon: "☑️", color: "#00A0AC" },
-              date: { label: "Fecha", icon: "📅", color: "#00A0AC" },
-              number: { label: "Número", icon: "#️⃣", color: "#00A0AC" },
+            // Count how many times each type appears
+            const typeCounts: Record<string, number> = {};
+            allElements.forEach(el => {
+              typeCounts[el.type] = (typeCounts[el.type] || 0) + 1;
+            });
+
+            // Fields that can only be added once
+            const singleUseFields = ["name", "phone", "address", "email", "city", "province", "postalCode", "notes", "quantity"];
+
+            // Field type configuration with Polaris icons
+            const fieldTypes: Record<string, { label: string; icon: any; maxCount: number }> = {
+              // Essential COD
+              name: { label: "Nombre", icon: PersonIcon, maxCount: 1 },
+              phone: { label: "Teléfono", icon: PhoneIcon, maxCount: 1 },
+              email: { label: "Email", icon: EmailIcon, maxCount: 1 },
+              address: { label: "Dirección", icon: LocationIcon, maxCount: 1 },
+              city: { label: "Ciudad", icon: GlobeIcon, maxCount: 1 },
+              province: { label: "Provincia", icon: GlobeIcon, maxCount: 1 },
+              postalCode: { label: "Código postal", icon: LocationIcon, maxCount: 1 },
+              notes: { label: "Notas", icon: NoteIcon, maxCount: 1 },
+              quantity: { label: "Cantidad", icon: HashtagIcon, maxCount: 1 },
+              // Custom inputs
+              text: { label: "Campo de texto", icon: TextIcon, maxCount: 99 },
+              textarea: { label: "Área de texto", icon: TextAlignLeftIcon, maxCount: 99 },
+              select: { label: "Desplegable", icon: ListBulletedIcon, maxCount: 99 },
+              radio: { label: "Opción única", icon: CheckIcon, maxCount: 99 },
+              checkbox: { label: "Casilla", icon: CheckIcon, maxCount: 99 },
+              date: { label: "Fecha", icon: CalendarIcon, maxCount: 99 },
+              number: { label: "Número", icon: HashtagIcon, maxCount: 99 },
               // Decorative
-              heading: { label: "Título/Texto", icon: "🏷️", color: "#637381" },
-              image: { label: "Imagen", icon: "🖼️", color: "#637381" },
-              html: { label: "HTML", icon: "🧩", color: "#637381" },
-              link_button: { label: "Botón enlace", icon: "🔗", color: "#637381" },
+              heading: { label: "Título/Texto", icon: TextIcon, maxCount: 99 },
+              image: { label: "Imagen", icon: ImageIcon, maxCount: 99 },
+              html: { label: "HTML", icon: CodeIcon, maxCount: 99 },
+              link_button: { label: "Botón enlace", icon: LinkIcon, maxCount: 99 },
+            };
+
+            // Default values for COD fields
+            const fieldDefaults: Record<string, { label: string; placeholder: string; required: boolean }> = {
+              name: { label: "Nombre completo", placeholder: "Ej: Juan Pérez", required: true },
+              phone: { label: "Teléfono / WhatsApp", placeholder: "Ej: 809-555-1234", required: true },
+              email: { label: "Email", placeholder: "Ej: juan@email.com", required: false },
+              address: { label: "Dirección de entrega", placeholder: "Calle, número, sector...", required: true },
+              city: { label: "Ciudad", placeholder: "Ej: Santo Domingo", required: false },
+              province: { label: "Provincia / Estado", placeholder: "", required: false },
+              postalCode: { label: "Código postal", placeholder: "Ej: 10101", required: false },
+              notes: { label: "Notas del pedido", placeholder: "Instrucciones especiales...", required: false },
+              quantity: { label: "Cantidad", placeholder: "", required: false },
             };
 
             const addElement = (type: string) => {
-              // Default labels and placeholders for COD essential fields
-              const fieldDefaults: Record<string, { label: string; placeholder: string; required: boolean }> = {
-                name: { label: "Nombre completo", placeholder: "Ej: Juan Pérez", required: true },
-                phone: { label: "Teléfono / WhatsApp", placeholder: "Ej: 809-555-1234", required: true },
-                email: { label: "Email", placeholder: "Ej: juan@email.com", required: false },
-                address: { label: "Dirección de entrega", placeholder: "Calle, número, sector...", required: true },
-                city: { label: "Ciudad", placeholder: "Ej: Santo Domingo", required: false },
-                province: { label: "Provincia / Estado", placeholder: "", required: false },
-                postalCode: { label: "Código postal", placeholder: "Ej: 10101", required: false },
-                notes: { label: "Notas del pedido", placeholder: "Instrucciones especiales...", required: false },
-                quantity: { label: "Cantidad", placeholder: "", required: false },
-              };
+              const typeConfig = fieldTypes[type];
+              if (typeConfig && typeCounts[type] >= typeConfig.maxCount) return;
 
-              const defaults = fieldDefaults[type] || { label: typeInfo[type]?.label || "Nuevo elemento", placeholder: "", required: false };
+              const defaults = fieldDefaults[type] || {
+                label: fieldTypes[type]?.label || "Nuevo elemento",
+                placeholder: "",
+                required: false
+              };
 
               const newField = {
                 id: `field_${Date.now()}`,
@@ -1098,104 +1111,127 @@ export default function Settings() {
                 imageUrl: "",
                 url: "",
               };
+
               setFormState(prev => ({
                 ...prev,
                 customFields: [...(prev.customFields as any[]), newField]
               }));
+
+              // Auto-scroll to new element after a short delay
+              setTimeout(() => {
+                const elements = document.querySelectorAll('[data-field-id]');
+                const lastElement = elements[elements.length - 1];
+                if (lastElement) {
+                  lastElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+              }, 100);
             };
 
             const updateElement = (index: number, updates: any) => {
-              const newFields = [...(formState.customFields as any[])];
+              const newFields = [...allElements];
               newFields[index] = { ...newFields[index], ...updates };
               setFormState(prev => ({ ...prev, customFields: newFields }));
             };
 
             const removeElement = (index: number) => {
-              const newFields = (formState.customFields as any[]).filter((_, i) => i !== index);
+              const newFields = allElements.filter((_, i) => i !== index);
               setFormState(prev => ({ ...prev, customFields: newFields }));
             };
 
             const moveElement = (index: number, direction: "up" | "down") => {
-              const newFields = [...(formState.customFields as any[])];
+              const newFields = [...allElements];
               const newIndex = direction === "up" ? index - 1 : index + 1;
               if (newIndex < 0 || newIndex >= newFields.length) return;
               [newFields[index], newFields[newIndex]] = [newFields[newIndex], newFields[index]];
               setFormState(prev => ({ ...prev, customFields: newFields }));
             };
 
+            // Render an add button with counter
+            const AddFieldButton = ({ type, variant = "secondary" }: { type: string; variant?: "primary" | "secondary" }) => {
+              const config = fieldTypes[type];
+              if (!config) return null;
+              const count = typeCounts[type] || 0;
+              const isAtLimit = count >= config.maxCount;
+              const isSingleUse = singleUseFields.includes(type);
+
+              return (
+                <Button
+                  onClick={() => addElement(type)}
+                  size="slim"
+                  variant={isAtLimit ? "secondary" : variant === "primary" ? "primary" : "secondary"}
+                  disabled={isAtLimit}
+                  icon={config.icon}
+                >
+                  {config.label}
+                  {isSingleUse && count > 0 && (
+                    <span style={{ marginLeft: "4px", opacity: 0.7 }}>✓</span>
+                  )}
+                </Button>
+              );
+            };
+
             return (
               <Layout>
                 <Layout.Section>
-                  {/* HEADER & ADD BUTTON */}
+                  {/* HEADER */}
                   <Card>
                     <BlockStack gap="400">
-                      <InlineStack align="space-between" blockAlign="start">
-                        <BlockStack gap="200">
-                          <Text as="h2" variant="headingLg">Constructor de formulario</Text>
-                          <Text as="p" tone="subdued">
-                            Arma tu formulario agregando elementos y ordenándolos como quieras.
-                          </Text>
-                        </BlockStack>
-                        {allElements.length === 0 && (
-                          <Button
-                            variant="primary"
-                            onClick={() => {
-                              // Add all essential COD fields at once
-                              const essentialFields = [
-                                { id: `field_${Date.now()}_1`, type: "name", label: "Nombre completo", placeholder: "Ej: Juan Pérez", required: true, options: [], content: "", imageUrl: "", url: "" },
-                                { id: `field_${Date.now()}_2`, type: "phone", label: "Teléfono / WhatsApp", placeholder: "Ej: 809-555-1234", required: true, options: [], content: "", imageUrl: "", url: "" },
-                                { id: `field_${Date.now()}_3`, type: "address", label: "Dirección de entrega", placeholder: "Calle, número, sector...", required: true, options: [], content: "", imageUrl: "", url: "" },
-                                { id: `field_${Date.now()}_4`, type: "city", label: "Ciudad", placeholder: "Ej: Santo Domingo", required: false, options: [], content: "", imageUrl: "", url: "" },
-                                { id: `field_${Date.now()}_5`, type: "province", label: "Provincia", placeholder: "", required: false, options: [], content: "", imageUrl: "", url: "" },
-                              ];
-                              setFormState(prev => ({
-                                ...prev,
-                                customFields: essentialFields
-                              }));
-                            }}
-                          >
-                            🚀 Comenzar con plantilla COD
-                          </Button>
-                        )}
-                      </InlineStack>
+                      <BlockStack gap="200">
+                        <Text as="h2" variant="headingLg">Constructor de formulario</Text>
+                        <Text as="p" tone="subdued">
+                          Agrega campos y ordénalos como quieras. Los campos esenciales solo pueden agregarse una vez.
+                        </Text>
+                      </BlockStack>
 
-                      {/* Quick add - Essential COD fields */}
-                      <BlockStack gap="300">
-                        <Text as="p" variant="headingSm">📦 Campos esenciales COD:</Text>
+                      {/* Essential COD fields */}
+                      <BlockStack gap="200">
+                        <InlineStack gap="200" align="start">
+                          <Icon source={PersonIcon} tone="base" />
+                          <Text as="span" variant="headingSm">Campos esenciales</Text>
+                        </InlineStack>
                         <InlineStack gap="200" wrap>
-                          <Button onClick={() => addElement("name")} size="slim" variant="primary">👤 Nombre</Button>
-                          <Button onClick={() => addElement("phone")} size="slim" variant="primary">📱 Teléfono</Button>
-                          <Button onClick={() => addElement("address")} size="slim" variant="primary">📍 Dirección</Button>
-                          <Button onClick={() => addElement("city")} size="slim">🏙️ Ciudad</Button>
-                          <Button onClick={() => addElement("province")} size="slim">🗺️ Provincia</Button>
-                          <Button onClick={() => addElement("email")} size="slim">✉️ Email</Button>
-                          <Button onClick={() => addElement("notes")} size="slim">📝 Notas</Button>
-                          <Button onClick={() => addElement("quantity")} size="slim">🔢 Cantidad</Button>
+                          <AddFieldButton type="name" variant="primary" />
+                          <AddFieldButton type="phone" variant="primary" />
+                          <AddFieldButton type="address" variant="primary" />
+                          <AddFieldButton type="city" />
+                          <AddFieldButton type="province" />
+                          <AddFieldButton type="email" />
+                          <AddFieldButton type="notes" />
                         </InlineStack>
                       </BlockStack>
 
-                      {/* Quick add - Custom elements */}
-                      <BlockStack gap="300">
-                        <Text as="p" variant="headingSm">🎨 Elementos personalizados:</Text>
+                      <Divider />
+
+                      {/* Custom input fields */}
+                      <BlockStack gap="200">
+                        <InlineStack gap="200" align="start">
+                          <Icon source={TextIcon} tone="base" />
+                          <Text as="span" variant="headingSm">Campos de entrada</Text>
+                        </InlineStack>
                         <InlineStack gap="200" wrap>
-                          <Button onClick={() => addElement("text")} size="slim">✏️ Texto</Button>
-                          <Button onClick={() => addElement("textarea")} size="slim">📄 Área texto</Button>
-                          <Button onClick={() => addElement("select")} size="slim">📋 Desplegable</Button>
-                          <Button onClick={() => addElement("radio")} size="slim">🔘 Opciones</Button>
-                          <Button onClick={() => addElement("checkbox")} size="slim">☑️ Casilla</Button>
-                          <Button onClick={() => addElement("number")} size="slim">#️⃣ Número</Button>
-                          <Button onClick={() => addElement("date")} size="slim">📅 Fecha</Button>
+                          <AddFieldButton type="text" />
+                          <AddFieldButton type="textarea" />
+                          <AddFieldButton type="select" />
+                          <AddFieldButton type="radio" />
+                          <AddFieldButton type="checkbox" />
+                          <AddFieldButton type="number" />
+                          <AddFieldButton type="date" />
                         </InlineStack>
                       </BlockStack>
 
-                      {/* Quick add - Decorative */}
-                      <BlockStack gap="300">
-                        <Text as="p" variant="headingSm">✨ Elementos decorativos:</Text>
+                      <Divider />
+
+                      {/* Decorative elements */}
+                      <BlockStack gap="200">
+                        <InlineStack gap="200" align="start">
+                          <Icon source={ImageIcon} tone="base" />
+                          <Text as="span" variant="headingSm">Elementos decorativos</Text>
+                        </InlineStack>
                         <InlineStack gap="200" wrap>
-                          <Button onClick={() => addElement("heading")} size="slim">🏷️ Título</Button>
-                          <Button onClick={() => addElement("image")} size="slim">🖼️ Imagen/GIF</Button>
-                          <Button onClick={() => addElement("html")} size="slim">🧩 HTML</Button>
-                          <Button onClick={() => addElement("link_button")} size="slim">🔗 Botón enlace</Button>
+                          <AddFieldButton type="heading" />
+                          <AddFieldButton type="image" />
+                          <AddFieldButton type="html" />
+                          <AddFieldButton type="link_button" />
                         </InlineStack>
                       </BlockStack>
                     </BlockStack>
@@ -1204,241 +1240,187 @@ export default function Settings() {
                   {/* ELEMENTS LIST */}
                   <Box paddingBlockStart="400">
                     <BlockStack gap="300">
+                      <InlineStack align="space-between">
+                        <Text as="h3" variant="headingMd">
+                          Campos del formulario ({allElements.length})
+                        </Text>
+                      </InlineStack>
+
                       {allElements.length === 0 ? (
                         <Card>
                           <BlockStack gap="400" inlineAlign="center">
-                            <div style={{ fontSize: "48px", opacity: 0.5 }}>📝</div>
+                            <Box padding="400">
+                              <Icon source={AlertCircleIcon} tone="subdued" />
+                            </Box>
                             <Text as="p" tone="subdued" alignment="center">
-                              Tu formulario está vacío. Usa los botones de arriba para agregar elementos.
+                              Tu formulario no tiene campos. Agrega elementos usando los botones de arriba.
                             </Text>
                           </BlockStack>
                         </Card>
                       ) : (
                         allElements.map((element, index) => {
-                          const info = typeInfo[element.type] || { label: element.type, icon: "📦", color: "#637381" };
+                          const config = fieldTypes[element.type] || { label: element.type, icon: TextIcon };
                           const isDecorative = ["heading", "image", "html", "link_button"].includes(element.type);
+                          const isCODField = singleUseFields.includes(element.type);
 
                           return (
-                            <div
-                              key={element.id}
-                              style={{
-                                background: "#fff",
-                                border: "1px solid #e1e3e5",
-                                borderRadius: "12px",
-                                borderLeft: `4px solid ${info.color}`,
-                                overflow: "hidden",
-                              }}
-                            >
-                              {/* Element header */}
-                              <div style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                padding: "12px 16px",
-                                background: "#fafbfc",
-                                borderBottom: "1px solid #e1e3e5",
-                              }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                  {/* Position indicator */}
-                                  <div style={{
-                                    width: "28px",
-                                    height: "28px",
-                                    borderRadius: "50%",
-                                    background: info.color,
-                                    color: "#fff",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    fontSize: "12px",
-                                    fontWeight: 600,
-                                  }}>
-                                    {index + 1}
-                                  </div>
-                                  <span style={{ fontSize: "18px" }}>{info.icon}</span>
-                                  <div>
-                                    <div style={{ fontWeight: 600, fontSize: "14px" }}>
-                                      {element.label || info.label}
-                                    </div>
-                                    <div style={{ fontSize: "12px", color: "#637381" }}>
-                                      {info.label}
-                                      {element.required && <span style={{ color: "#D72C0D", marginLeft: "6px" }}>• Requerido</span>}
-                                    </div>
-                                  </div>
-                                </div>
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                  {/* Move buttons */}
-                                  <button
-                                    onClick={() => moveElement(index, "up")}
-                                    disabled={index === 0}
-                                    style={{
-                                      padding: "6px 10px",
-                                      border: "1px solid #e1e3e5",
-                                      borderRadius: "6px",
-                                      background: index === 0 ? "#f6f6f7" : "#fff",
-                                      cursor: index === 0 ? "default" : "pointer",
-                                      opacity: index === 0 ? 0.4 : 1,
-                                      fontSize: "14px",
-                                    }}
-                                    title="Mover arriba"
-                                  >
-                                    ↑
-                                  </button>
-                                  <button
-                                    onClick={() => moveElement(index, "down")}
-                                    disabled={index === allElements.length - 1}
-                                    style={{
-                                      padding: "6px 10px",
-                                      border: "1px solid #e1e3e5",
-                                      borderRadius: "6px",
-                                      background: index === allElements.length - 1 ? "#f6f6f7" : "#fff",
-                                      cursor: index === allElements.length - 1 ? "default" : "pointer",
-                                      opacity: index === allElements.length - 1 ? 0.4 : 1,
-                                      fontSize: "14px",
-                                    }}
-                                    title="Mover abajo"
-                                  >
-                                    ↓
-                                  </button>
-                                  <button
-                                    onClick={() => removeElement(index)}
-                                    style={{
-                                      padding: "6px 10px",
-                                      border: "1px solid #ffd2cc",
-                                      borderRadius: "6px",
-                                      background: "#fff5f5",
-                                      color: "#D72C0D",
-                                      cursor: "pointer",
-                                      fontSize: "14px",
-                                    }}
-                                    title="Eliminar"
-                                  >
-                                    ✕
-                                  </button>
-                                </div>
+                            <Card key={element.id}>
+                              <div data-field-id={element.id}>
+                                <BlockStack gap="400">
+                                  {/* Header */}
+                                  <InlineStack align="space-between" blockAlign="center">
+                                    <InlineStack gap="300" blockAlign="center">
+                                      <Text as="span" variant="bodyMd" tone="subdued">#{index + 1}</Text>
+                                      <Icon source={config.icon} tone="base" />
+                                      <BlockStack gap="0">
+                                        <Text as="span" variant="bodyMd" fontWeight="semibold">
+                                          {element.label || config.label}
+                                        </Text>
+                                        <InlineStack gap="200">
+                                          <Text as="span" variant="bodySm" tone="subdued">{config.label}</Text>
+                                          {element.required && <Badge tone="attention" size="small">Requerido</Badge>}
+                                          {isCODField && <Badge tone="info" size="small">Esencial</Badge>}
+                                        </InlineStack>
+                                      </BlockStack>
+                                    </InlineStack>
+                                    <ButtonGroup>
+                                      <Button
+                                        icon={ChevronUpIcon}
+                                        size="slim"
+                                        onClick={() => moveElement(index, "up")}
+                                        disabled={index === 0}
+                                        accessibilityLabel="Mover arriba"
+                                      />
+                                      <Button
+                                        icon={ChevronDownIcon}
+                                        size="slim"
+                                        onClick={() => moveElement(index, "down")}
+                                        disabled={index === allElements.length - 1}
+                                        accessibilityLabel="Mover abajo"
+                                      />
+                                      <Button
+                                        icon={DeleteIcon}
+                                        size="slim"
+                                        tone="critical"
+                                        onClick={() => removeElement(index)}
+                                        accessibilityLabel="Eliminar"
+                                      />
+                                    </ButtonGroup>
+                                  </InlineStack>
+
+                                  <Divider />
+
+                                  {/* Config */}
+                                  <FormLayout>
+                                    <FormLayout.Group>
+                                      <Select
+                                        label="Tipo"
+                                        options={[
+                                          { label: "─ Esenciales ─", value: "", disabled: true },
+                                          { value: "name", label: "Nombre" },
+                                          { value: "phone", label: "Teléfono" },
+                                          { value: "email", label: "Email" },
+                                          { value: "address", label: "Dirección" },
+                                          { value: "city", label: "Ciudad" },
+                                          { value: "province", label: "Provincia" },
+                                          { value: "postalCode", label: "Código postal" },
+                                          { value: "notes", label: "Notas" },
+                                          { value: "quantity", label: "Cantidad" },
+                                          { label: "─ Personalizados ─", value: "_", disabled: true },
+                                          { value: "text", label: "Campo de texto" },
+                                          { value: "textarea", label: "Área de texto" },
+                                          { value: "number", label: "Número" },
+                                          { value: "select", label: "Desplegable" },
+                                          { value: "radio", label: "Opción única" },
+                                          { value: "checkbox", label: "Casilla" },
+                                          { value: "date", label: "Fecha" },
+                                          { label: "─ Decorativos ─", value: "__", disabled: true },
+                                          { value: "heading", label: "Título/Texto" },
+                                          { value: "image", label: "Imagen" },
+                                          { value: "html", label: "HTML" },
+                                          { value: "link_button", label: "Botón enlace" },
+                                        ]}
+                                        value={element.type}
+                                        onChange={(value) => updateElement(index, { type: value })}
+                                      />
+                                      {element.type !== "html" && (
+                                        <TextField
+                                          label={element.type === "heading" ? "Texto" : "Etiqueta"}
+                                          value={element.label || ""}
+                                          onChange={(value) => updateElement(index, { label: value })}
+                                          autoComplete="off"
+                                        />
+                                      )}
+                                    </FormLayout.Group>
+
+                                    {["text", "textarea", "number", "name", "phone", "email", "address", "city", "postalCode", "notes"].includes(element.type) && (
+                                      <TextField
+                                        label="Placeholder"
+                                        value={element.placeholder || ""}
+                                        onChange={(value) => updateElement(index, { placeholder: value })}
+                                        autoComplete="off"
+                                      />
+                                    )}
+
+                                    {["select", "radio"].includes(element.type) && (
+                                      <TextField
+                                        label="Opciones (separadas por coma)"
+                                        value={(element.options || []).join(", ")}
+                                        onChange={(value) => updateElement(index, {
+                                          options: value.split(",").map((o: string) => o.trim()).filter(Boolean)
+                                        })}
+                                        autoComplete="off"
+                                        helpText="Ejemplo: Opción 1, Opción 2, Opción 3"
+                                      />
+                                    )}
+
+                                    {element.type === "html" && (
+                                      <TextField
+                                        label="Código HTML"
+                                        value={element.content || ""}
+                                        onChange={(value) => updateElement(index, { content: value })}
+                                        multiline={3}
+                                        autoComplete="off"
+                                        monospaced
+                                      />
+                                    )}
+
+                                    {element.type === "image" && (
+                                      <TextField
+                                        label="URL de la imagen"
+                                        value={element.imageUrl || ""}
+                                        onChange={(value) => updateElement(index, { imageUrl: value })}
+                                        autoComplete="off"
+                                      />
+                                    )}
+
+                                    {element.type === "link_button" && (
+                                      <TextField
+                                        label="URL del enlace"
+                                        value={element.url || ""}
+                                        onChange={(value) => updateElement(index, { url: value })}
+                                        autoComplete="off"
+                                      />
+                                    )}
+
+                                    {!isDecorative && (
+                                      <Checkbox
+                                        label="Campo obligatorio"
+                                        checked={element.required || false}
+                                        onChange={(value) => updateElement(index, { required: value })}
+                                      />
+                                    )}
+                                  </FormLayout>
+                                </BlockStack>
                               </div>
-
-                              {/* Element config */}
-                              <div style={{ padding: "16px" }}>
-                                <FormLayout>
-                                  {/* Type selector */}
-                                  <Select
-                                    label="Tipo de elemento"
-                                    options={[
-                                      { label: "── Campos COD esenciales ──", value: "", disabled: true },
-                                      { value: "name", label: "👤 Nombre" },
-                                      { value: "phone", label: "📱 Teléfono" },
-                                      { value: "email", label: "✉️ Email" },
-                                      { value: "address", label: "📍 Dirección" },
-                                      { value: "city", label: "🏙️ Ciudad" },
-                                      { value: "province", label: "🗺️ Provincia" },
-                                      { value: "postalCode", label: "📮 Código postal" },
-                                      { value: "notes", label: "📝 Notas" },
-                                      { value: "quantity", label: "🔢 Cantidad" },
-                                      { label: "── Campos personalizados ──", value: "_custom", disabled: true },
-                                      { value: "text", label: "✏️ Campo de texto" },
-                                      { value: "textarea", label: "📄 Área de texto" },
-                                      { value: "number", label: "#️⃣ Número" },
-                                      { value: "select", label: "📋 Desplegable" },
-                                      { value: "radio", label: "🔘 Opción única" },
-                                      { value: "checkbox", label: "☑️ Casilla" },
-                                      { value: "date", label: "📅 Fecha" },
-                                      { label: "── Elementos decorativos ──", value: "_deco", disabled: true },
-                                      { value: "heading", label: "🏷️ Título o texto" },
-                                      { value: "image", label: "🖼️ Imagen o GIF" },
-                                      { value: "html", label: "🧩 Código HTML" },
-                                      { value: "link_button", label: "🔗 Botón con enlace" },
-                                    ]}
-                                    value={element.type}
-                                    onChange={(value) => updateElement(index, { type: value })}
-                                  />
-
-                                  {/* Label for non-HTML types */}
-                                  {element.type !== "html" && (
-                                    <TextField
-                                      label={element.type === "heading" ? "Texto a mostrar" : "Etiqueta del campo"}
-                                      value={element.label || ""}
-                                      onChange={(value) => updateElement(index, { label: value })}
-                                      autoComplete="off"
-                                    />
-                                  )}
-
-                                  {/* Placeholder for input types */}
-                                  {["text", "textarea", "number"].includes(element.type) && (
-                                    <TextField
-                                      label="Texto de ayuda (placeholder)"
-                                      value={element.placeholder || ""}
-                                      onChange={(value) => updateElement(index, { placeholder: value })}
-                                      autoComplete="off"
-                                    />
-                                  )}
-
-                                  {/* Options for select/radio */}
-                                  {["select", "radio"].includes(element.type) && (
-                                    <TextField
-                                      label="Opciones (una por línea o separadas por coma)"
-                                      value={(element.options || []).join(", ")}
-                                      onChange={(value) => updateElement(index, {
-                                        options: value.split(/[,\n]/).map((o: string) => o.trim()).filter(Boolean)
-                                      })}
-                                      multiline={2}
-                                      autoComplete="off"
-                                      helpText="Ejemplo: Opción 1, Opción 2, Opción 3"
-                                    />
-                                  )}
-
-                                  {/* HTML content */}
-                                  {element.type === "html" && (
-                                    <TextField
-                                      label="Código HTML"
-                                      value={element.content || ""}
-                                      onChange={(value) => updateElement(index, { content: value })}
-                                      multiline={4}
-                                      autoComplete="off"
-                                      monospaced
-                                      helpText="Puedes usar HTML para mostrar mensajes, banners, etc."
-                                    />
-                                  )}
-
-                                  {/* Image URL */}
-                                  {element.type === "image" && (
-                                    <TextField
-                                      label="URL de la imagen"
-                                      value={element.imageUrl || ""}
-                                      onChange={(value) => updateElement(index, { imageUrl: value })}
-                                      autoComplete="off"
-                                      helpText="Pega la URL de una imagen o GIF"
-                                    />
-                                  )}
-
-                                  {/* Link button URL */}
-                                  {element.type === "link_button" && (
-                                    <TextField
-                                      label="URL del enlace"
-                                      value={element.url || ""}
-                                      onChange={(value) => updateElement(index, { url: value })}
-                                      autoComplete="off"
-                                      helpText="A dónde llevará el botón al hacer clic"
-                                    />
-                                  )}
-
-                                  {/* Required toggle for input fields */}
-                                  {!isDecorative && (
-                                    <Checkbox
-                                      label="Este campo es obligatorio"
-                                      checked={element.required || false}
-                                      onChange={(value) => updateElement(index, { required: value })}
-                                    />
-                                  )}
-                                </FormLayout>
-                              </div>
-                            </div>
+                            </Card>
                           );
                         })
                       )}
                     </BlockStack>
                   </Box>
 
-                  {/* COUNTRIES & OPTIONS */}
+                  {/* REGIONAL CONFIG */}
                   <Box paddingBlockStart="400">
                     <Card>
                       <BlockStack gap="400">
@@ -1448,7 +1430,7 @@ export default function Settings() {
                             label="Países habilitados"
                             value={formState.countries}
                             onChange={handleChange("countries")}
-                            helpText="Códigos separados por coma: DO, CO, MX, PE, CL, AR"
+                            helpText="Códigos ISO: DO, CO, MX, PE, CL, AR"
                             autoComplete="off"
                           />
                           <Select
@@ -1462,32 +1444,31 @@ export default function Settings() {
                     </Card>
                   </Box>
 
-                  {/* FORM OPTIONS */}
+                  {/* OPTIONS */}
                   <Box paddingBlockStart="400">
                     <Card>
                       <BlockStack gap="400">
-                        <Text as="h2" variant="headingMd">Opciones de visualización</Text>
+                        <Text as="h2" variant="headingMd">Opciones</Text>
                         <FormLayout>
                           <Checkbox
-                            label="Ocultar etiquetas de campos"
-                            helpText="Solo mostrar placeholders, estilo más limpio"
+                            label="Ocultar etiquetas"
+                            helpText="Solo mostrar placeholders"
                             checked={formState.hideFieldLabels}
                             onChange={handleChange("hideFieldLabels")}
                           />
                           <Checkbox
-                            label="Texto de derecha a izquierda (RTL)"
-                            helpText="Para árabe, hebreo y otros idiomas RTL"
+                            label="Texto RTL"
+                            helpText="Derecha a izquierda (árabe, hebreo)"
                             checked={formState.enableRTL}
                             onChange={handleChange("enableRTL")}
                           />
                           <TextField
-                            label="CSS personalizado (avanzado)"
+                            label="CSS personalizado"
                             value={formState.customCss}
                             onChange={handleChange("customCss")}
-                            multiline={3}
+                            multiline={2}
                             autoComplete="off"
                             monospaced
-                            helpText="Estilos CSS adicionales para el formulario"
                           />
                         </FormLayout>
                       </BlockStack>
