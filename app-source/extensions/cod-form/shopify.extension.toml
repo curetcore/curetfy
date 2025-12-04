@@ -1,6 +1,7 @@
 api_version = "2024-10"
 
 [[extensions]]
+uid = "44936ccc-b956-c576-fc37-de61fd1c94fc848ecf01"
 type = "theme"
 name = "Curetfy COD Form"
 handle = "curetfy-cod-form"
