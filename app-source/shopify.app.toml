@@ -1,0 +1,53 @@
+# Curetfy - COD Form
+# Shopify App Configuration
+
+name = "Curetfy - COD Form"
+handle = "curetfy-cod-form"
+application_url = "https://app.curetcore.com"
+
+# Access scopes
+scopes = "read_products,write_products,read_orders,write_orders,write_draft_orders,read_customers,write_customers"
+
+[auth]
+redirect_urls = [
+  "https://app.curetcore.com/auth/callback",
+  "https://app.curetcore.com/auth/shopify/callback",
+  "https://app.curetcore.com/api/auth/callback"
+]
+
+[webhooks]
+api_version = "2024-10"
+
+  # App lifecycle
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/app/uninstalled"
+  topics = ["app/uninstalled"]
+
+  [[webhooks.subscriptions]]
+  topics = ["app/scopes_update"]
+  uri = "/webhooks/app/scopes_update"
+
+  # GDPR Compliance (mandatory for public apps)
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/customers/data_request"
+  compliance_topics = ["customers/data_request"]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/customers/redact"
+  compliance_topics = ["customers/redact"]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/shop/redact"
+  compliance_topics = ["shop/redact"]
+
+[pos]
+embedded = false
+
+[app_proxy]
+url = "https://app.curetcore.com/api/proxy"
+subpath = "curetfy"
+prefix = "apps"
+
+[build]
+automatically_update_urls_on_dev = true
+include_config_on_deploy = true

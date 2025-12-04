@@ -1,0 +1,38 @@
+# Curetfy COD Form - Docker Compose for Easypanel
+# Copy this configuration to Easypanel
+
+version: "3.8"
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://curetfy:${DB_PASSWORD}@db:5432/curetfy
+      - SHOPIFY_API_KEY=${SHOPIFY_API_KEY}
+      - SHOPIFY_API_SECRET=${SHOPIFY_API_SECRET}
+      - SHOPIFY_APP_URL=https://app.curetcore.com
+    depends_on:
+      - db
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.curetfy.rule=Host(`app.curetcore.com`)"
+      - "traefik.http.routers.curetfy.tls=true"
+      - "traefik.http.routers.curetfy.tls.certresolver=letsencrypt"
+      - "traefik.http.services.curetfy.loadbalancer.server.port=3000"
+
+  db:
+    image: postgres:16-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=curetfy
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=curetfy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

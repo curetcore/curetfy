@@ -1,0 +1,135 @@
+// Curetfy - COD Form
+// Prisma Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Shopify Session Storage (required by shopify-app-remix)
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+
+  @@index([shop])
+}
+
+// Shop Configuration
+model Shop {
+  id                  String   @id @default(cuid())
+  shopDomain          String   @unique
+
+  // WhatsApp Configuration
+  whatsappNumber      String?
+  messageTemplate     String?  @default("🛒 *Nuevo Pedido #{{orderNumber}}*\n\n*Producto:* {{product}}\n*Cantidad:* {{quantity}}\n*Total:* {{total}}\n\n*Cliente:* {{name}}\n*Teléfono:* {{phone}}\n*Dirección:* {{address}}\n*Provincia:* {{province}}")
+
+  // Form Customization
+  buttonText          String   @default("Comprar por WhatsApp")
+  buttonColor         String   @default("#25D366")
+  buttonTextColor     String   @default("#FFFFFF")
+  formTitle           String   @default("Completa tu pedido")
+
+  // Settings
+  enabledProducts     String[] @default([])
+  enabledCollections  String[] @default([])
+  countries           String[] @default(["DO"])
+  defaultCountry      String   @default("DO")
+
+  // Billing
+  plan                Plan     @default(FREE)
+  ordersThisMonth     Int      @default(0)
+  billingCycleStart   DateTime @default(now())
+  shopifyChargeId     String?
+
+  // Relations
+  orders              Order[]
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model Order {
+  id                  String      @id @default(cuid())
+  shopId              String
+  shop                Shop        @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  // Shopify Reference
+  shopifyOrderId      String?
+  shopifyOrderNumber  String?
+
+  // Customer Info
+  customerName        String
+  customerPhone       String
+  customerEmail       String?
+  customerAddress     String
+  customerProvince    String
+  customerCity        String?
+  customerCountry     String      @default("DO")
+  customerNotes       String?
+
+  // Order Details
+  productId           String
+  productTitle        String
+  productVariantId    String?
+  productImage        String?
+  quantity            Int         @default(1)
+  unitPrice           Decimal     @db.Decimal(10, 2)
+  subtotal            Decimal     @db.Decimal(10, 2)
+  discount            Decimal     @default(0) @db.Decimal(10, 2)
+  total               Decimal     @db.Decimal(10, 2)
+  currency            String      @default("DOP")
+
+  // Upsells
+  upsellsData         Json?       // Store upsell items if any
+
+  // Status
+  status              OrderStatus @default(PENDING)
+  whatsappSent        Boolean     @default(false)
+  whatsappSentAt      DateTime?
+
+  // Metadata
+  source              String      @default("cod_form")
+  ipAddress           String?
+  userAgent           String?
+
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  @@index([shopId, createdAt(sort: Desc)])
+  @@index([shopId, status])
+  @@index([customerPhone])
+}
+
+enum Plan {
+  FREE        // 60 orders/month
+  PRO         // 500 orders/month
+  BUSINESS    // 2000 orders/month
+  UNLIMITED   // Unlimited
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  RETURNED
+}

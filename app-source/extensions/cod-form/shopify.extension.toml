@@ -1,0 +1,16 @@
+api_version = "2024-10"
+
+[[extensions]]
+type = "theme"
+name = "Curetfy COD Form"
+handle = "curetfy-cod-form"
+
+  [[extensions.blocks]]
+  type = "@app"
+  name = "COD Buy Button"
+  template = "blocks/cod-button.liquid"
+
+  [[extensions.blocks]]
+  type = "product"
+  name = "COD Buy Button (Product)"
+  template = "blocks/cod-button.liquid"

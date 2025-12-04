@@ -1,0 +1,34 @@
+{
+  "cod_buy_button": {
+    "name": "COD Buy Button",
+    "settings": {
+      "button_text": {
+        "label": "Button text"
+      },
+      "button_color": {
+        "label": "Button color"
+      },
+      "button_text_color": {
+        "label": "Text color"
+      },
+      "button_radius": {
+        "label": "Border radius"
+      },
+      "button_padding": {
+        "label": "Padding"
+      },
+      "button_font_size": {
+        "label": "Font size"
+      },
+      "button_full_width": {
+        "label": "Full width"
+      },
+      "show_whatsapp_icon": {
+        "label": "Show WhatsApp icon"
+      },
+      "form_title": {
+        "label": "Form title"
+      }
+    }
+  }
+}
