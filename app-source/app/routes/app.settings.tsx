@@ -1038,17 +1038,142 @@ function FormModalPreview({
           />
         )}
 
-        {/* Total */}
+        {/* Shipping Methods */}
+        {formState.enableShipping && (
+          <div style={{ marginBottom: "16px" }}>
+            <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "10px", color: "#1a1a1a" }}>
+              Selecciona tu método de envío
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <label style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "12px",
+                border: "2px solid #008060",
+                borderRadius: "8px",
+                cursor: "pointer",
+                background: "#f0fdf4",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div style={{
+                    width: "18px",
+                    height: "18px",
+                    borderRadius: "50%",
+                    border: "2px solid #008060",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}>
+                    <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#008060" }} />
+                  </div>
+                  <span style={{ fontSize: "14px", fontWeight: 500 }}>Delivery Santo Domingo</span>
+                </div>
+                <span style={{ fontSize: "14px", fontWeight: 600, color: "#008060" }}>GRATIS</span>
+              </label>
+              <label style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "12px",
+                border: "1px solid #e1e3e5",
+                borderRadius: "8px",
+                cursor: "pointer",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div style={{
+                    width: "18px",
+                    height: "18px",
+                    borderRadius: "50%",
+                    border: "2px solid #8c9196",
+                  }} />
+                  <span style={{ fontSize: "14px" }}>Interior del país</span>
+                </div>
+                <span style={{ fontSize: "14px", fontWeight: 500 }}>RD$300</span>
+              </label>
+            </div>
+          </div>
+        )}
+
+        {/* Coupon Section */}
+        <div style={{ marginBottom: "16px" }}>
+          <div style={{ fontSize: "13px", fontWeight: 500, marginBottom: "8px", color: "#6b7177" }}>
+            ¿Tienes un cupón?
+          </div>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <input
+              type="text"
+              placeholder="Código de cupón"
+              readOnly
+              style={{
+                flex: 1,
+                padding: "10px 12px",
+                border: "1px solid #e1e3e5",
+                borderRadius: "8px",
+                fontSize: "14px",
+                background: "#fff",
+              }}
+            />
+            <button style={{
+              padding: "10px 16px",
+              background: "#f6f6f7",
+              border: "1px solid #e1e3e5",
+              borderRadius: "8px",
+              fontSize: "14px",
+              fontWeight: 500,
+              cursor: "pointer",
+            }}>
+              Aplicar
+            </button>
+          </div>
+          {/* Applied Coupon Chip */}
+          <div style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            marginTop: "10px",
+            padding: "6px 12px",
+            background: "#f0fdf4",
+            border: "1px solid #86efac",
+            borderRadius: "20px",
+            fontSize: "13px",
+          }}>
+            <span style={{ fontWeight: 600, color: "#166534" }}>4SALE</span>
+            <span style={{ color: "#166534" }}>-RD$4</span>
+            <span style={{ cursor: "pointer", color: "#6b7177", marginLeft: "4px" }}>×</span>
+          </div>
+        </div>
+
+        {/* Order Summary */}
         <div style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "16px 0",
-          borderTop: "1px solid #e1e3e5",
-          fontWeight: 600,
+          padding: "16px",
+          background: "#f9fafb",
+          borderRadius: "8px",
+          marginBottom: "16px",
         }}>
-          <span>Total:</span>
-          <span style={{ fontSize: "17px" }}>{productPrice}</span>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "14px" }}>
+            <span style={{ color: "#6b7177" }}>Productos:</span>
+            <span>RD$2,500</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "14px" }}>
+            <span style={{ color: "#6b7177" }}>Envío:</span>
+            <span style={{ color: "#008060", fontWeight: 500 }}>GRATIS</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px", fontSize: "14px" }}>
+            <span style={{ color: "#6b7177" }}>Descuento:</span>
+            <span style={{ color: "#dc2626" }}>-RD$4</span>
+          </div>
+          <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            paddingTop: "12px",
+            borderTop: "1px solid #e1e3e5",
+            fontSize: "16px",
+            fontWeight: 600,
+          }}>
+            <span>Total:</span>
+            <span style={{ color: "#1a1a1a" }}>RD$2,496</span>
+          </div>
         </div>
 
         {/* Submit Button */}
