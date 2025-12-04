@@ -1193,7 +1193,23 @@ export default function Settings() {
                   <BlockStack gap="400">
                     <InlineStack align="space-between">
                       <Text as="h2" variant="headingMd">Vista previa</Text>
-                      <Badge tone="info">En tiempo real</Badge>
+                      <InlineStack gap="100" blockAlign="center">
+                        <span style={{
+                          width: "8px",
+                          height: "8px",
+                          borderRadius: "50%",
+                          background: "#22c55e",
+                          display: "inline-block",
+                          animation: "pulse 2s infinite",
+                        }} />
+                        <Text as="span" variant="bodySm" tone="success">En vivo</Text>
+                        <style>{`
+                          @keyframes pulse {
+                            0%, 100% { opacity: 1; transform: scale(1); }
+                            50% { opacity: 0.5; transform: scale(1.2); }
+                          }
+                        `}</style>
+                      </InlineStack>
                     </InlineStack>
                     <WhatsAppPreview template={formState.messageTemplate} shopName={shop?.shopDomain || "Mi Tienda"} />
                   </BlockStack>
