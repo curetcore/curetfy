@@ -1,0 +1,193 @@
+# Estado Actual del Proyecto - Curetfy COD Form
+
+> Última actualización: 2025-12-04
+
+## Resumen Ejecutivo
+
+**Curetfy COD Form** es una app de Shopify para órdenes Cash on Delivery (COD) con integración WhatsApp, enfocada en el mercado LATAM (principalmente República Dominicana).
+
+---
+
+## Completado
+
+### 1. Infraestructura Base
+- [x] App creada con Shopify Remix Template
+- [x] Configuración `shopify.app.toml` completa
+- [x] Client ID: `f111f17bd25329a09376d46941b6532e`
+- [x] PostgreSQL configurado (Easypanel)
+- [x] Prisma 6.19.0 con schema funcional
+- [x] Deploy en Easypanel (Contabo VPS)
+- [x] Dominio: `app.curetcore.com`
+
+### 2. Dashboard (App Embebida)
+- [x] Ruta principal con redirect (`_index.tsx`)
+- [x] Página de configuración (`app.settings.tsx`)
+- [x] Página de órdenes (`app.orders.tsx`)
+- [x] Página de billing (`app.billing.tsx`)
+- [x] Integración con Polaris UI
+
+### 3. API
+- [x] Endpoint crear orden (`api.create-order.tsx`)
+- [x] Endpoint configuración (`api.config.tsx`)
+- [x] Webhooks GDPR completos:
+  - `customers/data_request`
+  - `customers/redact`
+  - `shop/redact`
+  - `app/uninstalled`
+
+### 4. Theme App Extension (v4) - MEJORADA
+- [x] **COD Buy Button** - Bloque manual para producto
+- [x] **COD Auto Button** - App Embed auto-instalable
+- [x] Soporte de carrito completo (múltiples productos)
+- [x] Modal profesional estilo Shopify
+- [x] Configuraciones disponibles:
+  - Texto del botón
+  - Tamaño y peso de fuente
+  - Color principal y texto
+  - Degradado (2 colores + ángulo)
+  - Bordes redondeados
+  - Padding horizontal/vertical
+  - Ancho completo
+  - Sombra
+  - Íconos (WhatsApp, Carrito, Bolsa)
+  - Tamaño del ícono
+  - Animaciones (Pulso, Brillo, Vibrar, Rebote)
+  - Márgenes superior/inferior
+- [x] CSS profesional con variables
+- [x] Responsive (modal slide-up en móvil)
+- [x] Detecta 9+ selectores de botón "Add to Cart"
+
+### 5. Archivos de la Extensión
+
+```
+extensions/cod-form/
+├── shopify.extension.toml    # Configuración de la extensión
+├── blocks/
+│   ├── cod-button.liquid     # Bloque manual (product template)
+│   └── auto-button.liquid    # App Embed (auto-instala)
+└── assets/
+    ├── cod-form.css          # Estilos profesionales
+    └── cod-form.js           # Lógica del formulario
+```
+
+---
+
+## Errores Resueltos (Documentación para Futuras Sesiones)
+
+### 1. Prisma DATETIME vs TIMESTAMP
+**Error:** PostgreSQL no soporta DATETIME
+**Solución:** Usar `@db.Timestamp()` o dejar que Prisma infiera TIMESTAMP
+
+### 2. Prisma Version Conflict
+**Error:** Shopify requiere Prisma 6.x, no 7.x
+**Solución:**
+```bash
+npm install prisma@6.19.0 @prisma/client@6.19.0 --save-exact
+```
+
+### 3. package-lock.json Missing
+**Error:** Template tiene `package-lock.json` en `.gitignore`
+**Solución:** Remover de `.gitignore` y generar nuevo lockfile
+
+### 4. Failed Migrations P3009
+**Error:** Migración anterior falló y bloqueó nuevas
+**Solución:**
+```sql
+DROP TABLE IF EXISTS _prisma_migrations;
+```
+Luego: `npx prisma migrate dev`
+
+### 5. Blank Screen
+**Error:** Falta ruta raíz que redirija a `/app`
+**Solución:** Crear `app/routes/_index.tsx`:
+```tsx
+import { redirect } from "@remix-run/node";
+export const loader = () => redirect("/app");
+```
+
+### 6. Theme Extension Schema Errors
+**Error:** "presets" no permitido, "body" no válido en enabled_on
+**Solución:** Remover presets, usar solo `templates: ["product"]`
+
+### 7. shopify.app.toml Validation
+**Error:** Falta `embedded` y formato incorrecto de `scopes`
+**Solución:**
+```toml
+embedded = true
+
+[access_scopes]
+scopes = "read_products,write_orders,..."
+```
+
+### 8. CLI Outdated
+**Error:** Versión 3.83.2 no soportada
+**Solución:** `npm install -g @shopify/cli@latest`
+
+### 9. Schema Headers Limit
+**Error:** Máximo 6 headers (non-interactive settings) por bloque
+**Solución:** Combinar secciones (ej: "Animación y espaciado")
+
+---
+
+## Próximos Pasos
+
+### Inmediato (Para Pruebas)
+1. [ ] Probar extensión en tienda de desarrollo
+2. [ ] Verificar auto-instalación del App Embed
+3. [ ] Probar soporte de carrito con múltiples productos
+4. [ ] Verificar animaciones funcionan
+5. [ ] Probar en móvil (modal slide-up)
+
+### Fase 1 - MVP (Pendiente)
+1. [ ] Configurar número WhatsApp en settings
+2. [ ] Probar flujo completo: formulario → orden → WhatsApp
+3. [ ] Implementar planes de billing funcionales
+4. [ ] Agregar analytics básicos
+5. [ ] Crear screenshots para App Store (1600x900)
+6. [ ] Crear ícono de app (1200x1200)
+7. [ ] Escribir descripción y política de privacidad
+8. [ ] Submit a Shopify App Store
+
+### Fase 2 - Built for Shopify
+- Ver `docs/FASE-2-BUILT-FOR-SHOPIFY.md`
+
+### Fase 3 - Escalamiento
+- Ver `docs/FASE-3-ESCALAMIENTO.md`
+
+---
+
+## Comandos Útiles
+
+```bash
+# Desarrollo local
+cd app-source && shopify app dev
+
+# Deploy extensión
+cd app-source && shopify app deploy --force
+
+# Ver logs en Easypanel
+# Panel: https://easypanel.curetcore.com
+
+# Prisma
+npx prisma migrate dev
+npx prisma studio
+```
+
+---
+
+## URLs Importantes
+
+| Recurso | URL |
+|---------|-----|
+| App Dashboard | https://app.curetcore.com |
+| Shopify Partners | https://partners.shopify.com |
+| Shopify App | https://dev.shopify.com/dashboard/4940756/apps/301103087617 |
+| GitHub | https://github.com/curetcore/curetfy |
+| Easypanel | https://easypanel.curetcore.com |
+
+---
+
+## Contacto
+
+- **Organización:** CURET
+- **App Handle:** curetfy-cod-form
