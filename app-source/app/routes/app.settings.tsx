@@ -994,47 +994,6 @@ function FormModalPreview({
       {/* Custom Image - After Product */}
       {formState.customImagePosition === "after_product" && <CustomImage />}
 
-      {/* Shipping Methods - At Top */}
-      {formState.enableShipping && (formState.customShippingRates as any[])?.length > 0 && (
-        <div style={{ padding: "16px 20px", background: "#f9fafb", borderBottom: "1px solid #e1e3e5" }}>
-          <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "10px", color: "#1a1a1a" }}>
-            Selecciona tu método de envío
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {(formState.customShippingRates as any[]).map((rate: any, index: number) => (
-              <label key={rate.id || index} style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "12px",
-                border: index === 0 ? "2px solid #008060" : "1px solid #e1e3e5",
-                borderRadius: "8px",
-                cursor: "pointer",
-                background: index === 0 ? "#f0fdf4" : "#fff",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <div style={{
-                    width: "18px",
-                    height: "18px",
-                    borderRadius: "50%",
-                    border: `2px solid ${index === 0 ? "#008060" : "#8c9196"}`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}>
-                    {index === 0 && <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#008060" }} />}
-                  </div>
-                  <span style={{ fontSize: "14px", fontWeight: index === 0 ? 500 : 400 }}>{rate.name || "Envío"}</span>
-                </div>
-                <span style={{ fontSize: "14px", fontWeight: 500, color: parseFloat(rate.price) === 0 ? "#008060" : "#1a1a1a" }}>
-                  {parseFloat(rate.price) === 0 ? "GRATIS" : `RD$${rate.price}`}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Coupon & Order Summary Section */}
       <div style={{ padding: "16px 20px", background: "#f9fafb", borderBottom: "1px solid #e1e3e5" }}>
         {/* Coupon Input */}
@@ -1152,6 +1111,47 @@ function FormModalPreview({
           );
         })()}
       </div>
+
+      {/* Shipping Methods */}
+      {formState.enableShipping && (formState.customShippingRates as any[])?.length > 0 && (
+        <div style={{ padding: "16px 20px", borderBottom: "1px solid #e1e3e5" }}>
+          <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "10px", color: "#1a1a1a" }}>
+            Selecciona tu método de envío
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {(formState.customShippingRates as any[]).map((rate: any, index: number) => (
+              <label key={rate.id || index} style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "12px",
+                border: index === 0 ? "2px solid #008060" : "1px solid #e1e3e5",
+                borderRadius: "8px",
+                cursor: "pointer",
+                background: index === 0 ? "#f0fdf4" : "#fff",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div style={{
+                    width: "18px",
+                    height: "18px",
+                    borderRadius: "50%",
+                    border: `2px solid ${index === 0 ? "#008060" : "#8c9196"}`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}>
+                    {index === 0 && <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#008060" }} />}
+                  </div>
+                  <span style={{ fontSize: "14px", fontWeight: index === 0 ? 500 : 400 }}>{rate.name || "Envío"}</span>
+                </div>
+                <span style={{ fontSize: "14px", fontWeight: 500, color: parseFloat(rate.price) === 0 ? "#008060" : "#1a1a1a" }}>
+                  {parseFloat(rate.price) === 0 ? "GRATIS" : `RD$${rate.price}`}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Form Fields */}
       <div style={{ padding: "20px" }}>
