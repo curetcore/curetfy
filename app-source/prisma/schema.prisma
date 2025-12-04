@@ -36,23 +36,114 @@ model Shop {
   id                  String   @id @default(cuid())
   shopDomain          String   @unique
 
-  // WhatsApp Configuration
+  // ==========================================
+  // WHATSAPP CONFIGURATION
+  // ==========================================
   whatsappNumber      String?
-  messageTemplate     String?  @default("🛒 *Nuevo Pedido #{{orderNumber}}*\n\n*Producto:* {{product}}\n*Cantidad:* {{quantity}}\n*Total:* {{total}}\n\n*Cliente:* {{name}}\n*Teléfono:* {{phone}}\n*Dirección:* {{address}}\n*Provincia:* {{province}}")
+  messageTemplate     String?  @default("🛒 *Nuevo Pedido #{{orderNumber}}*\n\n{{#products}}*Producto:* {{title}}\n*Cantidad:* {{quantity}}\n*Precio:* {{price}}\n{{/products}}\n*Total:* {{total}}\n\n*Cliente:* {{name}}\n*Teléfono:* {{phone}}\n*Dirección:* {{address}}\n*Ciudad:* {{city}}\n*Provincia:* {{province}}")
 
-  // Form Customization
+  // ==========================================
+  // SHOPIFY ORDER CONFIGURATION
+  // ==========================================
+  orderTagPrefix      String   @default("cod-form")
+  orderTags           String[] @default(["pago-contraentrega", "curetfy"])
+  createDraftOrder    Boolean  @default(true)
+  orderNote           String?  @default("Pedido creado via Curetfy COD Form")
+
+  // ==========================================
+  // FORM LABELS (Editable)
+  // ==========================================
+  labelName           String   @default("Nombre completo")
+  labelPhone          String   @default("Teléfono / WhatsApp")
+  labelEmail          String   @default("Email (opcional)")
+  labelAddress        String   @default("Dirección de entrega")
+  labelCity           String   @default("Ciudad")
+  labelProvince       String   @default("Provincia / Estado")
+  labelPostalCode     String   @default("Código postal")
+  labelNotes          String   @default("Notas del pedido")
+  labelQuantity       String   @default("Cantidad")
+
+  // ==========================================
+  // FORM PLACEHOLDERS (Editable)
+  // ==========================================
+  placeholderName     String   @default("Ej: Juan Pérez")
+  placeholderPhone    String   @default("Ej: 809-555-1234")
+  placeholderEmail    String   @default("Ej: juan@email.com")
+  placeholderAddress  String   @default("Calle, número, sector...")
+  placeholderCity     String   @default("Ej: Santo Domingo")
+  placeholderNotes    String   @default("Instrucciones especiales...")
+  placeholderPostal   String   @default("Ej: 10101")
+
+  // ==========================================
+  // FORM FIELDS VISIBILITY
+  // ==========================================
+  showEmail           Boolean  @default(false)
+  showCity            Boolean  @default(true)
+  showProvince        Boolean  @default(true)
+  showPostalCode      Boolean  @default(false)
+  showNotes           Boolean  @default(true)
+  showQuantity        Boolean  @default(true)
+
+  // ==========================================
+  // FORM FIELDS REQUIRED
+  // ==========================================
+  requireEmail        Boolean  @default(false)
+  requireCity         Boolean  @default(false)
+  requireProvince     Boolean  @default(true)
+  requirePostalCode   Boolean  @default(false)
+  requireNotes        Boolean  @default(false)
+
+  // ==========================================
+  // MODAL CUSTOMIZATION
+  // ==========================================
+  formTitle           String   @default("Completa tu pedido")
+  formSubtitle        String?  @default("Ingresa tus datos para recibir tu pedido")
+  submitButtonText    String   @default("Enviar pedido por WhatsApp")
+  submitButtonColor   String   @default("#25D366")
+  modalHeaderColor    String   @default("#000000")
+  modalAccentColor    String   @default("#25D366")
+  showProductImage    Boolean  @default(true)
+  showProductPrice    Boolean  @default(true)
+
+  // ==========================================
+  // SUCCESS/ERROR MESSAGES
+  // ==========================================
+  successTitle        String   @default("¡Pedido enviado!")
+  successMessage      String   @default("Te redirigiremos a WhatsApp para confirmar tu pedido.")
+  errorTitle          String   @default("Error")
+  errorMessage        String   @default("Hubo un problema al procesar tu pedido. Intenta de nuevo.")
+
+  // ==========================================
+  // COUNTRY/REGION CONFIGURATION
+  // ==========================================
+  countries           String[] @default(["DO"])
+  defaultCountry      String   @default("DO")
+  provincesConfig     Json?    // Custom provinces per country
+
+  // ==========================================
+  // PRODUCT SETTINGS
+  // ==========================================
+  enabledProducts     String[] @default([])
+  enabledCollections  String[] @default([])
+  enableAllProducts   Boolean  @default(true)
+
+  // ==========================================
+  // ADVANCED SETTINGS
+  // ==========================================
+  autoRedirectWhatsApp Boolean @default(true)
+  redirectDelay       Int      @default(2000) // milliseconds
+  enableAnalytics     Boolean  @default(true)
+  enablePixel         Boolean  @default(false)
+  pixelId             String?
+
+  // Legacy fields (for backwards compatibility)
   buttonText          String   @default("Comprar por WhatsApp")
   buttonColor         String   @default("#25D366")
   buttonTextColor     String   @default("#FFFFFF")
-  formTitle           String   @default("Completa tu pedido")
 
-  // Settings
-  enabledProducts     String[] @default([])
-  enabledCollections  String[] @default([])
-  countries           String[] @default(["DO"])
-  defaultCountry      String   @default("DO")
-
-  // Billing
+  // ==========================================
+  // BILLING
+  // ==========================================
   plan                Plan     @default(FREE)
   ordersThisMonth     Int      @default(0)
   billingCycleStart   DateTime @default(now())
