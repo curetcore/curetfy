@@ -456,9 +456,9 @@ export default function Dashboard() {
               <BlockStack gap="300" inlineAlign="start">
                 <InlineStack gap="200" blockAlign="center">
                   <Icon source={PhoneIcon} tone="base" />
-                  <Text as="h3" variant="headingMd">WhatsApp</Text>
+                  <Text as="h3" variant="headingSm">WhatsApp</Text>
                 </InlineStack>
-                <Text as="p" variant="headingLg" fontWeight="semibold">
+                <Text as="p" variant="bodyMd" fontWeight="semibold">
                   {shop.whatsappNumber || "No configurado"}
                 </Text>
                 <Button url="/app/settings" size="slim" icon={EditIcon}>
@@ -473,9 +473,9 @@ export default function Dashboard() {
               <BlockStack gap="300" inlineAlign="start">
                 <InlineStack gap="200" blockAlign="center">
                   <Icon source={SettingsIcon} tone="base" />
-                  <Text as="h3" variant="headingMd">Formulario</Text>
+                  <Text as="h3" variant="headingSm">Formulario</Text>
                 </InlineStack>
-                <Text as="p" variant="bodySm" tone="subdued">
+                <Text as="p" variant="bodyMd" tone="subdued">
                   Personaliza campos, colores y mensajes
                 </Text>
                 <Button url="/app/settings?tab=1" size="slim" icon={EditIcon}>
@@ -490,9 +490,9 @@ export default function Dashboard() {
               <BlockStack gap="300" inlineAlign="start">
                 <InlineStack gap="200" blockAlign="center">
                   <Icon source={CodeIcon} tone="base" />
-                  <Text as="h3" variant="headingMd">Facebook Pixel</Text>
+                  <Text as="h3" variant="headingSm">Facebook Pixel</Text>
                 </InlineStack>
-                <Text as="p" variant="bodySm" tone="subdued">
+                <Text as="p" variant="bodyMd" tone="subdued">
                   {shop.enablePixel && shop.pixelId ? `ID: ${shop.pixelId}` : "No configurado"}
                 </Text>
                 <Button url="/app/settings?tab=4" size="slim" icon={EditIcon}>
@@ -508,7 +508,7 @@ export default function Dashboard() {
         <InlineGrid columns={4} gap="400">
           <Card>
             <BlockStack gap="200" inlineAlign="start">
-              <Text as="p" variant="heading2xl" fontWeight="bold">
+              <Text as="p" variant="headingXl" fontWeight="bold">
                 {stats.formOpensLast7Days}
               </Text>
               <Text as="span" tone="subdued" variant="bodySm">Aberturas de formulario</Text>
@@ -516,7 +516,7 @@ export default function Dashboard() {
           </Card>
           <Card>
             <BlockStack gap="200" inlineAlign="start">
-              <Text as="p" variant="heading2xl" fontWeight="bold">
+              <Text as="p" variant="headingXl" fontWeight="bold">
                 {stats.ordersLast7Days}
               </Text>
               <Text as="span" tone="subdued" variant="bodySm">Pedidos</Text>
@@ -524,7 +524,7 @@ export default function Dashboard() {
           </Card>
           <Card>
             <BlockStack gap="200" inlineAlign="start">
-              <Text as="p" variant="heading2xl" fontWeight="bold">
+              <Text as="p" variant="headingXl" fontWeight="bold">
                 {currency} {stats.revenueLast7Days.toLocaleString()}
               </Text>
               <Text as="span" tone="subdued" variant="bodySm">Ingresos</Text>
@@ -532,7 +532,7 @@ export default function Dashboard() {
           </Card>
           <Card>
             <BlockStack gap="200" inlineAlign="start">
-              <Text as="p" variant="heading2xl" fontWeight="bold">
+              <Text as="p" variant="headingXl" fontWeight="bold">
                 {stats.conversionRate}%
               </Text>
               <Text as="span" tone="subdued" variant="bodySm">Tasa de conversión</Text>
@@ -541,15 +541,15 @@ export default function Dashboard() {
         </InlineGrid>
 
         {/* Charts Section */}
-        <Text as="h2" variant="headingLg">Analítica</Text>
+        <Text as="h2" variant="headingMd">Analítica</Text>
 
         <Layout>
           <Layout.Section variant="oneHalf">
             <Card>
               <BlockStack gap="300">
                 <InlineStack align="space-between">
-                  <Text as="h3" variant="headingMd">Aberturas de formulario</Text>
-                  <Text as="span" variant="headingLg" fontWeight="bold">
+                  <Text as="h3" variant="headingSm">Aberturas de formulario</Text>
+                  <Text as="span" variant="headingMd" fontWeight="bold">
                     {chartData.formOpens.reduce((a, b) => a + b, 0)}
                   </Text>
                 </InlineStack>
@@ -559,9 +559,6 @@ export default function Dashboard() {
                   label="Aberturas"
                   color="#5c6ac4"
                 />
-                <Text as="p" variant="bodySm" tone="subdued">
-                  Las fechas usan la zona horaria UTC.
-                </Text>
               </BlockStack>
             </Card>
           </Layout.Section>
@@ -570,8 +567,8 @@ export default function Dashboard() {
             <Card>
               <BlockStack gap="300">
                 <InlineStack align="space-between">
-                  <Text as="h3" variant="headingMd">Pedidos</Text>
-                  <Text as="span" variant="headingLg" fontWeight="bold">
+                  <Text as="h3" variant="headingSm">Pedidos</Text>
+                  <Text as="span" variant="headingMd" fontWeight="bold">
                     {chartData.orders.reduce((a, b) => a + b, 0)}
                   </Text>
                 </InlineStack>
@@ -581,9 +578,6 @@ export default function Dashboard() {
                   label="Pedidos"
                   color="#008060"
                 />
-                <Text as="p" variant="bodySm" tone="subdued">
-                  Las fechas usan la zona horaria UTC.
-                </Text>
               </BlockStack>
             </Card>
           </Layout.Section>
@@ -594,8 +588,8 @@ export default function Dashboard() {
             <Card>
               <BlockStack gap="300">
                 <InlineStack align="space-between">
-                  <Text as="h3" variant="headingMd">Tasa de conversión</Text>
-                  <Text as="span" variant="headingLg" fontWeight="bold">
+                  <Text as="h3" variant="headingSm">Tasa de conversión</Text>
+                  <Text as="span" variant="headingMd" fontWeight="bold">
                     {stats.conversionRate}%
                   </Text>
                 </InlineStack>
@@ -606,9 +600,6 @@ export default function Dashboard() {
                   color="#b98900"
                   suffix="%"
                 />
-                <Text as="p" variant="bodySm" tone="subdued">
-                  Las fechas usan la zona horaria UTC.
-                </Text>
               </BlockStack>
             </Card>
           </Layout.Section>
@@ -617,8 +608,8 @@ export default function Dashboard() {
             <Card>
               <BlockStack gap="300">
                 <InlineStack align="space-between">
-                  <Text as="h3" variant="headingMd">Ingresos</Text>
-                  <Text as="span" variant="headingLg" fontWeight="bold">
+                  <Text as="h3" variant="headingSm">Ingresos</Text>
+                  <Text as="span" variant="headingMd" fontWeight="bold">
                     {currency} {chartData.revenue.reduce((a, b) => a + b, 0).toLocaleString()}
                   </Text>
                 </InlineStack>
@@ -629,9 +620,6 @@ export default function Dashboard() {
                   color="#008060"
                   prefix={currency + " "}
                 />
-                <Text as="p" variant="bodySm" tone="subdued">
-                  Las fechas usan la zona horaria UTC.
-                </Text>
               </BlockStack>
             </Card>
           </Layout.Section>
@@ -641,8 +629,8 @@ export default function Dashboard() {
           <Layout.Section variant="oneHalf">
             <Card>
               <BlockStack gap="300">
-                <Text as="h3" variant="headingMd">Valor promedio de pedido</Text>
-                <Text as="p" variant="heading2xl" fontWeight="bold">
+                <Text as="h3" variant="headingSm">Valor promedio de pedido</Text>
+                <Text as="p" variant="headingXl" fontWeight="bold">
                   {currency} {stats.avgOrderValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </Text>
               </BlockStack>
@@ -652,8 +640,8 @@ export default function Dashboard() {
           <Layout.Section variant="oneHalf">
             <Card>
               <BlockStack gap="300">
-                <Text as="h3" variant="headingMd">Total generado con Curetfy</Text>
-                <Text as="p" variant="heading2xl" fontWeight="bold" tone="success">
+                <Text as="h3" variant="headingSm">Total generado con Curetfy</Text>
+                <Text as="p" variant="headingXl" fontWeight="bold" tone="success">
                   {currency} {stats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </Text>
               </BlockStack>
@@ -664,17 +652,17 @@ export default function Dashboard() {
         {/* UTM Data Table */}
         <Card>
           <BlockStack gap="400">
-            <Text as="h2" variant="headingMd">Datos UTM</Text>
+            <Text as="h2" variant="headingSm">Datos UTM</Text>
             <DataTable
               columnContentTypes={["text", "text", "text", "numeric", "numeric", "numeric"]}
               headings={["Fuente", "Medio", "Campaña", "Aberturas", "Pedidos", "Conversión"]}
               rows={utmRows}
             />
-            <Text as="p" variant="bodySm" tone="subdued">
-              <Link url="https://curetcore.com/utm-guide" external>
-                Aprende a usar UTM para rastrear tus campañas
-              </Link>
-            </Text>
+            {utmRows.length === 0 && (
+              <Text as="p" variant="bodySm" tone="subdued">
+                No hay datos UTM. Los datos aparecerán cuando los clientes visiten tu tienda con parámetros UTM.
+              </Text>
+            )}
           </BlockStack>
         </Card>
 
@@ -684,7 +672,7 @@ export default function Dashboard() {
             <Card>
               <BlockStack gap="400">
                 <InlineStack align="space-between" blockAlign="center">
-                  <Text as="h2" variant="headingMd">Plan actual</Text>
+                  <Text as="h2" variant="headingSm">Plan actual</Text>
                   <Badge tone={shop.plan === "FREE" ? "info" : "success"}>
                     {shop.plan}
                   </Badge>
@@ -727,7 +715,7 @@ export default function Dashboard() {
           <Layout.Section variant="oneHalf">
             <Card>
               <BlockStack gap="400">
-                <Text as="h2" variant="headingMd">Recursos</Text>
+                <Text as="h2" variant="headingSm">Recursos</Text>
                 <BlockStack gap="200">
                   <Button url="https://help.curetcore.com" external variant="plain" textAlign="start">
                     Centro de ayuda
