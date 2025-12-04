@@ -51,6 +51,20 @@ model Shop {
   orderNote           String?  @default("Pedido creado via Curetfy COD Form")
 
   // ==========================================
+  // ORDER OPTIONS
+  // ==========================================
+  useCodPaymentMethod     Boolean  @default(true)   // Create orders with COD payment method
+  saveUtmParams           Boolean  @default(true)   // Save UTM params in order additional details
+
+  // ==========================================
+  // FORM OPTIONS
+  // ==========================================
+  disableAutoDiscounts    Boolean  @default(false)  // Disable Shopify auto discounts in COD form
+  disableAutocomplete     Boolean  @default(false)  // Disable autocomplete in COD form
+  removeLeadingZeroPhone  Boolean  @default(false)  // Remove leading 0 from phone numbers
+  addCodFormTag           Boolean  @default(true)   // Add curetfy_cod_form tag to orders
+
+  // ==========================================
   // FORM LABELS (Editable)
   // ==========================================
   labelName           String   @default("Nombre completo")
