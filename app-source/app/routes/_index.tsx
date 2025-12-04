@@ -5,10 +5,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
   const hostname = url.hostname;
 
-  // Show app landing page if no shop parameter (public access)
+  // Show home page if no shop parameter (public access)
   const hasShopParam = url.searchParams.has("shop");
   if (!hasShopParam && !url.pathname.startsWith("/app")) {
-    return redirect("/curetfy");
+    return redirect("/home");
   }
 
   // Preserve query parameters for Shopify OAuth
