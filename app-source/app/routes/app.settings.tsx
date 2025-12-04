@@ -199,8 +199,37 @@ function WhatsAppPreview({ template }: { template: string }) {
     total: "RD$ 2,500.00",
   };
 
-  // Replace simple variables
-  let preview = template
+  // Sample products for the template
+  const sampleProducts = [
+    { title: "Camiseta Premium Negra", quantity: 2, price: "RD$ 1,250.00" },
+    { title: "Pantalón Jogger Gris", quantity: 1, price: "RD$ 1,890.00" },
+  ];
+
+  let preview = template;
+
+  // Handle products block - replace entire block with expanded products
+  const productsBlockRegex = /\{\{#products\}\}([\s\S]*?)\{\{\/products\}\}/g;
+  const productsMatch = template.match(productsBlockRegex);
+
+  if (productsMatch) {
+    // Get the template inside the products block
+    const blockContent = productsMatch[0]
+      .replace(/\{\{#products\}\}/, '')
+      .replace(/\{\{\/products\}\}/, '');
+
+    // Generate output for each sample product
+    const productsOutput = sampleProducts.map(product => {
+      return blockContent
+        .replace(/\{\{title\}\}/g, product.title)
+        .replace(/\{\{quantity\}\}/g, String(product.quantity))
+        .replace(/\{\{price\}\}/g, product.price);
+    }).join('');
+
+    preview = preview.replace(productsBlockRegex, productsOutput);
+  }
+
+  // Replace simple variables (outside products block)
+  preview = preview
     .replace(/\{\{orderNumber\}\}/g, sampleData.orderNumber)
     .replace(/\{\{name\}\}/g, sampleData.name)
     .replace(/\{\{phone\}\}/g, sampleData.phone)
@@ -211,11 +240,11 @@ function WhatsAppPreview({ template }: { template: string }) {
     .replace(/\{\{country\}\}/g, sampleData.country)
     .replace(/\{\{postalCode\}\}/g, sampleData.postalCode)
     .replace(/\{\{notes\}\}/g, sampleData.notes)
-    .replace(/\{\{total\}\}/g, sampleData.total);
-
-  // Handle products block
-  const productsSample = "*Producto:* Camiseta Premium\n*Cantidad:* 2\n*Precio:* RD$ 1,250.00";
-  preview = preview.replace(/\{\{#products\}\}[\s\S]*?\{\{\/products\}\}/g, productsSample);
+    .replace(/\{\{total\}\}/g, sampleData.total)
+    // Also handle legacy single product variables
+    .replace(/\{\{product\}\}/g, "Camiseta Premium Negra")
+    .replace(/\{\{quantity\}\}/g, "2")
+    .replace(/\{\{price\}\}/g, "RD$ 1,250.00");
 
   return (
     <div style={{
