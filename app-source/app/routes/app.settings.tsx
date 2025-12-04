@@ -27,6 +27,7 @@ import {
   EmptyState,
   ColorPicker,
   Popover,
+  ActionList,
   hsbToHex,
   hexToRgb,
 } from "@shopify/polaris";
@@ -1475,42 +1476,47 @@ export default function Settings() {
             const collapseAll = () => setExpandedFields(new Set());
             const expandAll = () => setExpandedFields(new Set(allElements.map((el: any) => el.id)));
 
-            // Build select options with category labels
-            const fieldOptions = [
-              // Esenciales
-              { value: "name", label: `Nombre ${typeCounts.name ? "✓" : ""}`, disabled: typeCounts.name >= 1 },
-              { value: "phone", label: `Teléfono ${typeCounts.phone ? "✓" : ""}`, disabled: typeCounts.phone >= 1 },
-              { value: "email", label: `Email ${typeCounts.email ? "✓" : ""}`, disabled: typeCounts.email >= 1 },
-              { value: "address", label: `Dirección ${typeCounts.address ? "✓" : ""}`, disabled: typeCounts.address >= 1 },
-              { value: "city", label: `Ciudad ${typeCounts.city ? "✓" : ""}`, disabled: typeCounts.city >= 1 },
-              { value: "province", label: `Provincia ${typeCounts.province ? "✓" : ""}`, disabled: typeCounts.province >= 1 },
-              { value: "postalCode", label: `Código postal ${typeCounts.postalCode ? "✓" : ""}`, disabled: typeCounts.postalCode >= 1 },
-              { value: "notes", label: `Notas ${typeCounts.notes ? "✓" : ""}`, disabled: typeCounts.notes >= 1 },
-              { value: "quantity", label: `Cantidad ${typeCounts.quantity ? "✓" : ""}`, disabled: typeCounts.quantity >= 1 },
-              // Separador visual
-              { value: "---custom", label: "── Personalizados ──", disabled: true },
-              { value: "text", label: "Texto" },
-              { value: "textarea", label: "Área de texto" },
-              { value: "select", label: "Desplegable" },
-              { value: "radio", label: "Opción única" },
-              { value: "checkbox", label: "Casilla" },
-              { value: "number", label: "Número" },
-              { value: "date", label: "Fecha" },
-              // Separador visual
-              { value: "---decorative", label: "── Decorativos ──", disabled: true },
-              { value: "heading", label: "Título" },
-              { value: "image", label: "Imagen" },
-              { value: "html", label: "HTML" },
-              { value: "link_button", label: "Botón" },
+            // Field picker popover state
+            const [fieldPickerActive, setFieldPickerActive] = useState(false);
+
+            // Action list items with icons
+            const fieldActionItems = [
+              {
+                title: "Campos esenciales",
+                items: [
+                  { content: "Nombre", icon: PersonIcon, onAction: () => { addElement("name"); setFieldPickerActive(false); }, disabled: typeCounts.name >= 1, suffix: typeCounts.name ? <Badge tone="success">✓</Badge> : null },
+                  { content: "Teléfono", icon: PhoneIcon, onAction: () => { addElement("phone"); setFieldPickerActive(false); }, disabled: typeCounts.phone >= 1, suffix: typeCounts.phone ? <Badge tone="success">✓</Badge> : null },
+                  { content: "Email", icon: EmailIcon, onAction: () => { addElement("email"); setFieldPickerActive(false); }, disabled: typeCounts.email >= 1, suffix: typeCounts.email ? <Badge tone="success">✓</Badge> : null },
+                  { content: "Dirección", icon: LocationIcon, onAction: () => { addElement("address"); setFieldPickerActive(false); }, disabled: typeCounts.address >= 1, suffix: typeCounts.address ? <Badge tone="success">✓</Badge> : null },
+                  { content: "Ciudad", icon: GlobeIcon, onAction: () => { addElement("city"); setFieldPickerActive(false); }, disabled: typeCounts.city >= 1, suffix: typeCounts.city ? <Badge tone="success">✓</Badge> : null },
+                  { content: "Provincia", icon: GlobeIcon, onAction: () => { addElement("province"); setFieldPickerActive(false); }, disabled: typeCounts.province >= 1, suffix: typeCounts.province ? <Badge tone="success">✓</Badge> : null },
+                  { content: "Código postal", icon: LocationIcon, onAction: () => { addElement("postalCode"); setFieldPickerActive(false); }, disabled: typeCounts.postalCode >= 1, suffix: typeCounts.postalCode ? <Badge tone="success">✓</Badge> : null },
+                  { content: "Notas", icon: NoteIcon, onAction: () => { addElement("notes"); setFieldPickerActive(false); }, disabled: typeCounts.notes >= 1, suffix: typeCounts.notes ? <Badge tone="success">✓</Badge> : null },
+                  { content: "Cantidad", icon: HashtagIcon, onAction: () => { addElement("quantity"); setFieldPickerActive(false); }, disabled: typeCounts.quantity >= 1, suffix: typeCounts.quantity ? <Badge tone="success">✓</Badge> : null },
+                ],
+              },
+              {
+                title: "Campos personalizados",
+                items: [
+                  { content: "Texto", icon: TextIcon, onAction: () => { addElement("text"); setFieldPickerActive(false); } },
+                  { content: "Área de texto", icon: TextAlignLeftIcon, onAction: () => { addElement("textarea"); setFieldPickerActive(false); } },
+                  { content: "Desplegable", icon: ListBulletedIcon, onAction: () => { addElement("select"); setFieldPickerActive(false); } },
+                  { content: "Opción única", icon: CheckIcon, onAction: () => { addElement("radio"); setFieldPickerActive(false); } },
+                  { content: "Casilla", icon: CheckIcon, onAction: () => { addElement("checkbox"); setFieldPickerActive(false); } },
+                  { content: "Número", icon: HashtagIcon, onAction: () => { addElement("number"); setFieldPickerActive(false); } },
+                  { content: "Fecha", icon: CalendarIcon, onAction: () => { addElement("date"); setFieldPickerActive(false); } },
+                ],
+              },
+              {
+                title: "Elementos decorativos",
+                items: [
+                  { content: "Título", icon: TextIcon, onAction: () => { addElement("heading"); setFieldPickerActive(false); } },
+                  { content: "Imagen", icon: ImageIcon, onAction: () => { addElement("image"); setFieldPickerActive(false); } },
+                  { content: "HTML", icon: CodeIcon, onAction: () => { addElement("html"); setFieldPickerActive(false); } },
+                  { content: "Botón", icon: LinkIcon, onAction: () => { addElement("link_button"); setFieldPickerActive(false); } },
+                ],
+              },
             ];
-
-            const [selectedFieldType, setSelectedFieldType] = useState("text");
-
-            const handleAddField = () => {
-              if (selectedFieldType && !selectedFieldType.startsWith("---")) {
-                addElement(selectedFieldType);
-              }
-            };
 
             return (
               <Layout>
@@ -1525,24 +1531,26 @@ export default function Settings() {
                         </Text>
                       </BlockStack>
 
-                      <InlineStack gap="300" blockAlign="end">
-                        <div style={{ flex: 1 }}>
-                          <Select
-                            label="Agregar campo"
-                            options={fieldOptions}
-                            value={selectedFieldType}
-                            onChange={setSelectedFieldType}
-                          />
-                        </div>
-                        <Button
-                          variant="primary"
-                          onClick={handleAddField}
-                          disabled={selectedFieldType.startsWith("---")}
-                          icon={PlusIcon}
-                        >
-                          Agregar
-                        </Button>
-                      </InlineStack>
+                      <Popover
+                        active={fieldPickerActive}
+                        activator={
+                          <Button
+                            onClick={() => setFieldPickerActive(true)}
+                            icon={PlusIcon}
+                            variant="primary"
+                            fullWidth
+                          >
+                            Agregar campo
+                          </Button>
+                        }
+                        onClose={() => setFieldPickerActive(false)}
+                        preferredAlignment="left"
+                      >
+                        <ActionList
+                          actionRole="menuitem"
+                          sections={fieldActionItems}
+                        />
+                      </Popover>
                     </BlockStack>
                   </Card>
 
