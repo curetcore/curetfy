@@ -1359,16 +1359,16 @@ export default function Settings() {
                   {/* HEADER */}
                   <Card>
                     <BlockStack gap="400" inlineAlign="start">
-                      <BlockStack gap="200">
-                        <Text as="h2" variant="headingLg">Constructor de formulario</Text>
-                        <Text as="p" tone="subdued">
-                          Agrega campos y ordénalos como quieras. Los campos esenciales solo pueden agregarse una vez.
+                      <BlockStack gap="100" inlineAlign="start">
+                        <Text as="h2" variant="headingSm">Constructor de formulario</Text>
+                        <Text as="p" variant="bodySm" tone="subdued">
+                          Agrega campos y ordenalos como quieras. Los campos esenciales solo pueden agregarse una vez.
                         </Text>
                       </BlockStack>
 
                       {/* Essential COD fields */}
-                      <BlockStack gap="200">
-                        <InlineStack gap="200" align="start">
+                      <BlockStack gap="200" inlineAlign="start">
+                        <InlineStack gap="200" blockAlign="center">
                           <Icon source={PersonIcon} tone="base" />
                           <Text as="span" variant="headingSm">Campos esenciales</Text>
                         </InlineStack>
@@ -1386,8 +1386,8 @@ export default function Settings() {
                       <Divider />
 
                       {/* Custom input fields */}
-                      <BlockStack gap="200">
-                        <InlineStack gap="200" align="start">
+                      <BlockStack gap="200" inlineAlign="start">
+                        <InlineStack gap="200" blockAlign="center">
                           <Icon source={TextIcon} tone="base" />
                           <Text as="span" variant="headingSm">Campos de entrada</Text>
                         </InlineStack>
@@ -1405,8 +1405,8 @@ export default function Settings() {
                       <Divider />
 
                       {/* Decorative elements */}
-                      <BlockStack gap="200">
-                        <InlineStack gap="200" align="start">
+                      <BlockStack gap="200" inlineAlign="start">
+                        <InlineStack gap="200" blockAlign="center">
                           <Icon source={ImageIcon} tone="base" />
                           <Text as="span" variant="headingSm">Elementos decorativos</Text>
                         </InlineStack>
