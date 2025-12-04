@@ -179,6 +179,452 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   return json({ success: true });
 };
 
+// ============================================
+// PREVIEW COMPONENTS
+// ============================================
+
+// WhatsApp Message Preview
+function WhatsAppPreview({ template }: { template: string }) {
+  const sampleData = {
+    orderNumber: "COD-001",
+    name: "Juan Pérez",
+    phone: "+1 809 555 1234",
+    email: "juan@email.com",
+    address: "Calle Principal #123, Sector Centro",
+    city: "Santo Domingo",
+    province: "Distrito Nacional",
+    country: "República Dominicana",
+    postalCode: "10101",
+    notes: "Entregar después de las 5pm",
+    total: "RD$ 2,500.00",
+  };
+
+  // Replace simple variables
+  let preview = template
+    .replace(/\{\{orderNumber\}\}/g, sampleData.orderNumber)
+    .replace(/\{\{name\}\}/g, sampleData.name)
+    .replace(/\{\{phone\}\}/g, sampleData.phone)
+    .replace(/\{\{email\}\}/g, sampleData.email)
+    .replace(/\{\{address\}\}/g, sampleData.address)
+    .replace(/\{\{city\}\}/g, sampleData.city)
+    .replace(/\{\{province\}\}/g, sampleData.province)
+    .replace(/\{\{country\}\}/g, sampleData.country)
+    .replace(/\{\{postalCode\}\}/g, sampleData.postalCode)
+    .replace(/\{\{notes\}\}/g, sampleData.notes)
+    .replace(/\{\{total\}\}/g, sampleData.total);
+
+  // Handle products block
+  const productsSample = "*Producto:* Camiseta Premium\n*Cantidad:* 2\n*Precio:* RD$ 1,250.00";
+  preview = preview.replace(/\{\{#products\}\}[\s\S]*?\{\{\/products\}\}/g, productsSample);
+
+  return (
+    <div style={{
+      background: "#e5ddd5",
+      borderRadius: "12px",
+      padding: "16px",
+      maxHeight: "400px",
+      overflowY: "auto",
+    }}>
+      <div style={{
+        background: "#dcf8c6",
+        borderRadius: "8px",
+        padding: "12px",
+        maxWidth: "90%",
+        marginLeft: "auto",
+        boxShadow: "0 1px 1px rgba(0,0,0,0.1)",
+        whiteSpace: "pre-wrap",
+        fontSize: "14px",
+        lineHeight: "1.5",
+      }}>
+        {preview}
+        <div style={{
+          fontSize: "11px",
+          color: "#667781",
+          textAlign: "right",
+          marginTop: "4px",
+        }}>
+          12:30 PM ✓✓
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Form/Modal Preview Component
+function FormModalPreview({
+  formState,
+  previewType,
+}: {
+  formState: any;
+  previewType: "form" | "fields" | "modal";
+}) {
+  const provinces = PROVINCES_BY_COUNTRY[formState.defaultCountry] || PROVINCES_BY_COUNTRY.DO;
+
+  return (
+    <div style={{
+      background: "#fff",
+      borderRadius: "12px",
+      boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+      overflow: "hidden",
+      maxWidth: "100%",
+    }}>
+      {/* Modal Header */}
+      <div style={{
+        background: formState.modalHeaderColor || "#000",
+        color: "#fff",
+        padding: "16px 20px",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+      }}>
+        <span style={{ fontWeight: 600, fontSize: "17px" }}>
+          {formState.formTitle || "Completa tu pedido"}
+        </span>
+        <span style={{ cursor: "pointer", fontSize: "20px" }}>×</span>
+      </div>
+
+      {/* Product Summary */}
+      {formState.showProductImage && (
+        <div style={{
+          display: "flex",
+          gap: "12px",
+          padding: "16px 20px",
+          background: "#fafbfb",
+          borderBottom: "1px solid #e1e3e5",
+        }}>
+          <div style={{
+            width: "64px",
+            height: "64px",
+            background: "#e1e3e5",
+            borderRadius: "8px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#6b7177",
+            fontSize: "24px",
+          }}>
+            📦
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 500, fontSize: "14px", color: "#1a1a1a" }}>
+              Producto de Ejemplo
+            </div>
+            {formState.showProductPrice && (
+              <div style={{ fontWeight: 600, fontSize: "15px", color: "#1a1a1a", marginTop: "4px" }}>
+                RD$ 1,250.00
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Subtitle */}
+      {formState.formSubtitle && (
+        <div style={{
+          padding: "12px 20px",
+          background: "#f6f6f7",
+          fontSize: "13px",
+          color: "#6b7177",
+          textAlign: "center",
+        }}>
+          {formState.formSubtitle}
+        </div>
+      )}
+
+      {/* Form Fields */}
+      <div style={{ padding: "20px" }}>
+        {/* Name - Always visible */}
+        <div style={{ marginBottom: "16px" }}>
+          <label style={{ display: "block", fontSize: "13px", fontWeight: 500, marginBottom: "6px", color: "#1a1a1a" }}>
+            {formState.labelName || "Nombre completo"} *
+          </label>
+          <input
+            type="text"
+            placeholder={formState.placeholderName || "Ej: Juan Pérez"}
+            readOnly
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              border: "1px solid #e1e3e5",
+              borderRadius: "8px",
+              fontSize: "14px",
+              boxSizing: "border-box",
+            }}
+          />
+        </div>
+
+        {/* Phone - Always visible */}
+        <div style={{ marginBottom: "16px" }}>
+          <label style={{ display: "block", fontSize: "13px", fontWeight: 500, marginBottom: "6px", color: "#1a1a1a" }}>
+            {formState.labelPhone || "Teléfono / WhatsApp"} *
+          </label>
+          <input
+            type="text"
+            placeholder={formState.placeholderPhone || "Ej: 809-555-1234"}
+            readOnly
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              border: "1px solid #e1e3e5",
+              borderRadius: "8px",
+              fontSize: "14px",
+              boxSizing: "border-box",
+            }}
+          />
+        </div>
+
+        {/* Email - Conditional */}
+        {formState.showEmail && (
+          <div style={{ marginBottom: "16px" }}>
+            <label style={{ display: "block", fontSize: "13px", fontWeight: 500, marginBottom: "6px", color: "#1a1a1a" }}>
+              {formState.labelEmail || "Email"} {formState.requireEmail ? "*" : ""}
+            </label>
+            <input
+              type="text"
+              placeholder={formState.placeholderEmail || "Ej: juan@email.com"}
+              readOnly
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                border: "1px solid #e1e3e5",
+                borderRadius: "8px",
+                fontSize: "14px",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+        )}
+
+        {/* Address - Always visible */}
+        <div style={{ marginBottom: "16px" }}>
+          <label style={{ display: "block", fontSize: "13px", fontWeight: 500, marginBottom: "6px", color: "#1a1a1a" }}>
+            {formState.labelAddress || "Dirección de entrega"} *
+          </label>
+          <input
+            type="text"
+            placeholder={formState.placeholderAddress || "Calle, número, sector..."}
+            readOnly
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              border: "1px solid #e1e3e5",
+              borderRadius: "8px",
+              fontSize: "14px",
+              boxSizing: "border-box",
+            }}
+          />
+        </div>
+
+        {/* City/Province Row */}
+        {(formState.showCity || formState.showProvince) && (
+          <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
+            {formState.showCity && (
+              <div style={{ flex: 1 }}>
+                <label style={{ display: "block", fontSize: "13px", fontWeight: 500, marginBottom: "6px", color: "#1a1a1a" }}>
+                  {formState.labelCity || "Ciudad"} {formState.requireCity ? "*" : ""}
+                </label>
+                <input
+                  type="text"
+                  placeholder={formState.placeholderCity || "Ej: Santo Domingo"}
+                  readOnly
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    border: "1px solid #e1e3e5",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+            )}
+            {formState.showProvince && (
+              <div style={{ flex: 1 }}>
+                <label style={{ display: "block", fontSize: "13px", fontWeight: 500, marginBottom: "6px", color: "#1a1a1a" }}>
+                  {formState.labelProvince || "Provincia"} {formState.requireProvince ? "*" : ""}
+                </label>
+                <select
+                  disabled
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    border: "1px solid #e1e3e5",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    boxSizing: "border-box",
+                    background: "#fff",
+                  }}
+                >
+                  <option>Seleccionar...</option>
+                  {provinces.slice(0, 3).map((p) => (
+                    <option key={p.value}>{p.label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Postal Code */}
+        {formState.showPostalCode && (
+          <div style={{ marginBottom: "16px" }}>
+            <label style={{ display: "block", fontSize: "13px", fontWeight: 500, marginBottom: "6px", color: "#1a1a1a" }}>
+              {formState.labelPostalCode || "Código postal"} {formState.requirePostalCode ? "*" : ""}
+            </label>
+            <input
+              type="text"
+              placeholder={formState.placeholderPostal || "Ej: 10101"}
+              readOnly
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                border: "1px solid #e1e3e5",
+                borderRadius: "8px",
+                fontSize: "14px",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+        )}
+
+        {/* Notes */}
+        {formState.showNotes && (
+          <div style={{ marginBottom: "16px" }}>
+            <label style={{ display: "block", fontSize: "13px", fontWeight: 500, marginBottom: "6px", color: "#1a1a1a" }}>
+              {formState.labelNotes || "Notas del pedido"} {formState.requireNotes ? "*" : ""}
+            </label>
+            <textarea
+              placeholder={formState.placeholderNotes || "Instrucciones especiales..."}
+              readOnly
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                border: "1px solid #e1e3e5",
+                borderRadius: "8px",
+                fontSize: "14px",
+                boxSizing: "border-box",
+                minHeight: "60px",
+                resize: "none",
+              }}
+            />
+          </div>
+        )}
+
+        {/* Quantity */}
+        {formState.showQuantity && (
+          <div style={{ marginBottom: "16px" }}>
+            <label style={{ display: "block", fontSize: "13px", fontWeight: 500, marginBottom: "6px", color: "#1a1a1a" }}>
+              {formState.labelQuantity || "Cantidad"}
+            </label>
+            <div style={{ display: "flex", border: "1px solid #e1e3e5", borderRadius: "8px", overflow: "hidden", width: "fit-content" }}>
+              <button style={{ width: "40px", border: "none", background: "#fafbfb", fontSize: "18px", cursor: "pointer" }}>−</button>
+              <input
+                type="text"
+                value="1"
+                readOnly
+                style={{
+                  width: "50px",
+                  textAlign: "center",
+                  border: "none",
+                  borderLeft: "1px solid #e1e3e5",
+                  borderRight: "1px solid #e1e3e5",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                }}
+              />
+              <button style={{ width: "40px", border: "none", background: "#fafbfb", fontSize: "18px", cursor: "pointer" }}>+</button>
+            </div>
+          </div>
+        )}
+
+        {/* Total */}
+        <div style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "16px 0",
+          borderTop: "1px solid #e1e3e5",
+          fontWeight: 600,
+        }}>
+          <span>Total:</span>
+          <span style={{ fontSize: "17px" }}>RD$ 1,250.00</span>
+        </div>
+
+        {/* Submit Button */}
+        <button style={{
+          width: "100%",
+          padding: "14px 20px",
+          background: formState.submitButtonColor || "#25D366",
+          color: "#fff",
+          border: "none",
+          borderRadius: "8px",
+          fontSize: "15px",
+          fontWeight: 600,
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "8px",
+        }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+          {formState.submitButtonText || "Enviar pedido por WhatsApp"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Success Message Preview
+function SuccessPreview({ formState }: { formState: any }) {
+  return (
+    <div style={{
+      background: "#fff",
+      borderRadius: "12px",
+      boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+      padding: "48px 24px",
+      textAlign: "center",
+    }}>
+      <div style={{ marginBottom: "16px" }}>
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="#008060">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+      </div>
+      <h3 style={{ margin: "0 0 8px", fontSize: "18px", fontWeight: 600, color: "#1a1a1a" }}>
+        {formState.successTitle || "¡Pedido enviado!"}
+      </h3>
+      <p style={{ margin: "0 0 24px", color: "#6b7177", fontSize: "14px", lineHeight: 1.5 }}>
+        {formState.successMessage || "Te redirigiremos a WhatsApp para confirmar tu pedido."}
+      </p>
+      <a
+        href="#"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "8px",
+          padding: "12px 24px",
+          background: "#25D366",
+          color: "#fff",
+          textDecoration: "none",
+          borderRadius: "8px",
+          fontWeight: 600,
+          fontSize: "15px",
+        }}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+        Abrir WhatsApp
+      </a>
+    </div>
+  );
+}
+
+// ============================================
+// MAIN COMPONENT
+// ============================================
+
 export default function Settings() {
   const { shop } = useLoaderData<typeof loader>();
   const submit = useSubmit();
@@ -285,6 +731,9 @@ export default function Settings() {
     { id: "advanced", content: "Avanzado", accessibilityLabel: "Avanzado" },
   ];
 
+  // Determine if we should show preview
+  const showPreview = selectedTab <= 3; // WhatsApp, Formulario, Campos, Modal
+
   return (
     <Page
       backAction={{ content: "Dashboard", url: "/app" }}
@@ -362,6 +811,19 @@ export default function Settings() {
                   </Card>
                 </Box>
               </Layout.Section>
+
+              {/* PREVIEW: WhatsApp */}
+              <Layout.Section variant="oneThird">
+                <Card>
+                  <BlockStack gap="400">
+                    <InlineStack align="space-between">
+                      <Text as="h2" variant="headingMd">Vista previa</Text>
+                      <Badge tone="info">En tiempo real</Badge>
+                    </InlineStack>
+                    <WhatsAppPreview template={formState.messageTemplate} />
+                  </BlockStack>
+                </Card>
+              </Layout.Section>
             </Layout>
           )}
 
@@ -416,6 +878,19 @@ export default function Settings() {
                     </BlockStack>
                   </Card>
                 </Box>
+              </Layout.Section>
+
+              {/* PREVIEW: Form */}
+              <Layout.Section variant="oneThird">
+                <Card>
+                  <BlockStack gap="400">
+                    <InlineStack align="space-between">
+                      <Text as="h2" variant="headingMd">Vista previa</Text>
+                      <Badge tone="info">En tiempo real</Badge>
+                    </InlineStack>
+                    <FormModalPreview formState={formState} previewType="form" />
+                  </BlockStack>
+                </Card>
               </Layout.Section>
             </Layout>
           )}
@@ -482,6 +957,19 @@ export default function Settings() {
                   </Card>
                 </Box>
               </Layout.Section>
+
+              {/* PREVIEW: Fields */}
+              <Layout.Section variant="oneThird">
+                <Card>
+                  <BlockStack gap="400">
+                    <InlineStack align="space-between">
+                      <Text as="h2" variant="headingMd">Vista previa</Text>
+                      <Badge tone="info">En tiempo real</Badge>
+                    </InlineStack>
+                    <FormModalPreview formState={formState} previewType="fields" />
+                  </BlockStack>
+                </Card>
+              </Layout.Section>
             </Layout>
           )}
 
@@ -525,12 +1013,30 @@ export default function Settings() {
                             label="Color del botón de envío"
                             value={formState.submitButtonColor}
                             onChange={handleChange("submitButtonColor")}
+                            prefix={
+                              <div style={{
+                                width: "20px",
+                                height: "20px",
+                                borderRadius: "4px",
+                                background: formState.submitButtonColor,
+                                border: "1px solid #ddd",
+                              }} />
+                            }
                             autoComplete="off"
                           />
                           <TextField
                             label="Color del encabezado"
                             value={formState.modalHeaderColor}
                             onChange={handleChange("modalHeaderColor")}
+                            prefix={
+                              <div style={{
+                                width: "20px",
+                                height: "20px",
+                                borderRadius: "4px",
+                                background: formState.modalHeaderColor,
+                                border: "1px solid #ddd",
+                              }} />
+                            }
                             autoComplete="off"
                           />
                         </FormLayout.Group>
@@ -538,6 +1044,15 @@ export default function Settings() {
                           label="Color de acento"
                           value={formState.modalAccentColor}
                           onChange={handleChange("modalAccentColor")}
+                          prefix={
+                            <div style={{
+                              width: "20px",
+                              height: "20px",
+                              borderRadius: "4px",
+                              background: formState.modalAccentColor,
+                              border: "1px solid #ddd",
+                            }} />
+                          }
                           autoComplete="off"
                         />
                       </FormLayout>
@@ -592,6 +1107,28 @@ export default function Settings() {
                     </BlockStack>
                   </Card>
                 </Box>
+              </Layout.Section>
+
+              {/* PREVIEW: Modal */}
+              <Layout.Section variant="oneThird">
+                <BlockStack gap="400">
+                  <Card>
+                    <BlockStack gap="400">
+                      <InlineStack align="space-between">
+                        <Text as="h2" variant="headingMd">Vista previa del modal</Text>
+                        <Badge tone="info">En tiempo real</Badge>
+                      </InlineStack>
+                      <FormModalPreview formState={formState} previewType="modal" />
+                    </BlockStack>
+                  </Card>
+
+                  <Card>
+                    <BlockStack gap="400">
+                      <Text as="h2" variant="headingMd">Vista previa: Éxito</Text>
+                      <SuccessPreview formState={formState} />
+                    </BlockStack>
+                  </Card>
+                </BlockStack>
               </Layout.Section>
             </Layout>
           )}
