@@ -1174,7 +1174,6 @@ export default function Settings() {
                         value={formState.messageTemplate}
                         onChange={handleChange("messageTemplate")}
                         multiline={8}
-                        helpText="Variables: {{orderNumber}}, {{name}}, {{phone}}, {{address}}, {{city}}, {{province}}, {{total}}, {{#products}}...{{/products}}"
                         autoComplete="off"
                       />
                     </FormLayout>
