@@ -372,6 +372,17 @@ function WhatsAppPreview({ template }: { template: string }) {
     .replace(/\{\{quantity\}\}/g, "2")
     .replace(/\{\{price\}\}/g, "RD$ 1,250.00");
 
+  // Convert WhatsApp formatting to HTML
+  // *text* -> bold, _text_ -> italic
+  const formatWhatsAppToHtml = (text: string) => {
+    return text
+      .replace(/\*([^*]+)\*/g, '<strong>$1</strong>')
+      .replace(/_([^_]+)_/g, '<em>$1</em>')
+      .replace(/\n/g, '<br/>');
+  };
+
+  const formattedPreview = formatWhatsAppToHtml(preview);
+
   return (
     <div style={{
       background: "#e5ddd5",
@@ -387,11 +398,10 @@ function WhatsAppPreview({ template }: { template: string }) {
         maxWidth: "90%",
         marginLeft: "auto",
         boxShadow: "0 1px 1px rgba(0,0,0,0.1)",
-        whiteSpace: "pre-wrap",
         fontSize: "14px",
         lineHeight: "1.5",
       }}>
-        {preview}
+        <span dangerouslySetInnerHTML={{ __html: formattedPreview }} />
         <div style={{
           fontSize: "11px",
           color: "#667781",
