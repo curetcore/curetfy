@@ -158,7 +158,18 @@ model Shop {
   // ==========================================
   enableShipping       Boolean  @default(false)  // Enable shipping rates
   shippingSource       String   @default("custom") // "custom" or "shopify"
-  customShippingRates  Json?    // Custom shipping rates: [{name, price, provinces}]
+  customShippingRates  Json?    // Custom shipping rates: [{name, price, deliveryDays, provinces}]
+
+  // Free Shipping
+  freeShippingEnabled   Boolean  @default(false)
+  freeShippingThreshold String   @default("2000")
+  freeShippingLabel     String   @default("Envío gratis")
+
+  // Store Pickup
+  enablePickup          Boolean  @default(false)
+  pickupName            String   @default("Recoger en tienda")
+  pickupAddress         String?
+  pickupInstructions    String?
 
   // ==========================================
   // SUCCESS/ERROR MESSAGES

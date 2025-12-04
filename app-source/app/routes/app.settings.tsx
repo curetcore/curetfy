@@ -346,7 +346,93 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     console.error("Error fetching order count:", error);
   }
 
-  return json({ shop, provincesConfig: PROVINCES_BY_COUNTRY, sampleProduct, nextOrderNumber });
+  // Fetch Shopify shipping zones and rates
+  let shopifyShippingZones: any[] = [];
+  try {
+    const shippingResponse = await admin.graphql(`
+      query {
+        deliveryProfiles(first: 10) {
+          edges {
+            node {
+              id
+              name
+              profileLocationGroups {
+                locationGroupZones(first: 20) {
+                  edges {
+                    node {
+                      zone {
+                        id
+                        name
+                        countries {
+                          code {
+                            countryCode
+                          }
+                          name
+                          provinces {
+                            code
+                            name
+                          }
+                        }
+                      }
+                      methodDefinitions(first: 20) {
+                        edges {
+                          node {
+                            id
+                            name
+                            active
+                            rateProvider {
+                              ... on DeliveryRateDefinition {
+                                id
+                                price {
+                                  amount
+                                  currencyCode
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `);
+    const shippingData = await shippingResponse.json();
+    const profiles = shippingData.data?.deliveryProfiles?.edges || [];
+
+    // Parse shipping zones into a flat structure
+    for (const profile of profiles) {
+      const locationGroups = profile.node?.profileLocationGroups || [];
+      for (const group of locationGroups) {
+        const zones = group?.locationGroupZones?.edges || [];
+        for (const zoneEdge of zones) {
+          const zone = zoneEdge.node?.zone;
+          const methods = zoneEdge.node?.methodDefinitions?.edges || [];
+
+          for (const methodEdge of methods) {
+            const method = methodEdge.node;
+            if (method?.active) {
+              shopifyShippingZones.push({
+                id: method.id,
+                zoneName: zone?.name || "Sin zona",
+                name: method.name,
+                price: method.rateProvider?.price?.amount || "0.00",
+                currency: method.rateProvider?.price?.currencyCode || "DOP",
+              });
+            }
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching Shopify shipping zones:", error);
+  }
+
+  return json({ shop, provincesConfig: PROVINCES_BY_COUNTRY, sampleProduct, nextOrderNumber, shopifyShippingZones });
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -371,7 +457,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // Customization fields
     'customImageUrl', 'customImagePosition', 'customHtmlTop', 'customHtmlBottom', 'customCss',
     // Shipping
-    'shippingSource'
+    'shippingSource', 'freeShippingThreshold', 'freeShippingLabel',
+    // Pickup
+    'pickupName', 'pickupAddress', 'pickupInstructions'
   ];
 
   textFields.forEach(field => {
@@ -390,7 +478,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // Modal options
     'hideCloseButton', 'hideFieldLabels', 'enableRTL', 'fullscreenMobile',
     // Shipping
-    'enableShipping'
+    'enableShipping', 'freeShippingEnabled', 'enablePickup'
   ];
 
   booleanFields.forEach(field => {
@@ -489,6 +577,116 @@ const FIELD_TYPES: Record<string, { label: string; icon: any; maxCount: number }
 };
 
 // Sortable Field Card Component
+// ============================================
+// SORTABLE SHIPPING RATE COMPONENT
+// ============================================
+
+interface SortableShippingRateProps {
+  rate: any;
+  index: number;
+  onUpdate: (updates: any) => void;
+  onRemove: () => void;
+}
+
+function SortableShippingRate({ rate, index, onUpdate, onRemove }: SortableShippingRateProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: rate.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card>
+        <BlockStack gap="300">
+          <InlineStack align="space-between" blockAlign="center">
+            <InlineStack gap="200" blockAlign="center">
+              <div {...attributes} {...listeners} style={{ cursor: 'grab' }}>
+                <Icon source={DragHandleIcon} tone="subdued" />
+              </div>
+              <Text as="span" variant="bodyMd" fontWeight="semibold">
+                {rate.name || "Sin nombre"}
+              </Text>
+              {rate.price === "0" || rate.price === "0.00" ? (
+                <Badge tone="success">Gratis</Badge>
+              ) : (
+                <Badge>${rate.price}</Badge>
+              )}
+            </InlineStack>
+            <Button
+              icon={DeleteIcon}
+              tone="critical"
+              size="slim"
+              onClick={onRemove}
+            />
+          </InlineStack>
+          <FormLayout>
+            <FormLayout.Group>
+              <TextField
+                label="Nombre"
+                value={rate.name}
+                onChange={(value) => onUpdate({ name: value })}
+                placeholder="Delivery Santo Domingo"
+                autoComplete="off"
+              />
+              <TextField
+                label="Precio"
+                value={rate.price}
+                onChange={(value) => onUpdate({ price: value })}
+                type="number"
+                prefix="$"
+                autoComplete="off"
+              />
+              <TextField
+                label="Tiempo estimado"
+                value={rate.deliveryDays || ""}
+                onChange={(value) => onUpdate({ deliveryDays: value })}
+                placeholder="1-2 días"
+                autoComplete="off"
+                helpText="Ej: 1-2 días, 24 horas"
+              />
+            </FormLayout.Group>
+            <Select
+              label="Condición"
+              options={[
+                { value: "always", label: "Siempre visible" },
+                { value: "min_order", label: "Monto mínimo de orden" },
+                { value: "province", label: "Por provincia" },
+              ]}
+              value={rate.condition || "always"}
+              onChange={(value) => onUpdate({ condition: value })}
+            />
+            {rate.condition === "min_order" && (
+              <TextField
+                label="Monto mínimo"
+                value={rate.minOrder || ""}
+                onChange={(value) => onUpdate({ minOrder: value })}
+                type="number"
+                prefix="$"
+                autoComplete="off"
+                helpText="La tarifa solo aparece si el pedido supera este monto"
+              />
+            )}
+          </FormLayout>
+        </BlockStack>
+      </Card>
+    </div>
+  );
+}
+
+// ============================================
+// SORTABLE FIELD CARD
+// ============================================
+
 interface SortableFieldCardProps {
   element: any;
   index: number;
@@ -1260,7 +1458,7 @@ function SuccessPreview({ formState }: { formState: any }) {
 // ============================================
 
 export default function Settings() {
-  const { shop, sampleProduct, nextOrderNumber } = useLoaderData<typeof loader>();
+  const { shop, sampleProduct, nextOrderNumber, shopifyShippingZones } = useLoaderData<typeof loader>();
   const submit = useSubmit();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -1378,6 +1576,17 @@ export default function Settings() {
     enableShipping: shop?.enableShipping ?? false,
     shippingSource: shop?.shippingSource || "custom",
     customShippingRates: shop?.customShippingRates || [],
+
+    // Free Shipping
+    freeShippingEnabled: shop?.freeShippingEnabled ?? false,
+    freeShippingThreshold: shop?.freeShippingThreshold || "2000",
+    freeShippingLabel: shop?.freeShippingLabel || "Envío gratis",
+
+    // Store Pickup
+    enablePickup: shop?.enablePickup ?? false,
+    pickupName: shop?.pickupName || "Recoger en tienda",
+    pickupAddress: shop?.pickupAddress || "",
+    pickupInstructions: shop?.pickupInstructions || "",
 
     // Tax
     enableTax: shop?.enableTax ?? false,
@@ -1946,7 +2155,7 @@ export default function Settings() {
             );
           })()}
 
-          {/* TAB: Shipping Rates */}
+          {/* TAB: Shipping Rates - Enterprise Version */}
           {selectedTab === 1 && (() => {
             const shippingRates = (formState.customShippingRates as any[]) || [];
 
@@ -1955,9 +2164,9 @@ export default function Settings() {
                 id: `rate_${Date.now()}`,
                 name: "",
                 price: "0.00",
+                deliveryDays: "",
                 condition: "always",
                 minOrder: "",
-                maxOrder: "",
                 provinces: [],
               };
               setFormState(prev => ({
@@ -1977,127 +2186,367 @@ export default function Settings() {
               setFormState(prev => ({ ...prev, customShippingRates: newRates }));
             };
 
+            const handleShippingDragEnd = (event: DragEndEvent) => {
+              const { active, over } = event;
+              if (over && active.id !== over.id) {
+                const oldIndex = shippingRates.findIndex((r) => r.id === active.id);
+                const newIndex = shippingRates.findIndex((r) => r.id === over.id);
+                const newRates = arrayMove(shippingRates, oldIndex, newIndex);
+                setFormState(prev => ({ ...prev, customShippingRates: newRates }));
+              }
+            };
+
+            const importFromShopify = () => {
+              if (shopifyShippingZones && shopifyShippingZones.length > 0) {
+                const importedRates = shopifyShippingZones.map((zone, i) => ({
+                  id: `rate_${Date.now()}_${i}`,
+                  name: `${zone.name} (${zone.zoneName})`,
+                  price: zone.price,
+                  deliveryDays: "",
+                  condition: "always",
+                  minOrder: "",
+                  provinces: [],
+                }));
+                setFormState(prev => ({
+                  ...prev,
+                  customShippingRates: importedRates
+                }));
+              }
+            };
+
+            // Calculate sample values for preview
+            const sampleSubtotal = parseFloat(sampleProduct?.price || "2500");
+            const freeShippingThreshold = parseFloat(formState.freeShippingThreshold as string) || 2000;
+            const amountToFreeShipping = Math.max(0, freeShippingThreshold - sampleSubtotal);
+            const freeShippingProgress = Math.min(100, (sampleSubtotal / freeShippingThreshold) * 100);
+
             return (
               <Layout>
+                {/* Main Configuration */}
                 <Layout.Section>
-                  <Card>
-                    <BlockStack gap="400" inlineAlign="start">
-                      <BlockStack gap="200">
-                        <Text as="h2" variant="headingLg">Tarifas de envío</Text>
-                        <Text as="p" tone="subdued">
-                          Configura tus tarifas de envío para tu formulario. Todos los precios se utilizarán en la divisa de tu tienda.
-                        </Text>
-                      </BlockStack>
-
-                      <Checkbox
-                        label="Habilitar tarifas de envío"
-                        helpText="Mostrar opciones de envío en el formulario"
-                        checked={formState.enableShipping}
-                        onChange={handleChange("enableShipping")}
-                      />
-                    </BlockStack>
-                  </Card>
-
-                  {formState.enableShipping && (
-                    <Box paddingBlockStart="400">
-                      <Card>
-                        <BlockStack gap="400">
-                          <InlineStack align="space-between">
-                            <Text as="h2" variant="headingSm">Tarifas configuradas</Text>
-                            <InlineStack gap="200">
-                              <Button
-                                onClick={() => {
-                                  const shopifyRates = [
-                                    { id: `rate_${Date.now()}_1`, name: "Envío estándar", price: "0.00", condition: "always" },
-                                    { id: `rate_${Date.now()}_2`, name: "Envío express", price: "150.00", condition: "always" },
-                                  ];
-                                  setFormState(prev => ({
-                                    ...prev,
-                                    customShippingRates: shopifyRates
-                                  }));
-                                }}
-                              >
-                                Importar de Shopify
-                              </Button>
-                              <Button onClick={addShippingRate} icon={PlusIcon} variant="primary">
-                                Agregar tarifa
-                              </Button>
-                            </InlineStack>
-                          </InlineStack>
-
-                          {shippingRates.length === 0 ? (
-                            <Box padding="400" background="bg-surface-secondary" borderRadius="200">
-                              <BlockStack gap="200" inlineAlign="center">
-                                <Text as="p" tone="subdued" alignment="center">
-                                  No tienes tarifas de envío configuradas. Agrega una para comenzar.
-                                </Text>
-                                <Button onClick={addShippingRate}>Agregar primera tarifa</Button>
-                              </BlockStack>
-                            </Box>
-                          ) : (
-                            <BlockStack gap="300">
-                              {shippingRates.map((rate, index) => (
-                                <Card key={rate.id}>
-                                  <BlockStack gap="300">
-                                    <InlineStack align="space-between" blockAlign="center">
-                                      <Text as="span" variant="bodyMd" fontWeight="semibold">
-                                        {rate.name || "Sin nombre"}
-                                      </Text>
-                                      <Button
-                                        icon={DeleteIcon}
-                                        tone="critical"
-                                        size="slim"
-                                        onClick={() => removeShippingRate(index)}
-                                      />
-                                    </InlineStack>
-                                    <FormLayout>
-                                      <FormLayout.Group>
-                                        <TextField
-                                          label="Nombre"
-                                          value={rate.name}
-                                          onChange={(value) => updateShippingRate(index, { name: value })}
-                                          placeholder="Delivery Santo Domingo"
-                                          autoComplete="off"
-                                        />
-                                        <TextField
-                                          label="Precio"
-                                          value={rate.price}
-                                          onChange={(value) => updateShippingRate(index, { price: value })}
-                                          type="number"
-                                          prefix="$"
-                                          autoComplete="off"
-                                        />
-                                      </FormLayout.Group>
-                                      <Select
-                                        label="Condición"
-                                        options={[
-                                          { value: "always", label: "Siempre visible" },
-                                          { value: "min_order", label: "Monto mínimo de orden" },
-                                          { value: "province", label: "Por provincia" },
-                                        ]}
-                                        value={rate.condition}
-                                        onChange={(value) => updateShippingRate(index, { condition: value })}
-                                      />
-                                      {rate.condition === "min_order" && (
-                                        <TextField
-                                          label="Monto mínimo"
-                                          value={rate.minOrder}
-                                          onChange={(value) => updateShippingRate(index, { minOrder: value })}
-                                          type="number"
-                                          prefix="$"
-                                          autoComplete="off"
-                                        />
-                                      )}
-                                    </FormLayout>
-                                  </BlockStack>
-                                </Card>
-                              ))}
-                            </BlockStack>
-                          )}
+                  <BlockStack gap="400">
+                    {/* Enable Shipping */}
+                    <Card>
+                      <BlockStack gap="400">
+                        <BlockStack gap="200">
+                          <Text as="h2" variant="headingLg">Configuración de envíos</Text>
+                          <Text as="p" tone="subdued">
+                            Configura las opciones de envío para tu formulario COD.
+                          </Text>
                         </BlockStack>
-                      </Card>
-                    </Box>
-                  )}
+
+                        <Checkbox
+                          label="Habilitar tarifas de envío"
+                          helpText="Mostrar opciones de envío en el formulario"
+                          checked={formState.enableShipping}
+                          onChange={handleChange("enableShipping")}
+                        />
+                      </BlockStack>
+                    </Card>
+
+                    {formState.enableShipping && (
+                      <>
+                        {/* Free Shipping */}
+                        <Card>
+                          <BlockStack gap="400">
+                            <InlineStack align="space-between" blockAlign="center">
+                              <BlockStack gap="100">
+                                <Text as="h2" variant="headingSm">Envío gratis inteligente</Text>
+                                <Text as="p" tone="subdued" variant="bodySm">
+                                  Ofrece envío gratis cuando el pedido supera un monto
+                                </Text>
+                              </BlockStack>
+                              <Checkbox
+                                label=""
+                                checked={formState.freeShippingEnabled}
+                                onChange={handleChange("freeShippingEnabled")}
+                              />
+                            </InlineStack>
+
+                            {formState.freeShippingEnabled && (
+                              <FormLayout>
+                                <FormLayout.Group>
+                                  <TextField
+                                    label="Monto mínimo para envío gratis"
+                                    value={formState.freeShippingThreshold as string}
+                                    onChange={handleChange("freeShippingThreshold")}
+                                    type="number"
+                                    prefix="$"
+                                    autoComplete="off"
+                                  />
+                                  <TextField
+                                    label="Nombre de la tarifa gratis"
+                                    value={formState.freeShippingLabel as string}
+                                    onChange={handleChange("freeShippingLabel")}
+                                    placeholder="Envío gratis"
+                                    autoComplete="off"
+                                  />
+                                </FormLayout.Group>
+                              </FormLayout>
+                            )}
+                          </BlockStack>
+                        </Card>
+
+                        {/* Store Pickup */}
+                        <Card>
+                          <BlockStack gap="400">
+                            <InlineStack align="space-between" blockAlign="center">
+                              <BlockStack gap="100">
+                                <Text as="h2" variant="headingSm">Recogida en tienda</Text>
+                                <Text as="p" tone="subdued" variant="bodySm">
+                                  Permite que los clientes recojan su pedido en tu local
+                                </Text>
+                              </BlockStack>
+                              <Checkbox
+                                label=""
+                                checked={formState.enablePickup}
+                                onChange={handleChange("enablePickup")}
+                              />
+                            </InlineStack>
+
+                            {formState.enablePickup && (
+                              <FormLayout>
+                                <TextField
+                                  label="Nombre de la opción"
+                                  value={formState.pickupName as string}
+                                  onChange={handleChange("pickupName")}
+                                  placeholder="Recoger en tienda"
+                                  autoComplete="off"
+                                />
+                                <TextField
+                                  label="Dirección del local"
+                                  value={formState.pickupAddress as string}
+                                  onChange={handleChange("pickupAddress")}
+                                  placeholder="Av. Winston Churchill #123, Santo Domingo"
+                                  autoComplete="off"
+                                />
+                                <TextField
+                                  label="Instrucciones (opcional)"
+                                  value={formState.pickupInstructions as string}
+                                  onChange={handleChange("pickupInstructions")}
+                                  placeholder="Horario: Lun-Vie 9am-6pm"
+                                  autoComplete="off"
+                                  multiline={2}
+                                />
+                              </FormLayout>
+                            )}
+                          </BlockStack>
+                        </Card>
+
+                        {/* Shipping Rates */}
+                        <Card>
+                          <BlockStack gap="400">
+                            <InlineStack align="space-between" blockAlign="center">
+                              <Text as="h2" variant="headingSm">Tarifas de envío</Text>
+                              <InlineStack gap="200">
+                                {shopifyShippingZones && shopifyShippingZones.length > 0 && (
+                                  <Button onClick={importFromShopify}>
+                                    Importar de Shopify ({shopifyShippingZones.length})
+                                  </Button>
+                                )}
+                                <Button onClick={addShippingRate} icon={PlusIcon} variant="primary">
+                                  Agregar tarifa
+                                </Button>
+                              </InlineStack>
+                            </InlineStack>
+
+                            {shippingRates.length === 0 ? (
+                              <Box padding="600" background="bg-surface-secondary" borderRadius="200">
+                                <BlockStack gap="300" inlineAlign="center">
+                                  <Icon source={LocationIcon} tone="subdued" />
+                                  <Text as="p" tone="subdued" alignment="center">
+                                    No tienes tarifas de envío configuradas.
+                                  </Text>
+                                  <InlineStack gap="200">
+                                    {shopifyShippingZones && shopifyShippingZones.length > 0 && (
+                                      <Button onClick={importFromShopify}>
+                                        Importar de Shopify
+                                      </Button>
+                                    )}
+                                    <Button onClick={addShippingRate} variant="primary">
+                                      Agregar tarifa
+                                    </Button>
+                                  </InlineStack>
+                                </BlockStack>
+                              </Box>
+                            ) : (
+                              <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCenter}
+                                onDragEnd={handleShippingDragEnd}
+                              >
+                                <SortableContext
+                                  items={shippingRates.map(r => r.id)}
+                                  strategy={verticalListSortingStrategy}
+                                >
+                                  <BlockStack gap="300">
+                                    {shippingRates.map((rate, index) => (
+                                      <SortableShippingRate
+                                        key={rate.id}
+                                        rate={rate}
+                                        index={index}
+                                        onUpdate={(updates) => updateShippingRate(index, updates)}
+                                        onRemove={() => removeShippingRate(index)}
+                                      />
+                                    ))}
+                                  </BlockStack>
+                                </SortableContext>
+                              </DndContext>
+                            )}
+                          </BlockStack>
+                        </Card>
+                      </>
+                    )}
+                  </BlockStack>
+                </Layout.Section>
+
+                {/* Live Preview */}
+                <Layout.Section variant="oneThird">
+                  <div style={{ position: 'sticky', top: '20px' }}>
+                    <Card>
+                      <BlockStack gap="400">
+                        <InlineStack align="space-between" blockAlign="center">
+                          <Text as="h2" variant="headingSm">Vista previa</Text>
+                          <Badge tone="success">En vivo</Badge>
+                        </InlineStack>
+
+                        {/* Preview Container */}
+                        <Box padding="400" background="bg-surface-secondary" borderRadius="200">
+                          <BlockStack gap="400">
+                            {/* Free Shipping Progress Bar */}
+                            {formState.enableShipping && formState.freeShippingEnabled && (
+                              <Box padding="300" background="bg-surface" borderRadius="200">
+                                {amountToFreeShipping > 0 ? (
+                                  <BlockStack gap="200">
+                                    <Text as="p" variant="bodySm" alignment="center">
+                                      Te faltan <strong>${amountToFreeShipping.toFixed(0)}</strong> para envío gratis
+                                    </Text>
+                                    <div style={{
+                                      height: '8px',
+                                      background: '#e5e7eb',
+                                      borderRadius: '4px',
+                                      overflow: 'hidden'
+                                    }}>
+                                      <div style={{
+                                        height: '100%',
+                                        width: `${freeShippingProgress}%`,
+                                        background: 'linear-gradient(90deg, #25D366, #128C7E)',
+                                        borderRadius: '4px',
+                                        transition: 'width 0.3s ease'
+                                      }} />
+                                    </div>
+                                  </BlockStack>
+                                ) : (
+                                  <InlineStack gap="200" align="center" blockAlign="center">
+                                    <span style={{ fontSize: '16px' }}>🎉</span>
+                                    <Text as="p" variant="bodySm" fontWeight="semibold" tone="success">
+                                      ¡Tienes envío gratis!
+                                    </Text>
+                                  </InlineStack>
+                                )}
+                              </Box>
+                            )}
+
+                            {/* Shipping Methods */}
+                            {formState.enableShipping && (
+                              <BlockStack gap="200">
+                                <Text as="p" variant="bodySm" fontWeight="semibold">
+                                  Método de envío
+                                </Text>
+
+                                {/* Store Pickup */}
+                                {formState.enablePickup && (
+                                  <Box padding="300" background="bg-surface" borderRadius="200" borderWidth="025" borderColor="border">
+                                    <InlineStack align="space-between" blockAlign="start">
+                                      <InlineStack gap="200" blockAlign="center">
+                                        <input type="radio" name="shipping_preview" />
+                                        <BlockStack gap="050">
+                                          <Text as="span" variant="bodySm" fontWeight="semibold">
+                                            {formState.pickupName || "Recoger en tienda"}
+                                          </Text>
+                                          {formState.pickupAddress && (
+                                            <Text as="span" variant="bodySm" tone="subdued">
+                                              {formState.pickupAddress}
+                                            </Text>
+                                          )}
+                                        </BlockStack>
+                                      </InlineStack>
+                                      <Badge tone="success">Gratis</Badge>
+                                    </InlineStack>
+                                  </Box>
+                                )}
+
+                                {/* Free Shipping Option (when qualified) */}
+                                {formState.freeShippingEnabled && amountToFreeShipping <= 0 && (
+                                  <Box padding="300" background="bg-surface" borderRadius="200" borderWidth="025" borderColor="border-success">
+                                    <InlineStack align="space-between" blockAlign="center">
+                                      <InlineStack gap="200" blockAlign="center">
+                                        <input type="radio" name="shipping_preview" defaultChecked />
+                                        <Text as="span" variant="bodySm" fontWeight="semibold">
+                                          {formState.freeShippingLabel || "Envío gratis"}
+                                        </Text>
+                                      </InlineStack>
+                                      <Badge tone="success">Gratis</Badge>
+                                    </InlineStack>
+                                  </Box>
+                                )}
+
+                                {/* Custom Rates */}
+                                {shippingRates.slice(0, 3).map((rate, index) => (
+                                  <Box key={rate.id} padding="300" background="bg-surface" borderRadius="200" borderWidth="025" borderColor="border">
+                                    <InlineStack align="space-between" blockAlign="start">
+                                      <InlineStack gap="200" blockAlign="center">
+                                        <input type="radio" name="shipping_preview" />
+                                        <BlockStack gap="050">
+                                          <Text as="span" variant="bodySm" fontWeight="semibold">
+                                            {rate.name || "Sin nombre"}
+                                          </Text>
+                                          {rate.deliveryDays && (
+                                            <Text as="span" variant="bodySm" tone="subdued">
+                                              Entrega: {rate.deliveryDays}
+                                            </Text>
+                                          )}
+                                        </BlockStack>
+                                      </InlineStack>
+                                      {rate.price === "0" || rate.price === "0.00" ? (
+                                        <Badge tone="success">Gratis</Badge>
+                                      ) : (
+                                        <Text as="span" variant="bodySm" fontWeight="semibold">
+                                          ${rate.price}
+                                        </Text>
+                                      )}
+                                    </InlineStack>
+                                  </Box>
+                                ))}
+
+                                {shippingRates.length > 3 && (
+                                  <Text as="p" variant="bodySm" tone="subdued" alignment="center">
+                                    +{shippingRates.length - 3} más...
+                                  </Text>
+                                )}
+
+                                {shippingRates.length === 0 && !formState.enablePickup && !formState.freeShippingEnabled && (
+                                  <Box padding="300" background="bg-surface" borderRadius="200">
+                                    <Text as="p" variant="bodySm" tone="subdued" alignment="center">
+                                      No hay métodos de envío configurados
+                                    </Text>
+                                  </Box>
+                                )}
+                              </BlockStack>
+                            )}
+
+                            {!formState.enableShipping && (
+                              <Box padding="400" background="bg-surface" borderRadius="200">
+                                <Text as="p" variant="bodySm" tone="subdued" alignment="center">
+                                  Las tarifas de envío están deshabilitadas
+                                </Text>
+                              </Box>
+                            )}
+                          </BlockStack>
+                        </Box>
+                      </BlockStack>
+                    </Card>
+                  </div>
                 </Layout.Section>
               </Layout>
             );
