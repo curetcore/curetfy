@@ -1127,19 +1127,19 @@ export default function Settings() {
   return (
     <Page
       backAction={{ content: "Dashboard", url: "/app" }}
-      title="Configuración"
+      title="Diseño del formulario"
       primaryAction={{
         content: "Guardar cambios",
         onAction: handleSubmit,
         loading: isSubmitting,
       }}
     >
-      <TitleBar title="Configuración" />
+      <TitleBar title="Diseño del formulario" />
 
       {showSaved && (
         <Box paddingBlockEnd="400">
           <Banner tone="success" onDismiss={() => setShowSaved(false)}>
-            Configuración guardada correctamente
+            Cambios guardados correctamente
           </Banner>
         </Box>
       )}

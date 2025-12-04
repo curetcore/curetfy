@@ -21,7 +21,7 @@ export default function App() {
     <AppProvider isEmbeddedApp apiKey={apiKey}>
       <NavMenu>
         <Link to="/app" rel="home">Dashboard</Link>
-        <Link to="/app/settings">Configuración</Link>
+        <Link to="/app/settings">Diseño del formulario</Link>
         <Link to="/app/billing">Plan de facturación</Link>
       </NavMenu>
       <Outlet />
