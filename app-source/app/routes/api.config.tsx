@@ -258,6 +258,25 @@ export async function loader({ request }: LoaderFunctionArgs) {
       enableAnalytics: shop.enableAnalytics,
       enablePixel: shop.enablePixel,
       pixelId: shop.pixelId,
+
+      // Customization
+      fieldOrder: shop.fieldOrder || ["name", "phone", "email", "address", "city", "province", "postalCode", "notes", "quantity"],
+      customImageUrl: shop.customImageUrl || "",
+      customImagePosition: shop.customImagePosition || "none",
+      customHtmlTop: shop.customHtmlTop || "",
+      customHtmlBottom: shop.customHtmlBottom || "",
+      customCss: shop.customCss || "",
+
+      // Modal options
+      hideCloseButton: shop.hideCloseButton ?? false,
+      hideFieldLabels: shop.hideFieldLabels ?? false,
+      enableRTL: shop.enableRTL ?? false,
+      fullscreenMobile: shop.fullscreenMobile ?? true,
+
+      // Shipping
+      enableShipping: shop.enableShipping ?? false,
+      shippingSource: shop.shippingSource || "custom",
+      customShippingRates: shop.customShippingRates || [],
     };
 
     // Get provinces for enabled countries
@@ -359,6 +378,22 @@ function getDefaultConfig() {
     enableAnalytics: true,
     enablePixel: false,
     pixelId: "",
+    // Customization
+    fieldOrder: ["name", "phone", "email", "address", "city", "province", "postalCode", "notes", "quantity"],
+    customImageUrl: "",
+    customImagePosition: "none",
+    customHtmlTop: "",
+    customHtmlBottom: "",
+    customCss: "",
+    // Modal options
+    hideCloseButton: false,
+    hideFieldLabels: false,
+    enableRTL: false,
+    fullscreenMobile: true,
+    // Shipping
+    enableShipping: false,
+    shippingSource: "custom",
+    customShippingRates: [],
   };
 }
 

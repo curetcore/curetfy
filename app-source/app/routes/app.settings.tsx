@@ -127,7 +127,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     'modalHeaderColor', 'modalAccentColor',
     'successTitle', 'successMessage', 'errorTitle', 'errorMessage',
     'defaultCountry', 'pixelId',
-    'buttonText', 'buttonColor', 'buttonTextColor'
+    'buttonText', 'buttonColor', 'buttonTextColor',
+    // Customization fields
+    'customImageUrl', 'customImagePosition', 'customHtmlTop', 'customHtmlBottom', 'customCss',
+    // Shipping
+    'shippingSource'
   ];
 
   textFields.forEach(field => {
@@ -142,7 +146,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     'createDraftOrder', 'showEmail', 'showCity', 'showProvince', 'showPostalCode',
     'showNotes', 'showQuantity', 'requireEmail', 'requireCity', 'requireProvince',
     'requirePostalCode', 'requireNotes', 'showProductImage', 'showProductPrice',
-    'enableAllProducts', 'autoRedirectWhatsApp', 'enableAnalytics', 'enablePixel'
+    'enableAllProducts', 'autoRedirectWhatsApp', 'enableAnalytics', 'enablePixel',
+    // Modal options
+    'hideCloseButton', 'hideFieldLabels', 'enableRTL', 'fullscreenMobile',
+    // Shipping
+    'enableShipping'
   ];
 
   booleanFields.forEach(field => {
@@ -165,6 +173,27 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const redirectDelay = formData.get('redirectDelay');
   if (redirectDelay) {
     updateData.redirectDelay = parseInt(redirectDelay as string, 10) || 2000;
+  }
+
+  // JSON fields
+  const fieldOrder = formData.get('fieldOrder');
+  if (fieldOrder) {
+    try {
+      // If it's already a JSON string (array), parse it
+      updateData.fieldOrder = JSON.parse(fieldOrder as string);
+    } catch {
+      // If it's a comma-separated string, split it
+      updateData.fieldOrder = (fieldOrder as string).split(',').map(f => f.trim()).filter(Boolean);
+    }
+  }
+
+  const customShippingRates = formData.get('customShippingRates');
+  if (customShippingRates) {
+    try {
+      updateData.customShippingRates = JSON.parse(customShippingRates as string);
+    } catch {
+      updateData.customShippingRates = [];
+    }
   }
 
   await prisma.shop.upsert({
@@ -288,6 +317,148 @@ function FormModalPreview({
   previewType: "form" | "fields" | "modal";
 }) {
   const provinces = PROVINCES_BY_COUNTRY[formState.defaultCountry] || PROVINCES_BY_COUNTRY.DO;
+  const fieldOrder = formState.fieldOrder as string[] || ["name", "phone", "email", "address", "city", "province", "postalCode", "notes", "quantity"];
+
+  // Helper to check if a field is visible
+  const isFieldVisible = (fieldId: string) => {
+    if (fieldId === "name" || fieldId === "phone" || fieldId === "address") return true;
+    if (fieldId === "email") return formState.showEmail;
+    if (fieldId === "city") return formState.showCity;
+    if (fieldId === "province") return formState.showProvince;
+    if (fieldId === "postalCode") return formState.showPostalCode;
+    if (fieldId === "notes") return formState.showNotes;
+    if (fieldId === "quantity") return formState.showQuantity;
+    return false;
+  };
+
+  // Helper to check if a field is required
+  const isFieldRequired = (fieldId: string) => {
+    if (fieldId === "name" || fieldId === "phone" || fieldId === "address") return true;
+    if (fieldId === "email") return formState.requireEmail;
+    if (fieldId === "city") return formState.requireCity;
+    if (fieldId === "province") return formState.requireProvince;
+    if (fieldId === "postalCode") return formState.requirePostalCode;
+    if (fieldId === "notes") return formState.requireNotes;
+    return false;
+  };
+
+  // Render individual field
+  const renderField = (fieldId: string) => {
+    if (!isFieldVisible(fieldId)) return null;
+
+    const hideLabels = formState.hideFieldLabels;
+    const fieldStyle = { marginBottom: "16px" };
+    const labelStyle = {
+      display: hideLabels ? "none" : "block",
+      fontSize: "13px",
+      fontWeight: 500,
+      marginBottom: "6px",
+      color: "#1a1a1a"
+    };
+    const inputStyle = {
+      width: "100%",
+      padding: "10px 12px",
+      border: "1px solid #e1e3e5",
+      borderRadius: "8px",
+      fontSize: "14px",
+      boxSizing: "border-box" as const,
+    };
+
+    switch (fieldId) {
+      case "name":
+        return (
+          <div key={fieldId} style={fieldStyle}>
+            <label style={labelStyle}>{formState.labelName || "Nombre completo"} *</label>
+            <input type="text" placeholder={formState.placeholderName || "Ej: Juan Pérez"} readOnly style={inputStyle} />
+          </div>
+        );
+      case "phone":
+        return (
+          <div key={fieldId} style={fieldStyle}>
+            <label style={labelStyle}>{formState.labelPhone || "Teléfono / WhatsApp"} *</label>
+            <input type="text" placeholder={formState.placeholderPhone || "Ej: 809-555-1234"} readOnly style={inputStyle} />
+          </div>
+        );
+      case "email":
+        return (
+          <div key={fieldId} style={fieldStyle}>
+            <label style={labelStyle}>{formState.labelEmail || "Email"} {isFieldRequired(fieldId) ? "*" : ""}</label>
+            <input type="text" placeholder={formState.placeholderEmail || "Ej: juan@email.com"} readOnly style={inputStyle} />
+          </div>
+        );
+      case "address":
+        return (
+          <div key={fieldId} style={fieldStyle}>
+            <label style={labelStyle}>{formState.labelAddress || "Dirección de entrega"} *</label>
+            <input type="text" placeholder={formState.placeholderAddress || "Calle, número, sector..."} readOnly style={inputStyle} />
+          </div>
+        );
+      case "city":
+        return (
+          <div key={fieldId} style={fieldStyle}>
+            <label style={labelStyle}>{formState.labelCity || "Ciudad"} {isFieldRequired(fieldId) ? "*" : ""}</label>
+            <input type="text" placeholder={formState.placeholderCity || "Ej: Santo Domingo"} readOnly style={inputStyle} />
+          </div>
+        );
+      case "province":
+        return (
+          <div key={fieldId} style={fieldStyle}>
+            <label style={labelStyle}>{formState.labelProvince || "Provincia"} {isFieldRequired(fieldId) ? "*" : ""}</label>
+            <select disabled style={{ ...inputStyle, background: "#fff" }}>
+              <option>Seleccionar...</option>
+              {provinces.slice(0, 3).map((p) => (<option key={p.value}>{p.label}</option>))}
+            </select>
+          </div>
+        );
+      case "postalCode":
+        return (
+          <div key={fieldId} style={fieldStyle}>
+            <label style={labelStyle}>{formState.labelPostalCode || "Código postal"} {isFieldRequired(fieldId) ? "*" : ""}</label>
+            <input type="text" placeholder={formState.placeholderPostal || "Ej: 10101"} readOnly style={inputStyle} />
+          </div>
+        );
+      case "notes":
+        return (
+          <div key={fieldId} style={fieldStyle}>
+            <label style={labelStyle}>{formState.labelNotes || "Notas del pedido"} {isFieldRequired(fieldId) ? "*" : ""}</label>
+            <textarea placeholder={formState.placeholderNotes || "Instrucciones especiales..."} readOnly style={{ ...inputStyle, minHeight: "60px", resize: "none" }} />
+          </div>
+        );
+      case "quantity":
+        return (
+          <div key={fieldId} style={fieldStyle}>
+            <label style={labelStyle}>{formState.labelQuantity || "Cantidad"}</label>
+            <div style={{ display: "flex", border: "1px solid #e1e3e5", borderRadius: "8px", overflow: "hidden", width: "fit-content" }}>
+              <button style={{ width: "40px", border: "none", background: "#fafbfb", fontSize: "18px", cursor: "pointer" }}>−</button>
+              <input type="text" value="1" readOnly style={{ width: "50px", textAlign: "center", border: "none", borderLeft: "1px solid #e1e3e5", borderRight: "1px solid #e1e3e5", fontSize: "14px", fontWeight: 500 }} />
+              <button style={{ width: "40px", border: "none", background: "#fafbfb", fontSize: "18px", cursor: "pointer" }}>+</button>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  // Custom image component
+  const CustomImage = () => {
+    if (!formState.customImageUrl || formState.customImagePosition === "none") return null;
+    return (
+      <div style={{ padding: "12px 20px", textAlign: "center" }}>
+        <img
+          src={formState.customImageUrl}
+          alt="Custom"
+          style={{ maxWidth: "100%", maxHeight: "150px", borderRadius: "8px" }}
+          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+        />
+      </div>
+    );
+  };
+
+  // Check RTL and other modal options
+  const isRTL = formState.enableRTL;
+  const hideLabels = formState.hideFieldLabels;
+  const hideClose = formState.hideCloseButton;
 
   return (
     <div style={{
@@ -296,7 +467,22 @@ function FormModalPreview({
       boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
       overflow: "hidden",
       maxWidth: "100%",
+      direction: isRTL ? "rtl" : "ltr",
     }}>
+      {/* Custom CSS Preview Notice */}
+      {formState.customCss && (
+        <div style={{ background: "#f0f4ff", padding: "8px 12px", fontSize: "11px", color: "#5c6ac4" }}>
+          CSS personalizado aplicado
+        </div>
+      )}
+
+      {/* RTL Notice */}
+      {isRTL && (
+        <div style={{ background: "#fff3cd", padding: "8px 12px", fontSize: "11px", color: "#856404" }}>
+          Modo RTL activado
+        </div>
+      )}
+
       {/* Modal Header */}
       <div style={{
         background: formState.modalHeaderColor || "#000",
@@ -309,8 +495,13 @@ function FormModalPreview({
         <span style={{ fontWeight: 600, fontSize: "17px" }}>
           {formState.formTitle || "Completa tu pedido"}
         </span>
-        <span style={{ cursor: "pointer", fontSize: "20px" }}>×</span>
+        {!hideClose && (
+          <span style={{ cursor: "pointer", fontSize: "20px" }}>×</span>
+        )}
       </div>
+
+      {/* Custom Image - Top */}
+      {formState.customImagePosition === "top" && <CustomImage />}
 
       {/* Product Summary */}
       {formState.showProductImage && (
@@ -347,6 +538,9 @@ function FormModalPreview({
         </div>
       )}
 
+      {/* Custom Image - After Product */}
+      {formState.customImagePosition === "after_product" && <CustomImage />}
+
       {/* Subtitle */}
       {formState.formSubtitle && (
         <div style={{
@@ -362,208 +556,26 @@ function FormModalPreview({
 
       {/* Form Fields */}
       <div style={{ padding: "20px" }}>
-        {/* Name - Always visible */}
-        <div style={{ marginBottom: "16px" }}>
-          <label style={{ display: "block", fontSize: "13px", fontWeight: 500, marginBottom: "6px", color: "#1a1a1a" }}>
-            {formState.labelName || "Nombre completo"} *
-          </label>
-          <input
-            type="text"
-            placeholder={formState.placeholderName || "Ej: Juan Pérez"}
-            readOnly
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              border: "1px solid #e1e3e5",
-              borderRadius: "8px",
-              fontSize: "14px",
-              boxSizing: "border-box",
-            }}
+        {/* Custom HTML Top */}
+        {formState.customHtmlTop && (
+          <div
+            style={{ marginBottom: "16px", padding: "12px", background: "#f9fafb", borderRadius: "8px", fontSize: "13px" }}
+            dangerouslySetInnerHTML={{ __html: formState.customHtmlTop }}
           />
-        </div>
+        )}
 
-        {/* Phone - Always visible */}
-        <div style={{ marginBottom: "16px" }}>
-          <label style={{ display: "block", fontSize: "13px", fontWeight: 500, marginBottom: "6px", color: "#1a1a1a" }}>
-            {formState.labelPhone || "Teléfono / WhatsApp"} *
-          </label>
-          <input
-            type="text"
-            placeholder={formState.placeholderPhone || "Ej: 809-555-1234"}
-            readOnly
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              border: "1px solid #e1e3e5",
-              borderRadius: "8px",
-              fontSize: "14px",
-              boxSizing: "border-box",
-            }}
+        {/* Render fields in order */}
+        {fieldOrder.map((fieldId) => renderField(fieldId))}
+
+        {/* Custom Image - Bottom */}
+        {formState.customImagePosition === "bottom" && <CustomImage />}
+
+        {/* Custom HTML Bottom */}
+        {formState.customHtmlBottom && (
+          <div
+            style={{ marginBottom: "16px", padding: "12px", background: "#f9fafb", borderRadius: "8px", fontSize: "13px" }}
+            dangerouslySetInnerHTML={{ __html: formState.customHtmlBottom }}
           />
-        </div>
-
-        {/* Email - Conditional */}
-        {formState.showEmail && (
-          <div style={{ marginBottom: "16px" }}>
-            <label style={{ display: "block", fontSize: "13px", fontWeight: 500, marginBottom: "6px", color: "#1a1a1a" }}>
-              {formState.labelEmail || "Email"} {formState.requireEmail ? "*" : ""}
-            </label>
-            <input
-              type="text"
-              placeholder={formState.placeholderEmail || "Ej: juan@email.com"}
-              readOnly
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                border: "1px solid #e1e3e5",
-                borderRadius: "8px",
-                fontSize: "14px",
-                boxSizing: "border-box",
-              }}
-            />
-          </div>
-        )}
-
-        {/* Address - Always visible */}
-        <div style={{ marginBottom: "16px" }}>
-          <label style={{ display: "block", fontSize: "13px", fontWeight: 500, marginBottom: "6px", color: "#1a1a1a" }}>
-            {formState.labelAddress || "Dirección de entrega"} *
-          </label>
-          <input
-            type="text"
-            placeholder={formState.placeholderAddress || "Calle, número, sector..."}
-            readOnly
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              border: "1px solid #e1e3e5",
-              borderRadius: "8px",
-              fontSize: "14px",
-              boxSizing: "border-box",
-            }}
-          />
-        </div>
-
-        {/* City/Province Row */}
-        {(formState.showCity || formState.showProvince) && (
-          <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
-            {formState.showCity && (
-              <div style={{ flex: 1 }}>
-                <label style={{ display: "block", fontSize: "13px", fontWeight: 500, marginBottom: "6px", color: "#1a1a1a" }}>
-                  {formState.labelCity || "Ciudad"} {formState.requireCity ? "*" : ""}
-                </label>
-                <input
-                  type="text"
-                  placeholder={formState.placeholderCity || "Ej: Santo Domingo"}
-                  readOnly
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px",
-                    border: "1px solid #e1e3e5",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    boxSizing: "border-box",
-                  }}
-                />
-              </div>
-            )}
-            {formState.showProvince && (
-              <div style={{ flex: 1 }}>
-                <label style={{ display: "block", fontSize: "13px", fontWeight: 500, marginBottom: "6px", color: "#1a1a1a" }}>
-                  {formState.labelProvince || "Provincia"} {formState.requireProvince ? "*" : ""}
-                </label>
-                <select
-                  disabled
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px",
-                    border: "1px solid #e1e3e5",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    boxSizing: "border-box",
-                    background: "#fff",
-                  }}
-                >
-                  <option>Seleccionar...</option>
-                  {provinces.slice(0, 3).map((p) => (
-                    <option key={p.value}>{p.label}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Postal Code */}
-        {formState.showPostalCode && (
-          <div style={{ marginBottom: "16px" }}>
-            <label style={{ display: "block", fontSize: "13px", fontWeight: 500, marginBottom: "6px", color: "#1a1a1a" }}>
-              {formState.labelPostalCode || "Código postal"} {formState.requirePostalCode ? "*" : ""}
-            </label>
-            <input
-              type="text"
-              placeholder={formState.placeholderPostal || "Ej: 10101"}
-              readOnly
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                border: "1px solid #e1e3e5",
-                borderRadius: "8px",
-                fontSize: "14px",
-                boxSizing: "border-box",
-              }}
-            />
-          </div>
-        )}
-
-        {/* Notes */}
-        {formState.showNotes && (
-          <div style={{ marginBottom: "16px" }}>
-            <label style={{ display: "block", fontSize: "13px", fontWeight: 500, marginBottom: "6px", color: "#1a1a1a" }}>
-              {formState.labelNotes || "Notas del pedido"} {formState.requireNotes ? "*" : ""}
-            </label>
-            <textarea
-              placeholder={formState.placeholderNotes || "Instrucciones especiales..."}
-              readOnly
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                border: "1px solid #e1e3e5",
-                borderRadius: "8px",
-                fontSize: "14px",
-                boxSizing: "border-box",
-                minHeight: "60px",
-                resize: "none",
-              }}
-            />
-          </div>
-        )}
-
-        {/* Quantity */}
-        {formState.showQuantity && (
-          <div style={{ marginBottom: "16px" }}>
-            <label style={{ display: "block", fontSize: "13px", fontWeight: 500, marginBottom: "6px", color: "#1a1a1a" }}>
-              {formState.labelQuantity || "Cantidad"}
-            </label>
-            <div style={{ display: "flex", border: "1px solid #e1e3e5", borderRadius: "8px", overflow: "hidden", width: "fit-content" }}>
-              <button style={{ width: "40px", border: "none", background: "#fafbfb", fontSize: "18px", cursor: "pointer" }}>−</button>
-              <input
-                type="text"
-                value="1"
-                readOnly
-                style={{
-                  width: "50px",
-                  textAlign: "center",
-                  border: "none",
-                  borderLeft: "1px solid #e1e3e5",
-                  borderRight: "1px solid #e1e3e5",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                }}
-              />
-              <button style={{ width: "40px", border: "none", background: "#fafbfb", fontSize: "18px", cursor: "pointer" }}>+</button>
-            </div>
-          </div>
         )}
 
         {/* Total */}
@@ -735,6 +747,25 @@ export default function Settings() {
     enablePixel: shop?.enablePixel ?? false,
     pixelId: shop?.pixelId || "",
     enableAllProducts: shop?.enableAllProducts ?? true,
+
+    // Field Order & Customization
+    fieldOrder: shop?.fieldOrder || ["name", "phone", "email", "address", "city", "province", "postalCode", "notes", "quantity"],
+    customImageUrl: shop?.customImageUrl || "",
+    customImagePosition: shop?.customImagePosition || "none",
+    customHtmlTop: shop?.customHtmlTop || "",
+    customHtmlBottom: shop?.customHtmlBottom || "",
+    customCss: shop?.customCss || "",
+
+    // Modal Options
+    hideCloseButton: shop?.hideCloseButton ?? false,
+    hideFieldLabels: shop?.hideFieldLabels ?? false,
+    enableRTL: shop?.enableRTL ?? false,
+    fullscreenMobile: shop?.fullscreenMobile ?? true,
+
+    // Shipping
+    enableShipping: shop?.enableShipping ?? false,
+    shippingSource: shop?.shippingSource || "custom",
+    customShippingRates: shop?.customShippingRates || [],
   });
 
   const handleChange = useCallback((field: string) => (value: string | boolean) => {
@@ -744,24 +775,53 @@ export default function Settings() {
   const handleSubmit = () => {
     const data = new FormData();
     Object.entries(formState).forEach(([key, value]) => {
-      data.append(key, String(value));
+      // Serialize arrays and objects as JSON
+      if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
+        data.append(key, JSON.stringify(value));
+      } else {
+        data.append(key, String(value));
+      }
     });
     submit(data, { method: "POST" });
     setShowSaved(true);
     setTimeout(() => setShowSaved(false), 3000);
   };
 
+  // Handler for field order changes
+  const moveField = useCallback((fromIndex: number, toIndex: number) => {
+    setFormState((prev) => {
+      const newOrder = [...(prev.fieldOrder as string[])];
+      const [removed] = newOrder.splice(fromIndex, 1);
+      newOrder.splice(toIndex, 0, removed);
+      return { ...prev, fieldOrder: newOrder };
+    });
+  }, []);
+
   const tabs = [
     { id: "whatsapp", content: "WhatsApp", accessibilityLabel: "WhatsApp" },
     { id: "form", content: "Formulario", accessibilityLabel: "Formulario" },
     { id: "fields", content: "Campos", accessibilityLabel: "Campos" },
     { id: "modal", content: "Modal", accessibilityLabel: "Modal" },
+    { id: "customize", content: "Personalizar", accessibilityLabel: "Personalizar" },
     { id: "orders", content: "Pedidos", accessibilityLabel: "Pedidos" },
     { id: "advanced", content: "Avanzado", accessibilityLabel: "Avanzado" },
   ];
 
+  // Field labels for drag and drop
+  const fieldLabels: Record<string, string> = {
+    name: formState.labelName || "Nombre completo",
+    phone: formState.labelPhone || "Teléfono / WhatsApp",
+    email: formState.labelEmail || "Email",
+    address: formState.labelAddress || "Dirección de entrega",
+    city: formState.labelCity || "Ciudad",
+    province: formState.labelProvince || "Provincia",
+    postalCode: formState.labelPostalCode || "Código postal",
+    notes: formState.labelNotes || "Notas",
+    quantity: formState.labelQuantity || "Cantidad",
+  };
+
   // Determine if we should show preview
-  const showPreview = selectedTab <= 3; // WhatsApp, Formulario, Campos, Modal
+  const showPreview = selectedTab <= 4; // WhatsApp, Formulario, Campos, Modal, Personalizar
 
   return (
     <Page
@@ -1162,8 +1222,255 @@ export default function Settings() {
             </Layout>
           )}
 
-          {/* TAB: Order Configuration */}
+          {/* TAB: Personalizar (Field Order, Custom Content) */}
           {selectedTab === 4 && (
+            <Layout>
+              <Layout.Section>
+                <Card>
+                  <BlockStack gap="400">
+                    <Text as="h2" variant="headingMd">Orden de campos</Text>
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      Arrastra los campos para cambiar el orden en que aparecen en el formulario.
+                    </Text>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      {(formState.fieldOrder as string[]).map((fieldId, index) => {
+                        const isVisible =
+                          fieldId === "name" ||
+                          fieldId === "phone" ||
+                          fieldId === "address" ||
+                          (fieldId === "email" && formState.showEmail) ||
+                          (fieldId === "city" && formState.showCity) ||
+                          (fieldId === "province" && formState.showProvince) ||
+                          (fieldId === "postalCode" && formState.showPostalCode) ||
+                          (fieldId === "notes" && formState.showNotes) ||
+                          (fieldId === "quantity" && formState.showQuantity);
+
+                        return (
+                          <div
+                            key={fieldId}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "12px",
+                              padding: "12px 16px",
+                              background: isVisible ? "#fff" : "#f6f6f7",
+                              border: "1px solid #e1e3e5",
+                              borderRadius: "8px",
+                              opacity: isVisible ? 1 : 0.5,
+                            }}
+                          >
+                            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                              <button
+                                onClick={() => index > 0 && moveField(index, index - 1)}
+                                disabled={index === 0}
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  cursor: index === 0 ? "default" : "pointer",
+                                  padding: "2px",
+                                  opacity: index === 0 ? 0.3 : 1,
+                                }}
+                              >
+                                ▲
+                              </button>
+                              <button
+                                onClick={() => index < (formState.fieldOrder as string[]).length - 1 && moveField(index, index + 1)}
+                                disabled={index === (formState.fieldOrder as string[]).length - 1}
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  cursor: index === (formState.fieldOrder as string[]).length - 1 ? "default" : "pointer",
+                                  padding: "2px",
+                                  opacity: index === (formState.fieldOrder as string[]).length - 1 ? 0.3 : 1,
+                                }}
+                              >
+                                ▼
+                              </button>
+                            </div>
+                            <span style={{ fontWeight: 500, flex: 1 }}>
+                              {fieldLabels[fieldId] || fieldId}
+                            </span>
+                            {!isVisible && (
+                              <Badge tone="subdued">Oculto</Badge>
+                            )}
+                            {(fieldId === "name" || fieldId === "phone" || fieldId === "address") && (
+                              <Badge tone="info">Requerido</Badge>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </BlockStack>
+                </Card>
+
+                <Box paddingBlockStart="400">
+                  <Card>
+                    <BlockStack gap="400">
+                      <Text as="h2" variant="headingMd">Imagen personalizada</Text>
+                      <FormLayout>
+                        <TextField
+                          label="URL de la imagen"
+                          value={formState.customImageUrl}
+                          onChange={handleChange("customImageUrl")}
+                          placeholder="https://ejemplo.com/imagen.jpg"
+                          helpText="URL de una imagen para mostrar en el modal"
+                          autoComplete="off"
+                        />
+                        <Select
+                          label="Posición de la imagen"
+                          options={[
+                            { value: "none", label: "No mostrar imagen" },
+                            { value: "top", label: "Arriba del formulario" },
+                            { value: "after_product", label: "Después del producto" },
+                            { value: "bottom", label: "Antes del botón de envío" },
+                          ]}
+                          value={formState.customImagePosition}
+                          onChange={handleChange("customImagePosition")}
+                        />
+                      </FormLayout>
+                    </BlockStack>
+                  </Card>
+                </Box>
+
+                <Box paddingBlockStart="400">
+                  <Card>
+                    <BlockStack gap="400">
+                      <Text as="h2" variant="headingMd">HTML personalizado</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        Puedes agregar HTML o Liquid para personalizar el modal. Usa con cuidado.
+                      </Text>
+                      <FormLayout>
+                        <TextField
+                          label="HTML arriba del formulario"
+                          value={formState.customHtmlTop}
+                          onChange={handleChange("customHtmlTop")}
+                          multiline={4}
+                          placeholder="<div class='promo-banner'>¡Envío gratis hoy!</div>"
+                          helpText="Se mostrará antes de los campos del formulario"
+                          autoComplete="off"
+                          monospaced
+                        />
+                        <TextField
+                          label="HTML abajo del formulario"
+                          value={formState.customHtmlBottom}
+                          onChange={handleChange("customHtmlBottom")}
+                          multiline={4}
+                          placeholder="<p class='terms'>Al enviar aceptas los términos</p>"
+                          helpText="Se mostrará antes del botón de envío"
+                          autoComplete="off"
+                          monospaced
+                        />
+                      </FormLayout>
+                    </BlockStack>
+                  </Card>
+                </Box>
+
+                <Box paddingBlockStart="400">
+                  <Card>
+                    <BlockStack gap="400">
+                      <Text as="h2" variant="headingMd">CSS personalizado</Text>
+                      <FormLayout>
+                        <TextField
+                          label="Estilos CSS adicionales"
+                          value={formState.customCss}
+                          onChange={handleChange("customCss")}
+                          multiline={6}
+                          placeholder={`.curetfy-modal { border-radius: 20px; }\n.curetfy-submit-btn { font-size: 18px; }`}
+                          helpText="CSS personalizado para el formulario"
+                          autoComplete="off"
+                          monospaced
+                        />
+                      </FormLayout>
+                    </BlockStack>
+                  </Card>
+                </Box>
+
+                <Box paddingBlockStart="400">
+                  <Card>
+                    <BlockStack gap="400">
+                      <Text as="h2" variant="headingMd">Opciones del modal</Text>
+                      <FormLayout>
+                        <Checkbox
+                          label="Ocultar botón de cierre"
+                          helpText="Esconde la X para cerrar el modal"
+                          checked={formState.hideCloseButton}
+                          onChange={handleChange("hideCloseButton")}
+                        />
+                        <Checkbox
+                          label="Ocultar etiquetas de campos"
+                          helpText="Solo muestra los placeholders, oculta las etiquetas"
+                          checked={formState.hideFieldLabels}
+                          onChange={handleChange("hideFieldLabels")}
+                        />
+                        <Checkbox
+                          label="Habilitar soporte RTL"
+                          helpText="Para idiomas que se leen de derecha a izquierda (árabe, hebreo)"
+                          checked={formState.enableRTL}
+                          onChange={handleChange("enableRTL")}
+                        />
+                        <Checkbox
+                          label="Pantalla completa en móvil"
+                          helpText="El modal ocupa toda la pantalla en dispositivos móviles"
+                          checked={formState.fullscreenMobile}
+                          onChange={handleChange("fullscreenMobile")}
+                        />
+                      </FormLayout>
+                    </BlockStack>
+                  </Card>
+                </Box>
+
+                <Box paddingBlockStart="400">
+                  <Card>
+                    <BlockStack gap="400">
+                      <Text as="h2" variant="headingMd">Tarifas de envío</Text>
+                      <FormLayout>
+                        <Checkbox
+                          label="Habilitar tarifas de envío"
+                          helpText="Permite agregar costos de envío a los pedidos"
+                          checked={formState.enableShipping}
+                          onChange={handleChange("enableShipping")}
+                        />
+                        {formState.enableShipping && (
+                          <>
+                            <Select
+                              label="Fuente de tarifas"
+                              options={[
+                                { value: "custom", label: "Tarifas personalizadas" },
+                                { value: "shopify", label: "Importar desde Shopify (próximamente)" },
+                              ]}
+                              value={formState.shippingSource}
+                              onChange={handleChange("shippingSource")}
+                            />
+                            {formState.shippingSource === "custom" && (
+                              <Banner tone="info">
+                                <p>Configura las tarifas de envío en la pestaña "Envíos" que se habilitará próximamente.</p>
+                              </Banner>
+                            )}
+                          </>
+                        )}
+                      </FormLayout>
+                    </BlockStack>
+                  </Card>
+                </Box>
+              </Layout.Section>
+
+              {/* PREVIEW: Personalizar */}
+              <Layout.Section variant="oneThird">
+                <Card>
+                  <BlockStack gap="400">
+                    <InlineStack align="space-between">
+                      <Text as="h2" variant="headingMd">Vista previa</Text>
+                      <Badge tone="info">En tiempo real</Badge>
+                    </InlineStack>
+                    <FormModalPreview formState={formState} previewType="modal" />
+                  </BlockStack>
+                </Card>
+              </Layout.Section>
+            </Layout>
+          )}
+
+          {/* TAB: Order Configuration */}
+          {selectedTab === 5 && (
             <Layout>
               <Layout.Section>
                 <Card>
@@ -1216,7 +1523,7 @@ export default function Settings() {
           )}
 
           {/* TAB: Advanced */}
-          {selectedTab === 5 && (
+          {selectedTab === 6 && (
             <Layout>
               <Layout.Section>
                 <Card>

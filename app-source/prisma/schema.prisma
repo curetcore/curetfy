@@ -106,6 +106,35 @@ model Shop {
   showProductPrice    Boolean  @default(true)
 
   // ==========================================
+  // FIELD ORDERING & CUSTOMIZATION
+  // ==========================================
+  fieldOrder          Json?    @default("[\"name\", \"phone\", \"email\", \"address\", \"city\", \"province\", \"postalCode\", \"notes\", \"quantity\"]")
+
+  // ==========================================
+  // CUSTOM CONTENT (Images, HTML, Liquid)
+  // ==========================================
+  customImageUrl      String?  // Custom image URL to display
+  customImagePosition String   @default("none") // none, top, bottom, after_product
+  customHtmlTop       String?  // Custom HTML at top of form
+  customHtmlBottom    String?  // Custom HTML at bottom of form (before submit)
+  customCss           String?  // Custom CSS styles
+
+  // ==========================================
+  // MODAL OPTIONS
+  // ==========================================
+  hideCloseButton     Boolean  @default(false)  // Hide the X close button
+  hideFieldLabels     Boolean  @default(false)  // Hide labels, show only placeholders
+  enableRTL           Boolean  @default(false)  // Right-to-left support for Arabic
+  fullscreenMobile    Boolean  @default(true)   // Fullscreen modal on mobile devices
+
+  // ==========================================
+  // SHIPPING RATES
+  // ==========================================
+  enableShipping       Boolean  @default(false)  // Enable shipping rates
+  shippingSource       String   @default("custom") // "custom" or "shopify"
+  customShippingRates  Json?    // Custom shipping rates: [{name, price, provinces}]
+
+  // ==========================================
   // SUCCESS/ERROR MESSAGES
   // ==========================================
   successTitle        String   @default("¡Pedido enviado!")
