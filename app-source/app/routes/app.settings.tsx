@@ -1158,7 +1158,7 @@ export default function Settings() {
             <Layout>
               <Layout.Section>
                 <Card>
-                  <BlockStack gap="400">
+                  <BlockStack gap="400" inlineAlign="start">
                     <Text as="h2" variant="headingSm">Configuración de WhatsApp</Text>
                     <FormLayout>
                       <TextField
@@ -1190,7 +1190,7 @@ export default function Settings() {
               {/* PREVIEW: WhatsApp */}
               <Layout.Section variant="oneThird">
                 <Card>
-                  <BlockStack gap="400">
+                  <BlockStack gap="400" inlineAlign="start">
                     <InlineStack align="space-between">
                       <Text as="h2" variant="headingSm">Vista previa</Text>
                       <InlineStack gap="100" blockAlign="center">
@@ -1357,7 +1357,7 @@ export default function Settings() {
                 <Layout.Section>
                   {/* HEADER */}
                   <Card>
-                    <BlockStack gap="400">
+                    <BlockStack gap="400" inlineAlign="start">
                       <BlockStack gap="200">
                         <Text as="h2" variant="headingLg">Constructor de formulario</Text>
                         <Text as="p" tone="subdued">
@@ -1605,7 +1605,7 @@ export default function Settings() {
                   {/* REGIONAL CONFIG */}
                   <Box paddingBlockStart="400">
                     <Card>
-                      <BlockStack gap="400">
+                      <BlockStack gap="400" inlineAlign="start">
                         <Text as="h2" variant="headingSm">Configuración regional</Text>
                         <Select
                           label="País"
@@ -1621,7 +1621,7 @@ export default function Settings() {
                   {/* OPTIONS */}
                   <Box paddingBlockStart="400">
                     <Card>
-                      <BlockStack gap="400">
+                      <BlockStack gap="400" inlineAlign="start">
                         <Text as="h2" variant="headingSm">Opciones</Text>
                         <FormLayout>
                           <Checkbox
@@ -1652,7 +1652,7 @@ export default function Settings() {
                   {/* MODAL CUSTOMIZATION */}
                   <Box paddingBlockStart="400">
                     <Card>
-                      <BlockStack gap="400">
+                      <BlockStack gap="400" inlineAlign="start">
                         <Text as="h2" variant="headingSm">Personalización del modal</Text>
                         <FormLayout>
                           <TextField
@@ -1723,7 +1723,7 @@ export default function Settings() {
                   {/* SUCCESS/ERROR MESSAGES */}
                   <Box paddingBlockStart="400">
                     <Card>
-                      <BlockStack gap="400">
+                      <BlockStack gap="400" inlineAlign="start">
                         <Text as="h2" variant="headingSm">Mensajes de éxito y error</Text>
                         <FormLayout>
                           <FormLayout.Group>
@@ -1764,7 +1764,7 @@ export default function Settings() {
                 <Layout.Section variant="oneThird">
                   <div style={{ position: "sticky", top: "20px" }}>
                     <Card>
-                      <BlockStack gap="400">
+                      <BlockStack gap="400" inlineAlign="start">
                         <InlineStack align="space-between">
                           <Text as="h2" variant="headingSm">Vista previa</Text>
                           <InlineStack gap="100" blockAlign="center">
@@ -1823,7 +1823,7 @@ export default function Settings() {
               <Layout>
                 <Layout.Section>
                   <Card>
-                    <BlockStack gap="400">
+                    <BlockStack gap="400" inlineAlign="start">
                       <BlockStack gap="200">
                         <Text as="h2" variant="headingLg">Tarifas de envío</Text>
                         <Text as="p" tone="subdued">
@@ -1934,7 +1934,7 @@ export default function Settings() {
             <Layout>
               <Layout.Section>
                 <Card>
-                  <BlockStack gap="400">
+                  <BlockStack gap="400" inlineAlign="start">
                     <Text as="h2" variant="headingSm">Etiquetas de pedidos</Text>
                     <FormLayout>
                       <TextField
@@ -1957,7 +1957,7 @@ export default function Settings() {
 
                 <Box paddingBlockStart="400">
                   <Card>
-                    <BlockStack gap="400">
+                    <BlockStack gap="400" inlineAlign="start">
                       <Text as="h2" variant="headingSm">Creación de pedidos</Text>
                       <FormLayout>
                         <Checkbox
@@ -1987,7 +1987,7 @@ export default function Settings() {
             <Layout>
               <Layout.Section>
                 <Card>
-                  <BlockStack gap="400">
+                  <BlockStack gap="400" inlineAlign="start">
                     <Text as="h2" variant="headingSm">Redirección a WhatsApp</Text>
                     <FormLayout>
                       <Checkbox
@@ -2010,7 +2010,7 @@ export default function Settings() {
 
                 <Box paddingBlockStart="400">
                   <Card>
-                    <BlockStack gap="400">
+                    <BlockStack gap="400" inlineAlign="start">
                       <Text as="h2" variant="headingSm">Analytics y Tracking</Text>
                       <FormLayout>
                         <Checkbox
@@ -2041,7 +2041,7 @@ export default function Settings() {
 
                 <Box paddingBlockStart="400">
                   <Card>
-                    <BlockStack gap="400">
+                    <BlockStack gap="400" inlineAlign="start">
                       <Text as="h2" variant="headingSm">Productos</Text>
                       <FormLayout>
                         <Checkbox
