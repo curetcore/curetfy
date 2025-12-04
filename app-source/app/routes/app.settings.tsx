@@ -1983,40 +1983,12 @@ export default function Settings() {
                         </Text>
                       </BlockStack>
 
-                      <InlineStack gap="400" blockAlign="center">
-                        <Checkbox
-                          label="Habilitar tarifas de envío"
-                          helpText="Mostrar opciones de envío en el formulario"
-                          checked={formState.enableShipping}
-                          onChange={handleChange("enableShipping")}
-                        />
-                      </InlineStack>
-
-                      {formState.enableShipping && (
-                        <Banner tone="info">
-                          <BlockStack gap="200">
-                            <Text as="p" variant="bodySm">
-                              Importa automáticamente las tarifas de envío configuradas en tu tienda Shopify.
-                            </Text>
-                            <Button
-                              size="slim"
-                              onClick={() => {
-                                // Add sample rates from Shopify-style zones
-                                const shopifyRates = [
-                                  { id: `rate_${Date.now()}_1`, name: "Envío estándar", price: "0.00", condition: "always" },
-                                  { id: `rate_${Date.now()}_2`, name: "Envío express", price: "150.00", condition: "always" },
-                                ];
-                                setFormState(prev => ({
-                                  ...prev,
-                                  customShippingRates: shopifyRates
-                                }));
-                              }}
-                            >
-                              Importar desde Shopify
-                            </Button>
-                          </BlockStack>
-                        </Banner>
-                      )}
+                      <Checkbox
+                        label="Habilitar tarifas de envío"
+                        helpText="Mostrar opciones de envío en el formulario"
+                        checked={formState.enableShipping}
+                        onChange={handleChange("enableShipping")}
+                      />
                     </BlockStack>
                   </Card>
 
@@ -2026,9 +1998,25 @@ export default function Settings() {
                         <BlockStack gap="400">
                           <InlineStack align="space-between">
                             <Text as="h2" variant="headingSm">Tarifas configuradas</Text>
-                            <Button onClick={addShippingRate} icon={PlusIcon}>
-                              Agregar tarifa
-                            </Button>
+                            <InlineStack gap="200">
+                              <Button
+                                onClick={() => {
+                                  const shopifyRates = [
+                                    { id: `rate_${Date.now()}_1`, name: "Envío estándar", price: "0.00", condition: "always" },
+                                    { id: `rate_${Date.now()}_2`, name: "Envío express", price: "150.00", condition: "always" },
+                                  ];
+                                  setFormState(prev => ({
+                                    ...prev,
+                                    customShippingRates: shopifyRates
+                                  }));
+                                }}
+                              >
+                                Importar de Shopify
+                              </Button>
+                              <Button onClick={addShippingRate} icon={PlusIcon} variant="primary">
+                                Agregar tarifa
+                              </Button>
+                            </InlineStack>
                           </InlineStack>
 
                           {shippingRates.length === 0 ? (
