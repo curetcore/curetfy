@@ -277,6 +277,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
       enableShipping: shop.enableShipping ?? false,
       shippingSource: shop.shippingSource || "custom",
       customShippingRates: shop.customShippingRates || [],
+
+      // Custom Fields
+      customFields: shop.customFields || [],
     };
 
     // Get provinces for enabled countries
@@ -394,6 +397,8 @@ function getDefaultConfig() {
     enableShipping: false,
     shippingSource: "custom",
     customShippingRates: [],
+    // Custom Fields
+    customFields: [],
   };
 }
 

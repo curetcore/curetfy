@@ -196,6 +196,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
   }
 
+  const customFields = formData.get('customFields');
+  if (customFields) {
+    try {
+      updateData.customFields = JSON.parse(customFields as string);
+    } catch {
+      updateData.customFields = [];
+    }
+  }
+
   await prisma.shop.upsert({
     where: { shopDomain: session.shop },
     update: updateData,
@@ -567,6 +576,114 @@ function FormModalPreview({
         {/* Render fields in order */}
         {fieldOrder.map((fieldId) => renderField(fieldId))}
 
+        {/* Render custom fields */}
+        {(formState.customFields as any[] || []).map((field: any) => {
+          const fieldStyle = { marginBottom: "16px" };
+          const labelStyle = {
+            display: formState.hideFieldLabels ? "none" : "block",
+            fontSize: "13px",
+            fontWeight: 500,
+            marginBottom: "6px",
+            color: "#1a1a1a"
+          };
+          const inputStyle = {
+            width: "100%",
+            padding: "10px 12px",
+            border: "1px solid #e1e3e5",
+            borderRadius: "8px",
+            fontSize: "14px",
+            boxSizing: "border-box" as const,
+          };
+
+          switch (field.type) {
+            case "text":
+            case "number":
+              return (
+                <div key={field.id} style={fieldStyle}>
+                  <label style={labelStyle}>{field.label} {field.required ? "*" : ""}</label>
+                  <input type={field.type} placeholder={field.placeholder || ""} readOnly style={inputStyle} />
+                </div>
+              );
+            case "textarea":
+              return (
+                <div key={field.id} style={fieldStyle}>
+                  <label style={labelStyle}>{field.label} {field.required ? "*" : ""}</label>
+                  <textarea placeholder={field.placeholder || ""} readOnly style={{ ...inputStyle, minHeight: "60px", resize: "none" }} />
+                </div>
+              );
+            case "select":
+              return (
+                <div key={field.id} style={fieldStyle}>
+                  <label style={labelStyle}>{field.label} {field.required ? "*" : ""}</label>
+                  <select disabled style={{ ...inputStyle, background: "#fff" }}>
+                    <option>Seleccionar...</option>
+                    {(field.options || []).map((opt: string, i: number) => (<option key={i}>{opt}</option>))}
+                  </select>
+                </div>
+              );
+            case "radio":
+              return (
+                <div key={field.id} style={fieldStyle}>
+                  <label style={labelStyle}>{field.label} {field.required ? "*" : ""}</label>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
+                    {(field.options || []).map((opt: string, i: number) => (
+                      <label key={i} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", cursor: "pointer" }}>
+                        <input type="radio" name={field.id} disabled style={{ margin: 0 }} />
+                        {opt}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              );
+            case "checkbox":
+              return (
+                <div key={field.id} style={{ ...fieldStyle, display: "flex", alignItems: "center", gap: "8px" }}>
+                  <input type="checkbox" disabled style={{ margin: 0, width: "18px", height: "18px" }} />
+                  <label style={{ fontSize: "14px", color: "#1a1a1a" }}>{field.label} {field.required ? "*" : ""}</label>
+                </div>
+              );
+            case "date":
+              return (
+                <div key={field.id} style={fieldStyle}>
+                  <label style={labelStyle}>{field.label} {field.required ? "*" : ""}</label>
+                  <input type="date" readOnly style={inputStyle} />
+                </div>
+              );
+            case "heading":
+              return (
+                <div key={field.id} style={{ ...fieldStyle, padding: "8px 0" }}>
+                  <div style={{ fontSize: "15px", fontWeight: 600, color: "#1a1a1a" }}>{field.label}</div>
+                </div>
+              );
+            case "image":
+              return field.imageUrl ? (
+                <div key={field.id} style={{ ...fieldStyle, textAlign: "center" }}>
+                  <img src={field.imageUrl} alt={field.label} style={{ maxWidth: "100%", maxHeight: "120px", borderRadius: "8px" }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                </div>
+              ) : null;
+            case "link_button":
+              return (
+                <div key={field.id} style={{ ...fieldStyle, textAlign: "center" }}>
+                  <a href="#" style={{
+                    display: "inline-block",
+                    padding: "10px 20px",
+                    background: "#f6f6f7",
+                    color: "#1a1a1a",
+                    textDecoration: "none",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    border: "1px solid #e1e3e5",
+                  }}>
+                    {field.label}
+                  </a>
+                </div>
+              );
+            default:
+              return null;
+          }
+        })}
+
         {/* Custom Image - Bottom */}
         {formState.customImagePosition === "bottom" && <CustomImage />}
 
@@ -766,6 +883,9 @@ export default function Settings() {
     enableShipping: shop?.enableShipping ?? false,
     shippingSource: shop?.shippingSource || "custom",
     customShippingRates: shop?.customShippingRates || [],
+
+    // Custom Fields
+    customFields: shop?.customFields || [],
   });
 
   const handleChange = useCallback((field: string) => (value: string | boolean) => {
@@ -802,6 +922,7 @@ export default function Settings() {
     { id: "form", content: "Formulario", accessibilityLabel: "Formulario" },
     { id: "fields", content: "Campos", accessibilityLabel: "Campos" },
     { id: "modal", content: "Modal", accessibilityLabel: "Modal" },
+    { id: "custom-fields", content: "Campos extras", accessibilityLabel: "Campos extras" },
     { id: "customize", content: "Personalizar", accessibilityLabel: "Personalizar" },
     { id: "orders", content: "Pedidos", accessibilityLabel: "Pedidos" },
     { id: "advanced", content: "Avanzado", accessibilityLabel: "Avanzado" },
@@ -821,7 +942,7 @@ export default function Settings() {
   };
 
   // Determine if we should show preview
-  const showPreview = selectedTab <= 4; // WhatsApp, Formulario, Campos, Modal, Personalizar
+  const showPreview = selectedTab <= 5; // WhatsApp, Formulario, Campos, Modal, Campos extras, Personalizar
 
   return (
     <Page
@@ -1222,8 +1343,255 @@ export default function Settings() {
             </Layout>
           )}
 
-          {/* TAB: Personalizar (Field Order, Custom Content) */}
+          {/* TAB: Campos extras (Custom Fields) */}
           {selectedTab === 4 && (
+            <Layout>
+              <Layout.Section>
+                <Card>
+                  <BlockStack gap="400">
+                    <InlineStack align="space-between">
+                      <Text as="h2" variant="headingMd">Campos personalizados</Text>
+                      <Button
+                        onClick={() => {
+                          const newField = {
+                            id: `field_${Date.now()}`,
+                            type: "text",
+                            label: "Nuevo campo",
+                            placeholder: "",
+                            required: false,
+                            options: [],
+                          };
+                          setFormState(prev => ({
+                            ...prev,
+                            customFields: [...(prev.customFields as any[]), newField]
+                          }));
+                        }}
+                      >
+                        Agregar campo
+                      </Button>
+                    </InlineStack>
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      Agrega campos adicionales al formulario como selectores, checkboxes, fechas, etc.
+                    </Text>
+
+                    {(formState.customFields as any[]).length === 0 ? (
+                      <Banner tone="info">
+                        <p>No hay campos personalizados. Haz clic en "Agregar campo" para crear uno.</p>
+                      </Banner>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                        {(formState.customFields as any[]).map((field, index) => (
+                          <Card key={field.id}>
+                            <BlockStack gap="300">
+                              <InlineStack align="space-between">
+                                <InlineStack gap="200">
+                                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                    <button
+                                      onClick={() => {
+                                        if (index > 0) {
+                                          const newFields = [...(formState.customFields as any[])];
+                                          [newFields[index], newFields[index - 1]] = [newFields[index - 1], newFields[index]];
+                                          setFormState(prev => ({ ...prev, customFields: newFields }));
+                                        }
+                                      }}
+                                      disabled={index === 0}
+                                      style={{ background: "none", border: "none", cursor: index === 0 ? "default" : "pointer", opacity: index === 0 ? 0.3 : 1, padding: "2px" }}
+                                    >
+                                      ▲
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        if (index < (formState.customFields as any[]).length - 1) {
+                                          const newFields = [...(formState.customFields as any[])];
+                                          [newFields[index], newFields[index + 1]] = [newFields[index + 1], newFields[index]];
+                                          setFormState(prev => ({ ...prev, customFields: newFields }));
+                                        }
+                                      }}
+                                      disabled={index === (formState.customFields as any[]).length - 1}
+                                      style={{ background: "none", border: "none", cursor: index === (formState.customFields as any[]).length - 1 ? "default" : "pointer", opacity: index === (formState.customFields as any[]).length - 1 ? 0.3 : 1, padding: "2px" }}
+                                    >
+                                      ▼
+                                    </button>
+                                  </div>
+                                  <Badge tone={field.required ? "attention" : "info"}>
+                                    {field.type === "text" && "Texto"}
+                                    {field.type === "textarea" && "Área de texto"}
+                                    {field.type === "select" && "Desplegable"}
+                                    {field.type === "radio" && "Selección única"}
+                                    {field.type === "checkbox" && "Casilla"}
+                                    {field.type === "date" && "Fecha"}
+                                    {field.type === "number" && "Número"}
+                                    {field.type === "heading" && "Título"}
+                                    {field.type === "image" && "Imagen"}
+                                    {field.type === "link_button" && "Botón con enlace"}
+                                  </Badge>
+                                  <Text as="span" fontWeight="semibold">{field.label}</Text>
+                                </InlineStack>
+                                <Button
+                                  tone="critical"
+                                  variant="plain"
+                                  onClick={() => {
+                                    const newFields = (formState.customFields as any[]).filter((_, i) => i !== index);
+                                    setFormState(prev => ({ ...prev, customFields: newFields }));
+                                  }}
+                                >
+                                  Eliminar
+                                </Button>
+                              </InlineStack>
+
+                              <FormLayout>
+                                <FormLayout.Group>
+                                  <Select
+                                    label="Tipo de campo"
+                                    options={[
+                                      { value: "text", label: "Campo de texto" },
+                                      { value: "textarea", label: "Área de texto" },
+                                      { value: "select", label: "Campo desplegable" },
+                                      { value: "radio", label: "Selección única (radio)" },
+                                      { value: "checkbox", label: "Casilla de verificación" },
+                                      { value: "date", label: "Selector de fecha" },
+                                      { value: "number", label: "Campo numérico" },
+                                      { value: "heading", label: "Título o texto" },
+                                      { value: "image", label: "Imagen o GIF" },
+                                      { value: "link_button", label: "Botón con enlace" },
+                                    ]}
+                                    value={field.type}
+                                    onChange={(value) => {
+                                      const newFields = [...(formState.customFields as any[])];
+                                      newFields[index] = { ...field, type: value };
+                                      setFormState(prev => ({ ...prev, customFields: newFields }));
+                                    }}
+                                  />
+                                  <TextField
+                                    label="Etiqueta"
+                                    value={field.label}
+                                    onChange={(value) => {
+                                      const newFields = [...(formState.customFields as any[])];
+                                      newFields[index] = { ...field, label: value };
+                                      setFormState(prev => ({ ...prev, customFields: newFields }));
+                                    }}
+                                    autoComplete="off"
+                                  />
+                                </FormLayout.Group>
+
+                                {/* Placeholder for text/textarea/number */}
+                                {["text", "textarea", "number"].includes(field.type) && (
+                                  <TextField
+                                    label="Placeholder"
+                                    value={field.placeholder || ""}
+                                    onChange={(value) => {
+                                      const newFields = [...(formState.customFields as any[])];
+                                      newFields[index] = { ...field, placeholder: value };
+                                      setFormState(prev => ({ ...prev, customFields: newFields }));
+                                    }}
+                                    autoComplete="off"
+                                  />
+                                )}
+
+                                {/* Options for select/radio */}
+                                {["select", "radio"].includes(field.type) && (
+                                  <TextField
+                                    label="Opciones (separadas por coma)"
+                                    value={(field.options || []).join(", ")}
+                                    onChange={(value) => {
+                                      const newFields = [...(formState.customFields as any[])];
+                                      newFields[index] = { ...field, options: value.split(",").map(o => o.trim()).filter(Boolean) };
+                                      setFormState(prev => ({ ...prev, customFields: newFields }));
+                                    }}
+                                    placeholder="Opción 1, Opción 2, Opción 3"
+                                    autoComplete="off"
+                                  />
+                                )}
+
+                                {/* URL for link_button */}
+                                {field.type === "link_button" && (
+                                  <TextField
+                                    label="URL del enlace"
+                                    value={field.url || ""}
+                                    onChange={(value) => {
+                                      const newFields = [...(formState.customFields as any[])];
+                                      newFields[index] = { ...field, url: value };
+                                      setFormState(prev => ({ ...prev, customFields: newFields }));
+                                    }}
+                                    placeholder="https://ejemplo.com/terminos"
+                                    autoComplete="off"
+                                  />
+                                )}
+
+                                {/* Image URL for image */}
+                                {field.type === "image" && (
+                                  <TextField
+                                    label="URL de la imagen"
+                                    value={field.imageUrl || ""}
+                                    onChange={(value) => {
+                                      const newFields = [...(formState.customFields as any[])];
+                                      newFields[index] = { ...field, imageUrl: value };
+                                      setFormState(prev => ({ ...prev, customFields: newFields }));
+                                    }}
+                                    placeholder="https://ejemplo.com/imagen.jpg"
+                                    autoComplete="off"
+                                  />
+                                )}
+
+                                {/* Required checkbox (not for decorative types) */}
+                                {!["heading", "image", "link_button"].includes(field.type) && (
+                                  <Checkbox
+                                    label="Campo requerido"
+                                    checked={field.required}
+                                    onChange={(value) => {
+                                      const newFields = [...(formState.customFields as any[])];
+                                      newFields[index] = { ...field, required: value };
+                                      setFormState(prev => ({ ...prev, customFields: newFields }));
+                                    }}
+                                  />
+                                )}
+                              </FormLayout>
+                            </BlockStack>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </BlockStack>
+                </Card>
+
+                <Box paddingBlockStart="400">
+                  <Card>
+                    <BlockStack gap="300">
+                      <Text as="h2" variant="headingMd">Tipos de campos disponibles</Text>
+                      <BlockStack gap="200">
+                        <Text as="p" variant="bodySm"><Badge>Texto</Badge> Campo de texto simple</Text>
+                        <Text as="p" variant="bodySm"><Badge>Área de texto</Badge> Para textos largos</Text>
+                        <Text as="p" variant="bodySm"><Badge>Desplegable</Badge> Selección de opciones en dropdown</Text>
+                        <Text as="p" variant="bodySm"><Badge>Selección única</Badge> Radio buttons</Text>
+                        <Text as="p" variant="bodySm"><Badge>Casilla</Badge> Checkbox (ej: acepto términos)</Text>
+                        <Text as="p" variant="bodySm"><Badge>Fecha</Badge> Selector de fecha</Text>
+                        <Text as="p" variant="bodySm"><Badge>Número</Badge> Solo números</Text>
+                        <Text as="p" variant="bodySm"><Badge tone="subdued">Título</Badge> Texto decorativo</Text>
+                        <Text as="p" variant="bodySm"><Badge tone="subdued">Imagen</Badge> Imagen o GIF decorativo</Text>
+                        <Text as="p" variant="bodySm"><Badge tone="subdued">Botón enlace</Badge> Botón que abre URL</Text>
+                      </BlockStack>
+                    </BlockStack>
+                  </Card>
+                </Box>
+              </Layout.Section>
+
+              {/* PREVIEW: Campos extras */}
+              <Layout.Section variant="oneThird">
+                <Card>
+                  <BlockStack gap="400">
+                    <InlineStack align="space-between">
+                      <Text as="h2" variant="headingMd">Vista previa</Text>
+                      <Badge tone="info">En tiempo real</Badge>
+                    </InlineStack>
+                    <FormModalPreview formState={formState} previewType="modal" />
+                  </BlockStack>
+                </Card>
+              </Layout.Section>
+            </Layout>
+          )}
+
+          {/* TAB: Personalizar (Field Order, Custom Content) */}
+          {selectedTab === 5 && (
             <Layout>
               <Layout.Section>
                 <Card>
@@ -1470,7 +1838,7 @@ export default function Settings() {
           )}
 
           {/* TAB: Order Configuration */}
-          {selectedTab === 5 && (
+          {selectedTab === 6 && (
             <Layout>
               <Layout.Section>
                 <Card>
@@ -1523,7 +1891,7 @@ export default function Settings() {
           )}
 
           {/* TAB: Advanced */}
-          {selectedTab === 6 && (
+          {selectedTab === 7 && (
             <Layout>
               <Layout.Section>
                 <Card>

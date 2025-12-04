@@ -111,6 +111,13 @@ model Shop {
   fieldOrder          Json?    @default("[\"name\", \"phone\", \"email\", \"address\", \"city\", \"province\", \"postalCode\", \"notes\", \"quantity\"]")
 
   // ==========================================
+  // CUSTOM FIELDS (Dynamic form builder)
+  // ==========================================
+  // Types: text, textarea, select, radio, checkbox, date, number, link_button, image, heading
+  // Structure: [{ id, type, label, placeholder?, options?, required?, url?, imageUrl? }]
+  customFields        Json?    @default("[]")
+
+  // ==========================================
   // CUSTOM CONTENT (Images, HTML, Liquid)
   // ==========================================
   customImageUrl      String?  // Custom image URL to display
