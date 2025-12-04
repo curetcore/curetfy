@@ -311,7 +311,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 // ============================================
 
 // WhatsApp Message Preview
-function WhatsAppPreview({ template }: { template: string }) {
+function WhatsAppPreview({ template, shopName }: { template: string; shopName: string }) {
   const sampleData = {
     orderNumber: "COD-001",
     name: "Juan Pérez",
@@ -384,16 +384,20 @@ function WhatsAppPreview({ template }: { template: string }) {
 
   const formattedPreview = formatWhatsAppToHtml(preview);
 
+  // Format shop name for display
+  const displayName = shopName.replace('.myshopify.com', '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
   return (
     <div style={{
-      background: "#0b141a",
+      background: "#f0f2f5",
       borderRadius: "12px",
       overflow: "hidden",
       maxHeight: "450px",
+      border: "1px solid #e0e0e0",
     }}>
       {/* WhatsApp Header */}
       <div style={{
-        background: "#202c33",
+        background: "#008069",
         padding: "10px 16px",
         display: "flex",
         alignItems: "center",
@@ -403,45 +407,44 @@ function WhatsAppPreview({ template }: { template: string }) {
           width: "40px",
           height: "40px",
           borderRadius: "50%",
-          background: "#00a884",
+          background: "#25D366",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          color: "white",
-          fontWeight: "bold",
-          fontSize: "16px",
         }}>
-          🏪
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
         </div>
-        <div>
-          <div style={{ color: "#e9edef", fontWeight: "500", fontSize: "16px" }}>Mi Tienda</div>
-          <div style={{ color: "#8696a0", fontSize: "13px" }}>en línea</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ color: "#ffffff", fontWeight: "500", fontSize: "16px" }}>{displayName}</div>
+          <div style={{ color: "rgba(255,255,255,0.8)", fontSize: "13px" }}>en linea</div>
         </div>
       </div>
 
       {/* Chat Area */}
       <div style={{
-        background: "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFklEQVQYV2NkIBIwEqmOYVQh3pAiHAYAE/wBE6gDdeQAAAAASUVORK5CYII=') #0b141a",
+        background: "#efeae2",
         padding: "16px",
         minHeight: "280px",
         overflowY: "auto",
       }}>
         {/* Message Bubble */}
         <div style={{
-          background: "#005c4b",
+          background: "#ffffff",
           borderRadius: "8px",
           borderTopLeftRadius: "0",
           padding: "8px 12px",
           maxWidth: "85%",
-          boxShadow: "0 1px 1px rgba(0,0,0,0.2)",
+          boxShadow: "0 1px 1px rgba(0,0,0,0.1)",
           fontSize: "14.2px",
           lineHeight: "1.5",
-          color: "#e9edef",
+          color: "#111b21",
         }}>
           <span dangerouslySetInnerHTML={{ __html: formattedPreview }} />
           <div style={{
             fontSize: "11px",
-            color: "rgba(255,255,255,0.6)",
+            color: "#667781",
             textAlign: "right",
             marginTop: "4px",
             display: "flex",
@@ -450,26 +453,30 @@ function WhatsAppPreview({ template }: { template: string }) {
             gap: "4px",
           }}>
             12:30
-            <span style={{ fontSize: "14px" }}>✓✓</span>
+            <svg width="16" height="11" viewBox="0 0 16 11" fill="#53bdeb">
+              <path d="M11.071.653a.457.457 0 00-.304-.102.493.493 0 00-.381.178l-6.19 7.636-2.405-2.272a.463.463 0 00-.336-.146.47.47 0 00-.343.146l-.311.31a.445.445 0 00-.14.337c0 .136.047.25.14.343l2.996 2.996a.724.724 0 00.502.203.697.697 0 00.546-.266l6.646-8.417a.497.497 0 00.108-.299.441.441 0 00-.14-.337l-.388-.31zm4 0a.457.457 0 00-.303-.102.493.493 0 00-.382.178l-6.19 7.636-1.028-.97-.686.654 1.54 1.54a.724.724 0 00.501.203.697.697 0 00.547-.266l6.646-8.417a.497.497 0 00.108-.299.441.441 0 00-.14-.337l-.388-.31z"/>
+            </svg>
           </div>
         </div>
       </div>
 
       {/* Input Area */}
       <div style={{
-        background: "#202c33",
+        background: "#f0f2f5",
         padding: "10px 16px",
         display: "flex",
         alignItems: "center",
         gap: "10px",
+        borderTop: "1px solid #e0e0e0",
       }}>
         <div style={{
           flex: 1,
-          background: "#2a3942",
+          background: "#ffffff",
           borderRadius: "8px",
           padding: "9px 12px",
-          color: "#8696a0",
+          color: "#667781",
           fontSize: "15px",
+          border: "1px solid #e0e0e0",
         }}>
           Escribe un mensaje
         </div>
@@ -477,12 +484,15 @@ function WhatsAppPreview({ template }: { template: string }) {
           width: "40px",
           height: "40px",
           borderRadius: "50%",
-          background: "#00a884",
+          background: "#008069",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
         }}>
-          🎤
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+          </svg>
         </div>
       </div>
     </div>
@@ -1186,7 +1196,7 @@ export default function Settings() {
                       <Text as="h2" variant="headingMd">Vista previa</Text>
                       <Badge tone="info">En tiempo real</Badge>
                     </InlineStack>
-                    <WhatsAppPreview template={formState.messageTemplate} />
+                    <WhatsAppPreview template={formState.messageTemplate} shopName={shop?.shopDomain || "Mi Tienda"} />
                   </BlockStack>
                 </Card>
               </Layout.Section>
