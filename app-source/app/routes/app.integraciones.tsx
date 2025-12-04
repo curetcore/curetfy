@@ -16,6 +16,8 @@ import {
   InlineStack,
   Badge,
   Tabs,
+  Select,
+  Divider,
 } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
@@ -27,6 +29,16 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const shop = await prisma.shop.findUnique({
     where: { shopDomain: session.shop },
     select: {
+      // Visibility
+      formEnabled: true,
+      enableOnProductPages: true,
+      enableOnCartPage: true,
+      hideCartBuyNowButton: true,
+      productButtonAction: true,
+      hideAddToCartButton: true,
+      hideProductBuyNowButton: true,
+      disableOnHomePage: true,
+      disableOnCollectionPages: true,
       // Order options
       useCodPaymentMethod: true,
       createDraftOrder: true,
@@ -57,6 +69,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   // Boolean fields
   const booleanFields = [
+    // Visibility
+    'formEnabled',
+    'enableOnProductPages',
+    'enableOnCartPage',
+    'hideCartBuyNowButton',
+    'hideAddToCartButton',
+    'hideProductBuyNowButton',
+    'disableOnHomePage',
+    'disableOnCollectionPages',
     // Order options
     'useCodPaymentMethod',
     'createDraftOrder',
@@ -72,6 +93,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     'enablePixel',
     'enableAllProducts',
   ];
+
+  // String fields
+  const productButtonAction = formData.get('productButtonAction');
+  if (productButtonAction !== null) {
+    updateData.productButtonAction = productButtonAction as string;
+  }
 
   booleanFields.forEach(field => {
     const value = formData.get(field);
@@ -109,6 +136,16 @@ export default function Integraciones() {
   const [selectedTab, setSelectedTab] = useState(0);
 
   const [formState, setFormState] = useState({
+    // Visibility
+    formEnabled: shop?.formEnabled ?? true,
+    enableOnProductPages: shop?.enableOnProductPages ?? true,
+    enableOnCartPage: shop?.enableOnCartPage ?? false,
+    hideCartBuyNowButton: shop?.hideCartBuyNowButton ?? false,
+    productButtonAction: shop?.productButtonAction || "current",
+    hideAddToCartButton: shop?.hideAddToCartButton ?? false,
+    hideProductBuyNowButton: shop?.hideProductBuyNowButton ?? false,
+    disableOnHomePage: shop?.disableOnHomePage ?? false,
+    disableOnCollectionPages: shop?.disableOnCollectionPages ?? false,
     // Order options
     useCodPaymentMethod: shop?.useCodPaymentMethod ?? true,
     createDraftOrder: shop?.createDraftOrder ?? true,
@@ -134,6 +171,16 @@ export default function Integraciones() {
   const handleSubmit = useCallback(() => {
     const formData = new FormData();
 
+    // Visibility
+    formData.append('formEnabled', String(formState.formEnabled));
+    formData.append('enableOnProductPages', String(formState.enableOnProductPages));
+    formData.append('enableOnCartPage', String(formState.enableOnCartPage));
+    formData.append('hideCartBuyNowButton', String(formState.hideCartBuyNowButton));
+    formData.append('productButtonAction', formState.productButtonAction);
+    formData.append('hideAddToCartButton', String(formState.hideAddToCartButton));
+    formData.append('hideProductBuyNowButton', String(formState.hideProductBuyNowButton));
+    formData.append('disableOnHomePage', String(formState.disableOnHomePage));
+    formData.append('disableOnCollectionPages', String(formState.disableOnCollectionPages));
     // Order options
     formData.append('useCodPaymentMethod', String(formState.useCodPaymentMethod));
     formData.append('createDraftOrder', String(formState.createDraftOrder));
@@ -157,6 +204,7 @@ export default function Integraciones() {
   }, [formState, submit]);
 
   const tabs = [
+    { id: "visibility", content: "Visibilidad", accessibilityLabel: "Visibilidad" },
     { id: "config", content: "Configuración", accessibilityLabel: "Configuración" },
     { id: "integrations", content: "Integraciones", accessibilityLabel: "Integraciones" },
   ];
@@ -183,8 +231,128 @@ export default function Integraciones() {
 
       <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab}>
         <Box paddingBlockStart="400">
-          {/* TAB: Configuración */}
+          {/* TAB: Visibilidad */}
           {selectedTab === 0 && (
+            <Layout>
+              <Layout.Section>
+                {/* Estado del formulario */}
+                <Card>
+                  <BlockStack gap="400">
+                    <BlockStack gap="200">
+                      <Text as="h2" variant="headingMd">Activa o desactiva tu formulario</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        Puedes optar por desactivar tu formulario o activarlo sólo en las páginas de productos, sólo en la página del carrito o en ambos.
+                      </Text>
+                    </BlockStack>
+                    <BlockStack gap="300">
+                      <Checkbox
+                        label="Formulario COD habilitado"
+                        helpText="Activa o desactiva completamente el formulario en tu tienda."
+                        checked={formState.formEnabled}
+                        onChange={handleChange("formEnabled")}
+                      />
+                      {formState.formEnabled && (
+                        <>
+                          <Checkbox
+                            label="Mostrar en páginas de producto"
+                            checked={formState.enableOnProductPages}
+                            onChange={handleChange("enableOnProductPages")}
+                          />
+                          <Checkbox
+                            label="Mostrar en página del carrito"
+                            checked={formState.enableOnCartPage}
+                            onChange={handleChange("enableOnCartPage")}
+                          />
+                        </>
+                      )}
+                    </BlockStack>
+                  </BlockStack>
+                </Card>
+
+                {/* Configuración página del carrito */}
+                {formState.formEnabled && formState.enableOnCartPage && (
+                  <Box paddingBlockStart="400">
+                    <Card>
+                      <BlockStack gap="400">
+                        <Text as="h2" variant="headingMd">Configuración de la página del carrito</Text>
+                        <BlockStack gap="300">
+                          <Checkbox
+                            label="Ocultar el botón Comprar Ahora en el carrito"
+                            helpText="Oculta el botón de compra rápida en la página del carrito."
+                            checked={formState.hideCartBuyNowButton}
+                            onChange={handleChange("hideCartBuyNowButton")}
+                          />
+                        </BlockStack>
+                      </BlockStack>
+                    </Card>
+                  </Box>
+                )}
+
+                {/* Configuración páginas de producto */}
+                {formState.formEnabled && formState.enableOnProductPages && (
+                  <Box paddingBlockStart="400">
+                    <Card>
+                      <BlockStack gap="400">
+                        <Text as="h2" variant="headingMd">Configuración de las páginas del producto</Text>
+                        <BlockStack gap="300">
+                          <Select
+                            label="Cuando se clica en el botón en las páginas del producto:"
+                            options={[
+                              { label: "Comprar producto actual", value: "current" },
+                              { label: "Comprar producto actual + carrito", value: "current_plus_cart" },
+                            ]}
+                            value={formState.productButtonAction}
+                            onChange={handleChange("productButtonAction")}
+                          />
+                          <Divider />
+                          <Checkbox
+                            label="Ocultar el botón Agregar al Carrito en las páginas del producto"
+                            helpText="Oculta el botón 'Agregar al carrito' para forzar el uso del formulario COD."
+                            checked={formState.hideAddToCartButton}
+                            onChange={handleChange("hideAddToCartButton")}
+                          />
+                          <Checkbox
+                            label="Ocultar el botón Comprar Ahora en las páginas del producto"
+                            helpText="Oculta el botón de compra rápida en las páginas de producto."
+                            checked={formState.hideProductBuyNowButton}
+                            onChange={handleChange("hideProductBuyNowButton")}
+                          />
+                        </BlockStack>
+                      </BlockStack>
+                    </Card>
+                  </Box>
+                )}
+
+                {/* Configuración otras páginas */}
+                {formState.formEnabled && (
+                  <Box paddingBlockStart="400">
+                    <Card>
+                      <BlockStack gap="400">
+                        <Text as="h2" variant="headingMd">Configuración de otras páginas</Text>
+                        <BlockStack gap="300">
+                          <Checkbox
+                            label="Deshabilitar Curetfy en la página de inicio"
+                            helpText="No mostrar el formulario COD en la página principal de tu tienda."
+                            checked={formState.disableOnHomePage}
+                            onChange={handleChange("disableOnHomePage")}
+                          />
+                          <Checkbox
+                            label="Deshabilitar Curetfy en las páginas de colecciones"
+                            helpText="No mostrar el formulario COD en las páginas de colecciones."
+                            checked={formState.disableOnCollectionPages}
+                            onChange={handleChange("disableOnCollectionPages")}
+                          />
+                        </BlockStack>
+                      </BlockStack>
+                    </Card>
+                  </Box>
+                )}
+              </Layout.Section>
+            </Layout>
+          )}
+
+          {/* TAB: Configuración */}
+          {selectedTab === 1 && (
             <Layout>
               <Layout.Section>
                 {/* Opciones de pedido */}
@@ -286,7 +454,7 @@ export default function Integraciones() {
           )}
 
           {/* TAB: Integraciones */}
-          {selectedTab === 1 && (
+          {selectedTab === 2 && (
             <Layout>
               <Layout.Section>
                 {/* Facebook Pixel */}

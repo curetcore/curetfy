@@ -92,6 +92,17 @@ ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "provincesConfig" JSONB;
 -- Add Shop product settings
 ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "enableAllProducts" BOOLEAN DEFAULT true;
 
+-- Add Shop visibility settings
+ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "formEnabled" BOOLEAN DEFAULT true;
+ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "enableOnProductPages" BOOLEAN DEFAULT true;
+ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "enableOnCartPage" BOOLEAN DEFAULT false;
+ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "hideCartBuyNowButton" BOOLEAN DEFAULT false;
+ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "productButtonAction" TEXT DEFAULT 'current';
+ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "hideAddToCartButton" BOOLEAN DEFAULT false;
+ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "hideProductBuyNowButton" BOOLEAN DEFAULT false;
+ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "disableOnHomePage" BOOLEAN DEFAULT false;
+ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "disableOnCollectionPages" BOOLEAN DEFAULT false;
+
 -- Add Shop advanced settings
 ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "autoRedirectWhatsApp" BOOLEAN DEFAULT true;
 ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "redirectDelay" INTEGER DEFAULT 2000;

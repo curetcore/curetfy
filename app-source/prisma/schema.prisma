@@ -178,6 +178,25 @@ model Shop {
   enableAllProducts   Boolean  @default(true)
 
   // ==========================================
+  // VISIBILITY SETTINGS
+  // ==========================================
+  formEnabled              Boolean  @default(true)   // Master on/off toggle
+  enableOnProductPages     Boolean  @default(true)   // Show on product pages
+  enableOnCartPage         Boolean  @default(false)  // Show on cart page
+
+  // Cart page options
+  hideCartBuyNowButton     Boolean  @default(false)  // Hide Buy Now in cart
+
+  // Product page options
+  productButtonAction      String   @default("current") // "current" or "current_plus_cart"
+  hideAddToCartButton      Boolean  @default(false)  // Hide Add to Cart button
+  hideProductBuyNowButton  Boolean  @default(false)  // Hide Buy Now on product pages
+
+  // Other pages
+  disableOnHomePage        Boolean  @default(false)  // Disable on home page
+  disableOnCollectionPages Boolean  @default(false)  // Disable on collection pages
+
+  // ==========================================
   // ADVANCED SETTINGS
   // ==========================================
   autoRedirectWhatsApp Boolean @default(true)
