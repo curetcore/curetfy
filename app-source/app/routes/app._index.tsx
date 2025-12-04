@@ -429,37 +429,49 @@ export default function Dashboard() {
         </Layout>
 
         {/* Stats Summary - Last 7 Days */}
-        <Card>
-          <BlockStack gap="400">
-            <Text as="h2" variant="headingMd">Últimos 7 días:</Text>
-            <InlineStack gap="800" wrap>
-              <BlockStack gap="100">
+        <Text as="h2" variant="headingMd">Últimos 7 días</Text>
+        <Layout>
+          <Layout.Section variant="oneQuarter">
+            <Card>
+              <BlockStack gap="200" inlineAlign="start">
                 <Text as="p" variant="heading2xl" fontWeight="bold">
                   {stats.formOpensLast7Days}
                 </Text>
                 <Text as="span" tone="subdued" variant="bodySm">Aberturas de formulario</Text>
               </BlockStack>
-              <BlockStack gap="100">
+            </Card>
+          </Layout.Section>
+          <Layout.Section variant="oneQuarter">
+            <Card>
+              <BlockStack gap="200" inlineAlign="start">
                 <Text as="p" variant="heading2xl" fontWeight="bold">
                   {stats.ordersLast7Days}
                 </Text>
                 <Text as="span" tone="subdued" variant="bodySm">Pedidos</Text>
               </BlockStack>
-              <BlockStack gap="100">
+            </Card>
+          </Layout.Section>
+          <Layout.Section variant="oneQuarter">
+            <Card>
+              <BlockStack gap="200" inlineAlign="start">
                 <Text as="p" variant="heading2xl" fontWeight="bold">
                   {currency} {stats.revenueLast7Days.toLocaleString()}
                 </Text>
                 <Text as="span" tone="subdued" variant="bodySm">Ingresos</Text>
               </BlockStack>
-              <BlockStack gap="100">
+            </Card>
+          </Layout.Section>
+          <Layout.Section variant="oneQuarter">
+            <Card>
+              <BlockStack gap="200" inlineAlign="start">
                 <Text as="p" variant="heading2xl" fontWeight="bold">
                   {stats.conversionRate}%
                 </Text>
                 <Text as="span" tone="subdued" variant="bodySm">Tasa de conversión</Text>
               </BlockStack>
-            </InlineStack>
-          </BlockStack>
-        </Card>
+            </Card>
+          </Layout.Section>
+        </Layout>
 
         {/* Charts Section */}
         <Text as="h2" variant="headingLg">Analítica</Text>
