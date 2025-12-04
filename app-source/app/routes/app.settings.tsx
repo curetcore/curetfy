@@ -1475,94 +1475,74 @@ export default function Settings() {
             const collapseAll = () => setExpandedFields(new Set());
             const expandAll = () => setExpandedFields(new Set(allElements.map((el: any) => el.id)));
 
-            // Render an add button with counter
-            const AddFieldButton = ({ type }: { type: string }) => {
-              const config = FIELD_TYPES[type];
-              if (!config) return null;
-              const count = typeCounts[type] || 0;
-              const isAtLimit = count >= config.maxCount;
-              const isSingleUse = singleUseFields.includes(type);
+            // Build select options with category labels
+            const fieldOptions = [
+              // Esenciales
+              { value: "name", label: `Nombre ${typeCounts.name ? "✓" : ""}`, disabled: typeCounts.name >= 1 },
+              { value: "phone", label: `Teléfono ${typeCounts.phone ? "✓" : ""}`, disabled: typeCounts.phone >= 1 },
+              { value: "email", label: `Email ${typeCounts.email ? "✓" : ""}`, disabled: typeCounts.email >= 1 },
+              { value: "address", label: `Dirección ${typeCounts.address ? "✓" : ""}`, disabled: typeCounts.address >= 1 },
+              { value: "city", label: `Ciudad ${typeCounts.city ? "✓" : ""}`, disabled: typeCounts.city >= 1 },
+              { value: "province", label: `Provincia ${typeCounts.province ? "✓" : ""}`, disabled: typeCounts.province >= 1 },
+              { value: "postalCode", label: `Código postal ${typeCounts.postalCode ? "✓" : ""}`, disabled: typeCounts.postalCode >= 1 },
+              { value: "notes", label: `Notas ${typeCounts.notes ? "✓" : ""}`, disabled: typeCounts.notes >= 1 },
+              { value: "quantity", label: `Cantidad ${typeCounts.quantity ? "✓" : ""}`, disabled: typeCounts.quantity >= 1 },
+              // Separador visual
+              { value: "---custom", label: "── Personalizados ──", disabled: true },
+              { value: "text", label: "Texto" },
+              { value: "textarea", label: "Área de texto" },
+              { value: "select", label: "Desplegable" },
+              { value: "radio", label: "Opción única" },
+              { value: "checkbox", label: "Casilla" },
+              { value: "number", label: "Número" },
+              { value: "date", label: "Fecha" },
+              // Separador visual
+              { value: "---decorative", label: "── Decorativos ──", disabled: true },
+              { value: "heading", label: "Título" },
+              { value: "image", label: "Imagen" },
+              { value: "html", label: "HTML" },
+              { value: "link_button", label: "Botón" },
+            ];
 
-              return (
-                <Button
-                  onClick={() => addElement(type)}
-                  size="slim"
-                  variant={isAtLimit ? "tertiary" : "secondary"}
-                  disabled={isAtLimit}
-                  icon={config.icon}
-                >
-                  {config.label}
-                  {isSingleUse && count > 0 && " ✓"}
-                </Button>
-              );
+            const [selectedFieldType, setSelectedFieldType] = useState("text");
+
+            const handleAddField = () => {
+              if (selectedFieldType && !selectedFieldType.startsWith("---")) {
+                addElement(selectedFieldType);
+              }
             };
 
             return (
               <Layout>
                 <Layout.Section>
-                  {/* HEADER - Add Field Buttons */}
+                  {/* HEADER - Add Field */}
                   <Card>
                     <BlockStack gap="400">
                       <BlockStack gap="100">
                         <Text as="h2" variant="headingSm">Constructor de formulario</Text>
                         <Text as="p" variant="bodySm" tone="subdued">
-                          Arrastra para reordenar. Haz clic para expandir y editar.
+                          Agrega campos, arrastra para reordenar y haz clic para editar.
                         </Text>
                       </BlockStack>
 
-                      {/* Essential COD fields */}
-                      <BlockStack gap="200">
-                        <InlineStack gap="200" blockAlign="center">
-                          <Badge tone="success">Esenciales</Badge>
-                          <Text as="span" variant="bodySm" tone="subdued">Campos principales para COD</Text>
-                        </InlineStack>
-                        <InlineStack gap="200" wrap>
-                          <AddFieldButton type="name" />
-                          <AddFieldButton type="phone" />
-                          <AddFieldButton type="address" />
-                          <AddFieldButton type="city" />
-                          <AddFieldButton type="province" />
-                          <AddFieldButton type="email" />
-                          <AddFieldButton type="notes" />
-                          <AddFieldButton type="quantity" />
-                          <AddFieldButton type="postalCode" />
-                        </InlineStack>
-                      </BlockStack>
-
-                      <Divider />
-
-                      {/* Custom input fields */}
-                      <BlockStack gap="200">
-                        <InlineStack gap="200" blockAlign="center">
-                          <Badge tone="info">Personalizados</Badge>
-                          <Text as="span" variant="bodySm" tone="subdued">Campos adicionales para tu formulario</Text>
-                        </InlineStack>
-                        <InlineStack gap="200" wrap>
-                          <AddFieldButton type="text" />
-                          <AddFieldButton type="textarea" />
-                          <AddFieldButton type="select" />
-                          <AddFieldButton type="radio" />
-                          <AddFieldButton type="checkbox" />
-                          <AddFieldButton type="number" />
-                          <AddFieldButton type="date" />
-                        </InlineStack>
-                      </BlockStack>
-
-                      <Divider />
-
-                      {/* Decorative elements */}
-                      <BlockStack gap="200">
-                        <InlineStack gap="200" blockAlign="center">
-                          <Badge tone="attention">Decorativos</Badge>
-                          <Text as="span" variant="bodySm" tone="subdued">Elementos visuales sin datos</Text>
-                        </InlineStack>
-                        <InlineStack gap="200" wrap>
-                          <AddFieldButton type="heading" />
-                          <AddFieldButton type="image" />
-                          <AddFieldButton type="html" />
-                          <AddFieldButton type="link_button" />
-                        </InlineStack>
-                      </BlockStack>
+                      <InlineStack gap="300" blockAlign="end">
+                        <div style={{ flex: 1 }}>
+                          <Select
+                            label="Agregar campo"
+                            options={fieldOptions}
+                            value={selectedFieldType}
+                            onChange={setSelectedFieldType}
+                          />
+                        </div>
+                        <Button
+                          variant="primary"
+                          onClick={handleAddField}
+                          disabled={selectedFieldType.startsWith("---")}
+                          icon={PlusIcon}
+                        >
+                          Agregar
+                        </Button>
+                      </InlineStack>
                     </BlockStack>
                   </Card>
 
