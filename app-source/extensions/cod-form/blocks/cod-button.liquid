@@ -20,10 +20,6 @@
     endif
   endif
 
-  if template.name == 'cart'
-    assign cart_total = cart.total_price | divided_by: 100.0
-    assign cart_count = cart.item_count
-  endif
 
   assign has_gradient = false
   if block.settings.enable_gradient
@@ -219,7 +215,7 @@
     {% if block.settings.hide_when_unavailable and product_available == false %}disabled{% endif %}
     style="
       {% if has_gradient %}
-        background: linear-gradient({{ block.settings.gradient_angle }}deg, {{ block.settings.button_color }}, {{ block.settings.gradient_color }});
+        background: linear-gradient(135deg, {{ block.settings.button_color }}, {{ block.settings.gradient_color }});
       {% else %}
         background-color: {{ block.settings.button_color }};
       {% endif %}
@@ -228,17 +224,15 @@
       padding: {{ block.settings.button_padding_y }}px {{ block.settings.button_padding_x }}px;
       font-size: {{ block.settings.button_font_size }}px;
       font-weight: {{ block.settings.button_font_weight }};
-      letter-spacing: {{ block.settings.letter_spacing }}px;
       {% if block.settings.text_transform != 'none' %}text-transform: {{ block.settings.text_transform }};{% endif %}
       {% if block.settings.button_full_width %}width: 100%;{% endif %}
       {% if block.settings.button_shadow %}box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.2);{% endif %}
       {% if has_border %}
-        border: {{ block.settings.border_width }}px {{ block.settings.border_style }} {{ block.settings.border_color }};
+        border: {{ block.settings.border_width }}px solid {{ block.settings.border_color }};
       {% else %}
         border: none;
       {% endif %}
       --curetfy-hover-bg: {{ block.settings.hover_color }};
-      --curetfy-hover-text: {{ block.settings.hover_text_color }};
       --curetfy-hover-scale: {{ block.settings.hover_scale }};
     "
   >
@@ -268,12 +262,6 @@
               {{ block.settings.secondary_text_custom }}
             {% when 'free_shipping' %}
               Envío gratis
-            {% when 'stock' %}
-              {% if product_available %}
-                En stock
-              {% else %}
-                Agotado
-              {% endif %}
           {% endcase %}
         </span>
       {% endif %}
@@ -300,7 +288,7 @@
   "settings": [
     {
       "type": "header",
-      "content": "Texto principal"
+      "content": "📝 Texto"
     },
     {
       "type": "text",
@@ -326,8 +314,7 @@
         { "value": "400", "label": "Normal" },
         { "value": "500", "label": "Medium" },
         { "value": "600", "label": "Semibold" },
-        { "value": "700", "label": "Bold" },
-        { "value": "800", "label": "Extra Bold" }
+        { "value": "700", "label": "Bold" }
       ],
       "default": "600"
     },
@@ -338,24 +325,9 @@
       "options": [
         { "value": "none", "label": "Normal" },
         { "value": "uppercase", "label": "MAYÚSCULAS" },
-        { "value": "lowercase", "label": "minúsculas" },
         { "value": "capitalize", "label": "Capitalizar" }
       ],
       "default": "none"
-    },
-    {
-      "type": "range",
-      "id": "letter_spacing",
-      "label": "Espaciado entre letras",
-      "min": -1,
-      "max": 5,
-      "step": 0.5,
-      "default": 0,
-      "unit": "px"
-    },
-    {
-      "type": "header",
-      "content": "Texto secundario"
     },
     {
       "type": "checkbox",
@@ -368,11 +340,10 @@
       "id": "secondary_text_type",
       "label": "Tipo de texto secundario",
       "options": [
-        { "value": "price", "label": "Precio del producto" },
+        { "value": "price", "label": "Precio" },
         { "value": "compare_price", "label": "Precio con descuento" },
         { "value": "free_shipping", "label": "Envío gratis" },
-        { "value": "stock", "label": "Estado de stock" },
-        { "value": "custom", "label": "Texto personalizado" }
+        { "value": "custom", "label": "Personalizado" }
       ],
       "default": "price"
     },
@@ -384,7 +355,7 @@
     },
     {
       "type": "header",
-      "content": "Colores"
+      "content": "🎨 Colores y estilo"
     },
     {
       "type": "color",
@@ -411,43 +382,10 @@
       "default": "#333333"
     },
     {
-      "type": "range",
-      "id": "gradient_angle",
-      "label": "Ángulo del degradado",
-      "min": 0,
-      "max": 360,
-      "step": 15,
-      "default": 135,
-      "unit": "°"
-    },
-    {
-      "type": "header",
-      "content": "Hover (al pasar el cursor)"
-    },
-    {
       "type": "color",
       "id": "hover_color",
-      "label": "Color de fondo en hover",
+      "label": "Color en hover",
       "default": "#333333"
-    },
-    {
-      "type": "color",
-      "id": "hover_text_color",
-      "label": "Color del texto en hover",
-      "default": "#FFFFFF"
-    },
-    {
-      "type": "range",
-      "id": "hover_scale",
-      "label": "Escala en hover",
-      "min": 1,
-      "max": 1.15,
-      "step": 0.01,
-      "default": 1.02
-    },
-    {
-      "type": "header",
-      "content": "Borde"
     },
     {
       "type": "range",
@@ -460,17 +398,6 @@
       "unit": "px"
     },
     {
-      "type": "select",
-      "id": "border_style",
-      "label": "Estilo del borde",
-      "options": [
-        { "value": "solid", "label": "Sólido" },
-        { "value": "dashed", "label": "Discontinuo" },
-        { "value": "dotted", "label": "Punteado" }
-      ],
-      "default": "solid"
-    },
-    {
       "type": "color",
       "id": "border_color",
       "label": "Color del borde",
@@ -478,7 +405,7 @@
     },
     {
       "type": "header",
-      "content": "Forma y tamaño"
+      "content": "📐 Forma y tamaño"
     },
     {
       "type": "range",
@@ -534,83 +461,6 @@
       "default": "center"
     },
     {
-      "type": "header",
-      "content": "Ícono"
-    },
-    {
-      "type": "checkbox",
-      "id": "show_icon",
-      "label": "Mostrar ícono",
-      "default": true
-    },
-    {
-      "type": "select",
-      "id": "icon_type",
-      "label": "Tipo de ícono",
-      "options": [
-        { "value": "whatsapp", "label": "WhatsApp" },
-        { "value": "cart", "label": "Carrito" },
-        { "value": "bag", "label": "Bolsa" },
-        { "value": "phone", "label": "Teléfono" },
-        { "value": "check", "label": "Check" },
-        { "value": "arrow_right", "label": "Flecha derecha" },
-        { "value": "truck", "label": "Camión" },
-        { "value": "box", "label": "Caja" },
-        { "value": "star", "label": "Estrella" },
-        { "value": "heart", "label": "Corazón" },
-        { "value": "lightning", "label": "Rayo" },
-        { "value": "shield", "label": "Escudo" }
-      ],
-      "default": "whatsapp"
-    },
-    {
-      "type": "select",
-      "id": "icon_position",
-      "label": "Posición del ícono",
-      "options": [
-        { "value": "left", "label": "Izquierda" },
-        { "value": "right", "label": "Derecha" }
-      ],
-      "default": "left"
-    },
-    {
-      "type": "range",
-      "id": "icon_size",
-      "label": "Tamaño del ícono",
-      "min": 14,
-      "max": 32,
-      "step": 2,
-      "default": 20,
-      "unit": "px"
-    },
-    {
-      "type": "header",
-      "content": "Animación"
-    },
-    {
-      "type": "select",
-      "id": "button_animation",
-      "label": "Animación del botón",
-      "options": [
-        { "value": "none", "label": "Ninguna" },
-        { "value": "pulse", "label": "Pulso" },
-        { "value": "glow", "label": "Brillo" },
-        { "value": "shake", "label": "Vibrar" },
-        { "value": "bounce", "label": "Rebote" },
-        { "value": "wiggle", "label": "Meneo" },
-        { "value": "heartbeat", "label": "Latido" },
-        { "value": "flash", "label": "Destello" },
-        { "value": "rubber", "label": "Elástico" },
-        { "value": "swing", "label": "Balanceo" },
-        { "value": "tada", "label": "Tada" }
-      ],
-      "default": "none"
-    },
-    {
-      "type": "header",
-      "content": "Espaciado"
-    },
-    {
       "type": "range",
       "id": "margin_top",
       "label": "Margen superior",
@@ -632,7 +482,87 @@
     },
     {
       "type": "header",
-      "content": "Visibilidad"
+      "content": "🔷 Ícono"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_icon",
+      "label": "Mostrar ícono",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "icon_type",
+      "label": "Tipo de ícono",
+      "options": [
+        { "value": "whatsapp", "label": "WhatsApp" },
+        { "value": "cart", "label": "Carrito" },
+        { "value": "bag", "label": "Bolsa" },
+        { "value": "phone", "label": "Teléfono" },
+        { "value": "truck", "label": "Camión" },
+        { "value": "check", "label": "Check" },
+        { "value": "star", "label": "Estrella" },
+        { "value": "heart", "label": "Corazón" },
+        { "value": "lightning", "label": "Rayo" },
+        { "value": "shield", "label": "Escudo" }
+      ],
+      "default": "whatsapp"
+    },
+    {
+      "type": "select",
+      "id": "icon_position",
+      "label": "Posición",
+      "options": [
+        { "value": "left", "label": "Izquierda" },
+        { "value": "right", "label": "Derecha" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "range",
+      "id": "icon_size",
+      "label": "Tamaño",
+      "min": 14,
+      "max": 32,
+      "step": 2,
+      "default": 20,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "✨ Animación"
+    },
+    {
+      "type": "select",
+      "id": "button_animation",
+      "label": "Tipo de animación",
+      "options": [
+        { "value": "none", "label": "Ninguna" },
+        { "value": "pulse", "label": "Pulso" },
+        { "value": "glow", "label": "Brillo" },
+        { "value": "shake", "label": "Vibrar" },
+        { "value": "bounce", "label": "Rebote" },
+        { "value": "wiggle", "label": "Meneo" },
+        { "value": "heartbeat", "label": "Latido" },
+        { "value": "flash", "label": "Destello" },
+        { "value": "rubber", "label": "Elástico" },
+        { "value": "swing", "label": "Balanceo" },
+        { "value": "tada", "label": "Tada" }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "range",
+      "id": "hover_scale",
+      "label": "Escala en hover",
+      "min": 1,
+      "max": 1.2,
+      "step": 0.1,
+      "default": 1
+    },
+    {
+      "type": "header",
+      "content": "⚙️ Visibilidad"
     },
     {
       "type": "select",
@@ -652,14 +582,10 @@
       "default": true
     },
     {
-      "type": "header",
-      "content": "Avanzado"
-    },
-    {
       "type": "text",
       "id": "custom_class",
       "label": "Clase CSS personalizada",
-      "info": "Añade clases CSS separadas por espacios"
+      "info": "Clases CSS separadas por espacios"
     }
   ]
 }
