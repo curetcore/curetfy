@@ -2825,36 +2825,6 @@ export default function Settings() {
                       </BlockStack>
                     </Card>
 
-                    {/* WhatsApp Template */}
-                    <Card>
-                      <BlockStack gap="400">
-                        <BlockStack gap="100">
-                          <Text as="h2" variant="headingSm">Plantilla de mensaje WhatsApp</Text>
-                          <Text as="p" variant="bodySm" tone="subdued">
-                            Personaliza el mensaje que se envía por WhatsApp
-                          </Text>
-                        </BlockStack>
-                        <TextField
-                          label="Plantilla del mensaje"
-                          value={formState.whatsappTemplate as string}
-                          onChange={handleChange("whatsappTemplate")}
-                          multiline={8}
-                          autoComplete="off"
-                          helpText="Variables: {nombre}, {telefono}, {direccion}, {ciudad}, {provincia}, {productos}, {subtotal}, {envio}, {impuesto}, {total}, {notas}"
-                        />
-                        <Box padding="300" background="bg-surface-secondary" borderRadius="200">
-                          <BlockStack gap="200">
-                            <Text as="span" variant="bodySm" fontWeight="medium">Variables disponibles:</Text>
-                            <InlineStack gap="200" wrap>
-                              {['{nombre}', '{telefono}', '{direccion}', '{ciudad}', '{provincia}', '{productos}', '{subtotal}', '{envio}', '{impuesto}', '{total}', '{notas}'].map(v => (
-                                <Badge key={v} tone="info">{v}</Badge>
-                              ))}
-                            </InlineStack>
-                          </BlockStack>
-                        </Box>
-                      </BlockStack>
-                    </Card>
-
                     {/* Blocked Provinces */}
                     <Card>
                       <BlockStack gap="400">
@@ -2961,12 +2931,6 @@ export default function Settings() {
                       <BlockStack gap="400">
                         <Text as="h2" variant="headingSm">Creación de pedidos en Shopify</Text>
                         <FormLayout>
-                          <Checkbox
-                            label="Crear orden borrador automáticamente"
-                            helpText="Se creará una orden borrador que podrás confirmar después"
-                            checked={formState.createDraftOrder}
-                            onChange={handleChange("createDraftOrder")}
-                          />
                           <TextField
                             label="Nota interna del pedido"
                             value={formState.orderNote}
