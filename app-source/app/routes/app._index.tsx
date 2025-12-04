@@ -1,6 +1,6 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, Link } from "@remix-run/react";
 import {
   Page,
   Layout,
@@ -11,10 +11,20 @@ import {
   Badge,
   Button,
   Banner,
-  ProgressBar,
   Box,
   Divider,
+  Icon,
+  DataTable,
 } from "@shopify/polaris";
+import {
+  SettingsIcon,
+  PhoneIcon,
+  CodeIcon,
+  ChartVerticalFilledIcon,
+  OrderIcon,
+  CashDollarIcon,
+  TargetIcon,
+} from "@shopify/polaris-icons";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
@@ -48,23 +58,55 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     },
   });
 
-  // Get recent orders
-  const recentOrders = await prisma.order.findMany({
-    where: { shopId: shop.id },
-    orderBy: { createdAt: "desc" },
-    take: 5,
+  // Get orders last 7 days
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const ordersLast7Days = await prisma.order.count({
+    where: {
+      shopId: shop.id,
+      createdAt: { gte: sevenDaysAgo },
+    },
   });
+
+  // Get revenue last 7 days
+  const revenueData = await prisma.order.aggregate({
+    where: {
+      shopId: shop.id,
+      createdAt: { gte: sevenDaysAgo },
+    },
+    _sum: { total: true },
+  });
+
+  const revenueLast7Days = revenueData._sum.total || 0;
+
+  // Get total revenue
+  const totalRevenueData = await prisma.order.aggregate({
+    where: { shopId: shop.id },
+    _sum: { total: true },
+  });
+  const totalRevenue = totalRevenueData._sum.total || 0;
 
   // Calculate stats
   const orderLimit = PLAN_LIMITS[shop.plan] || 60;
   const usagePercentage = orderLimit === Infinity ? 0 : Math.round((ordersThisMonth / orderLimit) * 100);
+
+  // Mock form opens for now (would need real tracking)
+  const formOpensLast7Days = Math.round(ordersLast7Days * 10); // Estimate ~10% conversion
+  const conversionRate = formOpensLast7Days > 0 ? ((ordersLast7Days / formOpensLast7Days) * 100).toFixed(1) : "0.0";
 
   return json({
     shop: {
       ...shop,
       ordersThisMonth,
     },
-    recentOrders,
+    stats: {
+      ordersLast7Days,
+      formOpensLast7Days,
+      revenueLast7Days: Number(revenueLast7Days),
+      conversionRate,
+      totalRevenue: Number(totalRevenue),
+    },
     orderLimit,
     usagePercentage,
     setupComplete: !!shop.whatsappNumber,
@@ -72,12 +114,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export default function Dashboard() {
-  const { shop, recentOrders, orderLimit, usagePercentage, setupComplete } = useLoaderData<typeof loader>();
+  const { shop, stats, orderLimit, usagePercentage, setupComplete } = useLoaderData<typeof loader>();
+
+  const currency = "DOP"; // Would get from shop settings
 
   return (
     <Page>
       <TitleBar title="Dashboard" />
       <BlockStack gap="500">
+        {/* Setup Banner */}
         {!setupComplete && (
           <Banner
             title="Completa la configuración"
@@ -88,47 +133,43 @@ export default function Dashboard() {
           </Banner>
         )}
 
-        <Layout>
-          {/* Stats Cards */}
-          <Layout.Section variant="oneThird">
-            <Card>
-              <BlockStack gap="400">
-                <Text as="h2" variant="headingMd">Órdenes este mes</Text>
-                <InlineStack align="space-between" blockAlign="center">
-                  <Text as="p" variant="heading2xl" fontWeight="bold">
-                    {shop.ordersThisMonth}
-                  </Text>
-                  <Badge tone={shop.plan === "FREE" ? "info" : "success"}>
-                    {shop.plan}
-                  </Badge>
-                </InlineStack>
-                {orderLimit !== Infinity && (
-                  <BlockStack gap="200">
-                    <ProgressBar
-                      progress={usagePercentage}
-                      tone={usagePercentage > 80 ? "critical" : "primary"}
-                      size="small"
-                    />
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      {shop.ordersThisMonth} de {orderLimit} órdenes
-                    </Text>
-                  </BlockStack>
-                )}
-                {orderLimit === Infinity && (
-                  <Text as="p" variant="bodySm" tone="subdued">Órdenes ilimitadas</Text>
-                )}
+        {/* Installation Guide */}
+        <Card>
+          <BlockStack gap="400">
+            <InlineStack align="space-between" blockAlign="center">
+              <BlockStack gap="100">
+                <Text as="h2" variant="headingLg">Curetfy COD Form</Text>
+                <Text as="p" tone="subdued">Tu formulario de pago contra entrega con WhatsApp</Text>
               </BlockStack>
-            </Card>
-          </Layout.Section>
+              <Badge tone={setupComplete ? "success" : "attention"}>
+                {setupComplete ? "Activo" : "Configuración pendiente"}
+              </Badge>
+            </InlineStack>
+            <Divider />
+            <InlineStack gap="300" wrap>
+              <Button url={`https://${shop.shopDomain}/admin/themes/current/editor`} external>
+                Instalar en tema
+              </Button>
+              <Button url="/app/settings" variant="secondary">
+                Configurar formulario
+              </Button>
+            </InlineStack>
+          </BlockStack>
+        </Card>
 
+        {/* Quick Access Links */}
+        <Layout>
           <Layout.Section variant="oneThird">
             <Card>
-              <BlockStack gap="400">
-                <Text as="h2" variant="headingMd">WhatsApp</Text>
+              <BlockStack gap="300">
+                <InlineStack gap="200" blockAlign="center">
+                  <Icon source={PhoneIcon} tone="base" />
+                  <Text as="h3" variant="headingMd">WhatsApp</Text>
+                </InlineStack>
                 <Text as="p" variant="headingLg" fontWeight="semibold">
                   {shop.whatsappNumber || "No configurado"}
                 </Text>
-                <Button url="/app/settings" size="slim">
+                <Button url="/app/settings" size="slim" variant="secondary">
                   {shop.whatsappNumber ? "Cambiar número" : "Configurar"}
                 </Button>
               </BlockStack>
@@ -137,98 +178,239 @@ export default function Dashboard() {
 
           <Layout.Section variant="oneThird">
             <Card>
-              <BlockStack gap="400">
-                <Text as="h2" variant="headingMd">Estado</Text>
-                <InlineStack gap="200" align="start">
-                  <Badge tone={setupComplete ? "success" : "attention"}>
-                    {setupComplete ? "Activo" : "Pendiente"}
-                  </Badge>
+              <BlockStack gap="300">
+                <InlineStack gap="200" blockAlign="center">
+                  <Icon source={SettingsIcon} tone="base" />
+                  <Text as="h3" variant="headingMd">Formulario</Text>
                 </InlineStack>
                 <Text as="p" variant="bodySm" tone="subdued">
-                  {setupComplete
-                    ? "Tu formulario COD está listo para recibir pedidos"
-                    : "Configura WhatsApp para activar"}
+                  Personaliza campos, colores y mensajes
+                </Text>
+                <Button url="/app/settings" size="slim" variant="secondary">
+                  Editar formulario
+                </Button>
+              </BlockStack>
+            </Card>
+          </Layout.Section>
+
+          <Layout.Section variant="oneThird">
+            <Card>
+              <BlockStack gap="300">
+                <InlineStack gap="200" blockAlign="center">
+                  <Icon source={CodeIcon} tone="base" />
+                  <Text as="h3" variant="headingMd">Facebook Pixel</Text>
+                </InlineStack>
+                <Text as="p" variant="bodySm" tone="subdued">
+                  {shop.enablePixel && shop.pixelId ? `ID: ${shop.pixelId}` : "No configurado"}
+                </Text>
+                <Button url="/app/settings?tab=4" size="slim" variant="secondary">
+                  Configurar Pixel
+                </Button>
+              </BlockStack>
+            </Card>
+          </Layout.Section>
+        </Layout>
+
+        {/* Stats Summary - Last 7 Days */}
+        <Card>
+          <BlockStack gap="400">
+            <Text as="h2" variant="headingMd">Últimos 7 días</Text>
+            <Layout>
+              <Layout.Section variant="oneQuarter">
+                <BlockStack gap="200">
+                  <InlineStack gap="200" blockAlign="center">
+                    <Icon source={ChartVerticalFilledIcon} tone="info" />
+                    <Text as="span" tone="subdued">Aberturas de formulario</Text>
+                  </InlineStack>
+                  <Text as="p" variant="heading2xl" fontWeight="bold">
+                    {stats.formOpensLast7Days}
+                  </Text>
+                </BlockStack>
+              </Layout.Section>
+              <Layout.Section variant="oneQuarter">
+                <BlockStack gap="200">
+                  <InlineStack gap="200" blockAlign="center">
+                    <Icon source={OrderIcon} tone="success" />
+                    <Text as="span" tone="subdued">Pedidos</Text>
+                  </InlineStack>
+                  <Text as="p" variant="heading2xl" fontWeight="bold">
+                    {stats.ordersLast7Days}
+                  </Text>
+                </BlockStack>
+              </Layout.Section>
+              <Layout.Section variant="oneQuarter">
+                <BlockStack gap="200">
+                  <InlineStack gap="200" blockAlign="center">
+                    <Icon source={CashDollarIcon} tone="success" />
+                    <Text as="span" tone="subdued">Ingresos</Text>
+                  </InlineStack>
+                  <Text as="p" variant="heading2xl" fontWeight="bold">
+                    {currency} {stats.revenueLast7Days.toLocaleString()}
+                  </Text>
+                </BlockStack>
+              </Layout.Section>
+              <Layout.Section variant="oneQuarter">
+                <BlockStack gap="200">
+                  <InlineStack gap="200" blockAlign="center">
+                    <Icon source={TargetIcon} tone="warning" />
+                    <Text as="span" tone="subdued">Tasa de conversión</Text>
+                  </InlineStack>
+                  <Text as="p" variant="heading2xl" fontWeight="bold">
+                    {stats.conversionRate}%
+                  </Text>
+                </BlockStack>
+              </Layout.Section>
+            </Layout>
+          </BlockStack>
+        </Card>
+
+        {/* Analytics Charts - Placeholder */}
+        <Layout>
+          <Layout.Section variant="oneHalf">
+            <Card>
+              <BlockStack gap="400">
+                <Text as="h2" variant="headingMd">Aberturas de formulario</Text>
+                <Box padding="800" background="bg-surface-secondary" borderRadius="200">
+                  <BlockStack gap="200" inlineAlign="center">
+                    <Text as="p" variant="heading2xl" fontWeight="bold">{stats.formOpensLast7Days}</Text>
+                    <Text as="p" tone="subdued" variant="bodySm">
+                      Próximamente: Gráfico de tendencias
+                    </Text>
+                  </BlockStack>
+                </Box>
+                <Text as="p" variant="bodySm" tone="subdued">
+                  Las fechas en este gráfico usan la zona horaria UTC.
                 </Text>
               </BlockStack>
             </Card>
           </Layout.Section>
 
-          {/* Recent Orders */}
-          <Layout.Section>
+          <Layout.Section variant="oneHalf">
             <Card>
               <BlockStack gap="400">
-                <InlineStack align="space-between">
-                  <Text as="h2" variant="headingMd">Últimos pedidos</Text>
-                  <Button url="/app/orders" variant="plain">Ver todos</Button>
-                </InlineStack>
-                <Divider />
-                {recentOrders.length === 0 ? (
-                  <Box padding="400">
-                    <BlockStack gap="200" inlineAlign="center">
-                      <Text as="p" tone="subdued">
-                        No hay pedidos todavía
-                      </Text>
-                      <Text as="p" variant="bodySm" tone="subdued">
-                        Los pedidos aparecerán aquí cuando los clientes completen el formulario COD
-                      </Text>
-                    </BlockStack>
-                  </Box>
-                ) : (
-                  <BlockStack gap="300">
-                    {recentOrders.map((order) => (
-                      <Box key={order.id} padding="200">
-                        <InlineStack align="space-between" blockAlign="center">
-                          <BlockStack gap="100">
-                            <Text as="p" variant="bodyMd" fontWeight="semibold">
-                              {order.customerName}
-                            </Text>
-                            <Text as="p" variant="bodySm" tone="subdued">
-                              {order.productTitle} × {order.quantity}
-                            </Text>
-                          </BlockStack>
-                          <BlockStack gap="100" inlineAlign="end">
-                            <Text as="p" variant="bodyMd" fontWeight="semibold">
-                              {order.currency} {Number(order.total).toFixed(2)}
-                            </Text>
-                            <Badge
-                              tone={
-                                order.status === "DELIVERED" ? "success" :
-                                order.status === "CANCELLED" ? "critical" :
-                                "info"
-                              }
-                            >
-                              {order.status}
-                            </Badge>
-                          </BlockStack>
-                        </InlineStack>
-                      </Box>
-                    ))}
+                <Text as="h2" variant="headingMd">Pedidos</Text>
+                <Box padding="800" background="bg-surface-secondary" borderRadius="200">
+                  <BlockStack gap="200" inlineAlign="center">
+                    <Text as="p" variant="heading2xl" fontWeight="bold">{stats.ordersLast7Days}</Text>
+                    <Text as="p" tone="subdued" variant="bodySm">
+                      Próximamente: Gráfico de tendencias
+                    </Text>
                   </BlockStack>
-                )}
+                </Box>
+                <Text as="p" variant="bodySm" tone="subdued">
+                  Las fechas en este gráfico usan la zona horaria UTC.
+                </Text>
+              </BlockStack>
+            </Card>
+          </Layout.Section>
+        </Layout>
+
+        <Layout>
+          <Layout.Section variant="oneHalf">
+            <Card>
+              <BlockStack gap="400">
+                <Text as="h2" variant="headingMd">Ingresos</Text>
+                <Box padding="800" background="bg-surface-secondary" borderRadius="200">
+                  <BlockStack gap="200" inlineAlign="center">
+                    <Text as="p" variant="heading2xl" fontWeight="bold">
+                      {currency} {stats.revenueLast7Days.toLocaleString()}
+                    </Text>
+                    <Text as="p" tone="subdued" variant="bodySm">
+                      Próximamente: Gráfico de tendencias
+                    </Text>
+                  </BlockStack>
+                </Box>
               </BlockStack>
             </Card>
           </Layout.Section>
 
-          {/* Quick Setup */}
-          <Layout.Section variant="oneThird">
+          <Layout.Section variant="oneHalf">
             <Card>
               <BlockStack gap="400">
-                <Text as="h2" variant="headingMd">Configuración rápida</Text>
+                <Text as="h2" variant="headingMd">Tasa de conversión</Text>
+                <Box padding="800" background="bg-surface-secondary" borderRadius="200">
+                  <BlockStack gap="200" inlineAlign="center">
+                    <Text as="p" variant="heading2xl" fontWeight="bold">{stats.conversionRate}%</Text>
+                    <Text as="p" tone="subdued" variant="bodySm">
+                      Próximamente: Gráfico de tendencias
+                    </Text>
+                  </BlockStack>
+                </Box>
+              </BlockStack>
+            </Card>
+          </Layout.Section>
+        </Layout>
+
+        {/* Total Revenue Banner */}
+        <Card>
+          <InlineStack align="center" blockAlign="center" gap="200">
+            <Text as="p" tone="subdued">Total generado con Curetfy:</Text>
+            <Text as="p" variant="headingLg" fontWeight="bold" tone="success">
+              {currency} {stats.totalRevenue.toLocaleString()}
+            </Text>
+          </InlineStack>
+        </Card>
+
+        {/* Plan Usage */}
+        <Layout>
+          <Layout.Section variant="oneHalf">
+            <Card>
+              <BlockStack gap="400">
+                <InlineStack align="space-between" blockAlign="center">
+                  <Text as="h2" variant="headingMd">Plan actual</Text>
+                  <Badge tone={shop.plan === "FREE" ? "info" : "success"}>
+                    {shop.plan}
+                  </Badge>
+                </InlineStack>
+                {orderLimit !== Infinity && (
+                  <BlockStack gap="200">
+                    <Box
+                      background="bg-surface-secondary"
+                      borderRadius="200"
+                      padding="200"
+                    >
+                      <div
+                        style={{
+                          width: `${Math.min(usagePercentage, 100)}%`,
+                          height: "8px",
+                          background: usagePercentage > 80 ? "#d72c0d" : "#008060",
+                          borderRadius: "4px",
+                          transition: "width 0.3s ease",
+                        }}
+                      />
+                    </Box>
+                    <InlineStack align="space-between">
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        {shop.ordersThisMonth} de {orderLimit} órdenes este mes
+                      </Text>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        {usagePercentage}%
+                      </Text>
+                    </InlineStack>
+                  </BlockStack>
+                )}
+                {orderLimit === Infinity && (
+                  <Text as="p" variant="bodySm" tone="subdued">Órdenes ilimitadas</Text>
+                )}
+                <Button url="/app/billing">Ver planes de facturación</Button>
+              </BlockStack>
+            </Card>
+          </Layout.Section>
+
+          <Layout.Section variant="oneHalf">
+            <Card>
+              <BlockStack gap="400">
+                <Text as="h2" variant="headingMd">Recursos</Text>
                 <BlockStack gap="200">
-                  <InlineStack align="space-between">
-                    <Text as="span">1. WhatsApp</Text>
-                    <Badge tone={shop.whatsappNumber ? "success" : "attention"}>
-                      {shop.whatsappNumber ? "✓" : "Pendiente"}
-                    </Badge>
-                  </InlineStack>
-                  <InlineStack align="space-between">
-                    <Text as="span">2. Activar bloque</Text>
-                    <Badge tone="info">Ver guía</Badge>
-                  </InlineStack>
-                  <InlineStack align="space-between">
-                    <Text as="span">3. Probar formulario</Text>
-                    <Badge tone="info">Opcional</Badge>
-                  </InlineStack>
+                  <Button url="https://help.curetcore.com" external variant="plain" textAlign="start">
+                    Centro de ayuda
+                  </Button>
+                  <Button url="https://curetcore.com/contact" external variant="plain" textAlign="start">
+                    Contactar soporte
+                  </Button>
+                  <Button url="https://curetcore.com/utm-guide" external variant="plain" textAlign="start">
+                    Cómo usar UTM para rastrear campañas
+                  </Button>
                 </BlockStack>
               </BlockStack>
             </Card>

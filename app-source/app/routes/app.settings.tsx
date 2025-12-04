@@ -921,7 +921,7 @@ export default function Settings() {
   const tabs = [
     { id: "whatsapp", content: "WhatsApp", accessibilityLabel: "WhatsApp" },
     { id: "form-builder", content: "Formulario", accessibilityLabel: "Formulario" },
-    { id: "modal", content: "Modal", accessibilityLabel: "Modal" },
+    { id: "shipping", content: "Envíos", accessibilityLabel: "Envíos" },
     { id: "orders", content: "Pedidos", accessibilityLabel: "Pedidos" },
     { id: "advanced", content: "Avanzado", accessibilityLabel: "Avanzado" },
   ];
@@ -1425,21 +1425,13 @@ export default function Settings() {
                     <Card>
                       <BlockStack gap="400">
                         <Text as="h2" variant="headingMd">Configuración regional</Text>
-                        <FormLayout>
-                          <TextField
-                            label="Países habilitados"
-                            value={formState.countries}
-                            onChange={handleChange("countries")}
-                            helpText="Códigos ISO: DO, CO, MX, PE, CL, AR"
-                            autoComplete="off"
-                          />
-                          <Select
-                            label="País por defecto"
-                            options={COUNTRIES}
-                            value={formState.defaultCountry}
-                            onChange={handleChange("defaultCountry")}
-                          />
-                        </FormLayout>
+                        <Select
+                          label="País"
+                          options={COUNTRIES}
+                          value={formState.defaultCountry}
+                          onChange={handleChange("defaultCountry")}
+                          helpText="Las provincias/estados se cargarán según el país seleccionado"
+                        />
                       </BlockStack>
                     </Card>
                   </Box>
@@ -1474,6 +1466,116 @@ export default function Settings() {
                       </BlockStack>
                     </Card>
                   </Box>
+
+                  {/* MODAL CUSTOMIZATION */}
+                  <Box paddingBlockStart="400">
+                    <Card>
+                      <BlockStack gap="400">
+                        <Text as="h2" variant="headingMd">Personalización del modal</Text>
+                        <FormLayout>
+                          <TextField
+                            label="Título del formulario"
+                            value={formState.formTitle}
+                            onChange={handleChange("formTitle")}
+                            autoComplete="off"
+                          />
+                          <TextField
+                            label="Subtítulo"
+                            value={formState.formSubtitle}
+                            onChange={handleChange("formSubtitle")}
+                            autoComplete="off"
+                          />
+                          <TextField
+                            label="Texto del botón de envío"
+                            value={formState.submitButtonText}
+                            onChange={handleChange("submitButtonText")}
+                            autoComplete="off"
+                          />
+                          <FormLayout.Group>
+                            <TextField
+                              label="Color del botón"
+                              value={formState.submitButtonColor}
+                              onChange={handleChange("submitButtonColor")}
+                              prefix={
+                                <div style={{
+                                  width: "20px",
+                                  height: "20px",
+                                  borderRadius: "4px",
+                                  background: formState.submitButtonColor,
+                                  border: "1px solid #ddd",
+                                }} />
+                              }
+                              autoComplete="off"
+                            />
+                            <TextField
+                              label="Color del encabezado"
+                              value={formState.modalHeaderColor}
+                              onChange={handleChange("modalHeaderColor")}
+                              prefix={
+                                <div style={{
+                                  width: "20px",
+                                  height: "20px",
+                                  borderRadius: "4px",
+                                  background: formState.modalHeaderColor,
+                                  border: "1px solid #ddd",
+                                }} />
+                              }
+                              autoComplete="off"
+                            />
+                          </FormLayout.Group>
+                          <Checkbox
+                            label="Mostrar imagen del producto"
+                            checked={formState.showProductImage}
+                            onChange={handleChange("showProductImage")}
+                          />
+                          <Checkbox
+                            label="Mostrar precio del producto"
+                            checked={formState.showProductPrice}
+                            onChange={handleChange("showProductPrice")}
+                          />
+                        </FormLayout>
+                      </BlockStack>
+                    </Card>
+                  </Box>
+
+                  {/* SUCCESS/ERROR MESSAGES */}
+                  <Box paddingBlockStart="400">
+                    <Card>
+                      <BlockStack gap="400">
+                        <Text as="h2" variant="headingMd">Mensajes de éxito y error</Text>
+                        <FormLayout>
+                          <FormLayout.Group>
+                            <TextField
+                              label="Título de éxito"
+                              value={formState.successTitle}
+                              onChange={handleChange("successTitle")}
+                              autoComplete="off"
+                            />
+                            <TextField
+                              label="Título de error"
+                              value={formState.errorTitle}
+                              onChange={handleChange("errorTitle")}
+                              autoComplete="off"
+                            />
+                          </FormLayout.Group>
+                          <TextField
+                            label="Mensaje de éxito"
+                            value={formState.successMessage}
+                            onChange={handleChange("successMessage")}
+                            multiline={2}
+                            autoComplete="off"
+                          />
+                          <TextField
+                            label="Mensaje de error"
+                            value={formState.errorMessage}
+                            onChange={handleChange("errorMessage")}
+                            multiline={2}
+                            autoComplete="off"
+                          />
+                        </FormLayout>
+                      </BlockStack>
+                    </Card>
+                  </Box>
                 </Layout.Section>
 
                 {/* PREVIEW */}
@@ -1494,165 +1596,146 @@ export default function Settings() {
             );
           })()}
 
-          {/* TAB: Modal Customization */}
-          {selectedTab === 2 && (
-            <Layout>
-              <Layout.Section>
-                <Card>
-                  <BlockStack gap="400">
-                    <Text as="h2" variant="headingMd">Textos del modal</Text>
-                    <FormLayout>
-                      <TextField
-                        label="Título del formulario"
-                        value={formState.formTitle}
-                        onChange={handleChange("formTitle")}
-                        autoComplete="off"
+          {/* TAB: Shipping Rates */}
+          {selectedTab === 2 && (() => {
+            const shippingRates = (formState.customShippingRates as any[]) || [];
+
+            const addShippingRate = () => {
+              const newRate = {
+                id: `rate_${Date.now()}`,
+                name: "",
+                price: "0.00",
+                condition: "always",
+                minOrder: "",
+                maxOrder: "",
+                provinces: [],
+              };
+              setFormState(prev => ({
+                ...prev,
+                customShippingRates: [...shippingRates, newRate]
+              }));
+            };
+
+            const updateShippingRate = (index: number, updates: any) => {
+              const newRates = [...shippingRates];
+              newRates[index] = { ...newRates[index], ...updates };
+              setFormState(prev => ({ ...prev, customShippingRates: newRates }));
+            };
+
+            const removeShippingRate = (index: number) => {
+              const newRates = shippingRates.filter((_, i) => i !== index);
+              setFormState(prev => ({ ...prev, customShippingRates: newRates }));
+            };
+
+            return (
+              <Layout>
+                <Layout.Section>
+                  <Card>
+                    <BlockStack gap="400">
+                      <BlockStack gap="200">
+                        <Text as="h2" variant="headingLg">Tarifas de envío</Text>
+                        <Text as="p" tone="subdued">
+                          Configura tus tarifas de envío para tu formulario. Todos los precios se utilizarán en la divisa de tu tienda.
+                        </Text>
+                      </BlockStack>
+
+                      <Checkbox
+                        label="Habilitar tarifas de envío"
+                        helpText="Mostrar opciones de envío en el formulario"
+                        checked={formState.enableShipping}
+                        onChange={handleChange("enableShipping")}
                       />
-                      <TextField
-                        label="Subtítulo"
-                        value={formState.formSubtitle}
-                        onChange={handleChange("formSubtitle")}
-                        autoComplete="off"
-                      />
-                      <TextField
-                        label="Texto del botón de envío"
-                        value={formState.submitButtonText}
-                        onChange={handleChange("submitButtonText")}
-                        autoComplete="off"
-                      />
-                    </FormLayout>
-                  </BlockStack>
-                </Card>
-
-                <Box paddingBlockStart="400">
-                  <Card>
-                    <BlockStack gap="400">
-                      <Text as="h2" variant="headingMd">Colores del modal</Text>
-                      <FormLayout>
-                        <FormLayout.Group>
-                          <TextField
-                            label="Color del botón de envío"
-                            value={formState.submitButtonColor}
-                            onChange={handleChange("submitButtonColor")}
-                            prefix={
-                              <div style={{
-                                width: "20px",
-                                height: "20px",
-                                borderRadius: "4px",
-                                background: formState.submitButtonColor,
-                                border: "1px solid #ddd",
-                              }} />
-                            }
-                            autoComplete="off"
-                          />
-                          <TextField
-                            label="Color del encabezado"
-                            value={formState.modalHeaderColor}
-                            onChange={handleChange("modalHeaderColor")}
-                            prefix={
-                              <div style={{
-                                width: "20px",
-                                height: "20px",
-                                borderRadius: "4px",
-                                background: formState.modalHeaderColor,
-                                border: "1px solid #ddd",
-                              }} />
-                            }
-                            autoComplete="off"
-                          />
-                        </FormLayout.Group>
-                        <TextField
-                          label="Color de acento"
-                          value={formState.modalAccentColor}
-                          onChange={handleChange("modalAccentColor")}
-                          prefix={
-                            <div style={{
-                              width: "20px",
-                              height: "20px",
-                              borderRadius: "4px",
-                              background: formState.modalAccentColor,
-                              border: "1px solid #ddd",
-                            }} />
-                          }
-                          autoComplete="off"
-                        />
-                      </FormLayout>
-                    </BlockStack>
-                  </Card>
-                </Box>
-
-                <Box paddingBlockStart="400">
-                  <Card>
-                    <BlockStack gap="400">
-                      <Text as="h2" variant="headingMd">Opciones de visualización</Text>
-                      <FormLayout>
-                        <Checkbox
-                          label="Mostrar imagen del producto"
-                          checked={formState.showProductImage}
-                          onChange={handleChange("showProductImage")}
-                        />
-                        <Checkbox
-                          label="Mostrar precio del producto"
-                          checked={formState.showProductPrice}
-                          onChange={handleChange("showProductPrice")}
-                        />
-                      </FormLayout>
-                    </BlockStack>
-                  </Card>
-                </Box>
-
-                <Box paddingBlockStart="400">
-                  <Card>
-                    <BlockStack gap="400">
-                      <Text as="h2" variant="headingMd">Mensajes de éxito y error</Text>
-                      <FormLayout>
-                        <FormLayout.Group>
-                          <TextField label="Título de éxito" value={formState.successTitle} onChange={handleChange("successTitle")} autoComplete="off" />
-                          <TextField label="Título de error" value={formState.errorTitle} onChange={handleChange("errorTitle")} autoComplete="off" />
-                        </FormLayout.Group>
-                        <TextField
-                          label="Mensaje de éxito"
-                          value={formState.successMessage}
-                          onChange={handleChange("successMessage")}
-                          multiline={2}
-                          autoComplete="off"
-                        />
-                        <TextField
-                          label="Mensaje de error"
-                          value={formState.errorMessage}
-                          onChange={handleChange("errorMessage")}
-                          multiline={2}
-                          autoComplete="off"
-                        />
-                      </FormLayout>
-                    </BlockStack>
-                  </Card>
-                </Box>
-              </Layout.Section>
-
-              {/* PREVIEW: Modal */}
-              <Layout.Section variant="oneThird">
-                <BlockStack gap="400">
-                  <Card>
-                    <BlockStack gap="400">
-                      <InlineStack align="space-between">
-                        <Text as="h2" variant="headingMd">Vista previa del modal</Text>
-                        <Badge tone="info">En tiempo real</Badge>
-                      </InlineStack>
-                      <FormModalPreview formState={formState} previewType="modal" />
                     </BlockStack>
                   </Card>
 
-                  <Card>
-                    <BlockStack gap="400">
-                      <Text as="h2" variant="headingMd">Vista previa: Éxito</Text>
-                      <SuccessPreview formState={formState} />
-                    </BlockStack>
-                  </Card>
-                </BlockStack>
-              </Layout.Section>
-            </Layout>
-          )}
+                  {formState.enableShipping && (
+                    <Box paddingBlockStart="400">
+                      <Card>
+                        <BlockStack gap="400">
+                          <InlineStack align="space-between">
+                            <Text as="h2" variant="headingMd">Tarifas configuradas</Text>
+                            <Button onClick={addShippingRate} icon={PlusIcon}>
+                              Agregar tarifa
+                            </Button>
+                          </InlineStack>
+
+                          {shippingRates.length === 0 ? (
+                            <Box padding="400" background="bg-surface-secondary" borderRadius="200">
+                              <BlockStack gap="200" inlineAlign="center">
+                                <Text as="p" tone="subdued" alignment="center">
+                                  No tienes tarifas de envío configuradas. Agrega una para comenzar.
+                                </Text>
+                                <Button onClick={addShippingRate}>Agregar primera tarifa</Button>
+                              </BlockStack>
+                            </Box>
+                          ) : (
+                            <BlockStack gap="300">
+                              {shippingRates.map((rate, index) => (
+                                <Card key={rate.id}>
+                                  <BlockStack gap="300">
+                                    <InlineStack align="space-between" blockAlign="center">
+                                      <Text as="span" variant="bodyMd" fontWeight="semibold">
+                                        {rate.name || "Sin nombre"}
+                                      </Text>
+                                      <Button
+                                        icon={DeleteIcon}
+                                        tone="critical"
+                                        size="slim"
+                                        onClick={() => removeShippingRate(index)}
+                                      />
+                                    </InlineStack>
+                                    <FormLayout>
+                                      <FormLayout.Group>
+                                        <TextField
+                                          label="Nombre"
+                                          value={rate.name}
+                                          onChange={(value) => updateShippingRate(index, { name: value })}
+                                          placeholder="Ej: Delivery en Santo Domingo"
+                                          autoComplete="off"
+                                        />
+                                        <TextField
+                                          label="Precio"
+                                          value={rate.price}
+                                          onChange={(value) => updateShippingRate(index, { price: value })}
+                                          type="number"
+                                          prefix="$"
+                                          autoComplete="off"
+                                        />
+                                      </FormLayout.Group>
+                                      <Select
+                                        label="Condición"
+                                        options={[
+                                          { value: "always", label: "Siempre visible" },
+                                          { value: "min_order", label: "Monto mínimo de orden" },
+                                          { value: "province", label: "Por provincia" },
+                                        ]}
+                                        value={rate.condition}
+                                        onChange={(value) => updateShippingRate(index, { condition: value })}
+                                      />
+                                      {rate.condition === "min_order" && (
+                                        <TextField
+                                          label="Monto mínimo"
+                                          value={rate.minOrder}
+                                          onChange={(value) => updateShippingRate(index, { minOrder: value })}
+                                          type="number"
+                                          prefix="$"
+                                          autoComplete="off"
+                                        />
+                                      )}
+                                    </FormLayout>
+                                  </BlockStack>
+                                </Card>
+                              ))}
+                            </BlockStack>
+                          )}
+                        </BlockStack>
+                      </Card>
+                    </Box>
+                  )}
+                </Layout.Section>
+              </Layout>
+            );
+          })()}
 
           {/* TAB: Order Configuration */}
           {selectedTab === 3 && (

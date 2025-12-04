@@ -125,8 +125,8 @@ export default function Billing() {
   };
 
   return (
-    <Page backAction={{ content: "Dashboard", url: "/app" }} title="Planes">
-      <TitleBar title="Planes y Facturación" />
+    <Page backAction={{ content: "Dashboard", url: "/app" }} title="Planes de facturación">
+      <TitleBar title="Planes de facturación" />
       <Layout>
         {Object.entries(plans).map(([key, plan]) => (
           <Layout.Section key={key} variant="oneQuarter">
