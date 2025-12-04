@@ -1,3 +1,7 @@
+-- Add Shop WhatsApp redirect configuration
+ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "redirectType" TEXT DEFAULT 'whatsapp';
+ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "customRedirectUrl" TEXT;
+
 -- Add Shop order configuration fields
 ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "orderTagPrefix" TEXT DEFAULT 'cod-form';
 ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "orderTags" TEXT[] DEFAULT ARRAY['pago-contraentrega', 'curetfy']::TEXT[];
@@ -102,6 +106,18 @@ ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "hideAddToCartButton" BOOLEAN DEFAUL
 ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "hideProductBuyNowButton" BOOLEAN DEFAULT false;
 ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "disableOnHomePage" BOOLEAN DEFAULT false;
 ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "disableOnCollectionPages" BOOLEAN DEFAULT false;
+
+-- Add Shop limits settings
+ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "limitToSpecificProducts" BOOLEAN DEFAULT false;
+ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "limitToSpecificCollections" BOOLEAN DEFAULT false;
+ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "excludeProducts" BOOLEAN DEFAULT false;
+ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "excludeCollections" BOOLEAN DEFAULT false;
+ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "excludedProducts" TEXT[] DEFAULT ARRAY[]::TEXT[];
+ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "excludedCollections" TEXT[] DEFAULT ARRAY[]::TEXT[];
+ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "limitToCountries" BOOLEAN DEFAULT false;
+ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "limitedCountries" TEXT[] DEFAULT ARRAY[]::TEXT[];
+ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "orderMinimum" DECIMAL(10, 2);
+ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "orderMaximum" DECIMAL(10, 2);
 
 -- Add Shop advanced settings
 ALTER TABLE "Shop" ADD COLUMN IF NOT EXISTS "autoRedirectWhatsApp" BOOLEAN DEFAULT true;

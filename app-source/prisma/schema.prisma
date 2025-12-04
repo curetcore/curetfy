@@ -40,7 +40,11 @@ model Shop {
   // WHATSAPP CONFIGURATION
   // ==========================================
   whatsappNumber      String?
-  messageTemplate     String?  @default("🛒 *Nuevo Pedido #{{orderNumber}}*\n\n{{#products}}*Producto:* {{title}}\n*Cantidad:* {{quantity}}\n*Precio:* {{price}}\n{{/products}}\n*Total:* {{total}}\n\n*Cliente:* {{name}}\n*Teléfono:* {{phone}}\n*Dirección:* {{address}}\n*Ciudad:* {{city}}\n*Provincia:* {{province}}")
+  messageTemplate     String?  @default("Hola, realicé un pedido el cual me gustaría que sea entregado tomando en cuenta los siguientes datos.\n\nNumero de orden: {order_number}\nTotal de la compra: RD${order_total}\nLo que compré fue: {products_summary_with_quantity}\n\nPersona autorizada de recibir:\nNombre: {first_name} {last_name}\nWhatsApp: {phone}\nCorreo electronico: {email}\n\nDirección de entrega:\n{address}, {province}\n\nAgradezco su pronta atención y confirmación del envío.\n\nSaludos cordiales,\n\n{first_name} {last_name}")
+
+  // Redirect options after order: "shopify" | "custom" | "whatsapp"
+  redirectType        String   @default("whatsapp")
+  customRedirectUrl   String?  // URL for custom redirect
 
   // ==========================================
   // SHOPIFY ORDER CONFIGURATION
@@ -195,6 +199,20 @@ model Shop {
   // Other pages
   disableOnHomePage        Boolean  @default(false)  // Disable on home page
   disableOnCollectionPages Boolean  @default(false)  // Disable on collection pages
+
+  // ==========================================
+  // LIMITS SETTINGS
+  // ==========================================
+  limitToSpecificProducts     Boolean  @default(false)  // Only show for specific products
+  limitToSpecificCollections  Boolean  @default(false)  // Only show for specific collections
+  excludeProducts             Boolean  @default(false)  // Exclude specific products
+  excludeCollections          Boolean  @default(false)  // Exclude specific collections
+  excludedProducts            String[] @default([])     // List of excluded product IDs
+  excludedCollections         String[] @default([])     // List of excluded collection IDs
+  limitToCountries            Boolean  @default(false)  // Only show for specific countries
+  limitedCountries            String[] @default([])     // List of allowed country codes
+  orderMinimum                Decimal? @db.Decimal(10, 2) // Minimum order total
+  orderMaximum                Decimal? @db.Decimal(10, 2) // Maximum order total (null = no limit)
 
   // ==========================================
   // ADVANCED SETTINGS

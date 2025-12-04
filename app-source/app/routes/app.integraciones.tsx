@@ -18,6 +18,8 @@ import {
   Tabs,
   Select,
   Divider,
+  RadioButton,
+  Link,
 } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
@@ -29,6 +31,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const shop = await prisma.shop.findUnique({
     where: { shopDomain: session.shop },
     select: {
+      // WhatsApp
+      whatsappNumber: true,
+      messageTemplate: true,
+      redirectType: true,
+      customRedirectUrl: true,
       // Visibility
       formEnabled: true,
       enableOnProductPages: true,
@@ -39,6 +46,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       hideProductBuyNowButton: true,
       disableOnHomePage: true,
       disableOnCollectionPages: true,
+      // Limits
+      limitToSpecificProducts: true,
+      limitToSpecificCollections: true,
+      excludeProducts: true,
+      excludeCollections: true,
+      limitToCountries: true,
+      orderMinimum: true,
+      orderMaximum: true,
       // Order options
       useCodPaymentMethod: true,
       createDraftOrder: true,
@@ -78,6 +93,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     'hideProductBuyNowButton',
     'disableOnHomePage',
     'disableOnCollectionPages',
+    // Limits
+    'limitToSpecificProducts',
+    'limitToSpecificCollections',
+    'excludeProducts',
+    'excludeCollections',
+    'limitToCountries',
     // Order options
     'useCodPaymentMethod',
     'createDraftOrder',
@@ -113,10 +134,43 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     updateData.pixelId = pixelId as string;
   }
 
+  const whatsappNumber = formData.get('whatsappNumber');
+  if (whatsappNumber !== null) {
+    updateData.whatsappNumber = whatsappNumber as string;
+  }
+
+  const messageTemplate = formData.get('messageTemplate');
+  if (messageTemplate !== null) {
+    updateData.messageTemplate = messageTemplate as string;
+  }
+
+  const redirectType = formData.get('redirectType');
+  if (redirectType !== null) {
+    updateData.redirectType = redirectType as string;
+  }
+
+  const customRedirectUrl = formData.get('customRedirectUrl');
+  if (customRedirectUrl !== null) {
+    updateData.customRedirectUrl = customRedirectUrl as string;
+  }
+
   // Number fields
   const redirectDelay = formData.get('redirectDelay');
   if (redirectDelay) {
     updateData.redirectDelay = parseInt(redirectDelay as string, 10) || 2000;
+  }
+
+  // Decimal fields (order limits)
+  const orderMinimum = formData.get('orderMinimum');
+  if (orderMinimum !== null) {
+    const val = parseFloat(orderMinimum as string);
+    updateData.orderMinimum = isNaN(val) || val <= 0 ? null : val;
+  }
+
+  const orderMaximum = formData.get('orderMaximum');
+  if (orderMaximum !== null) {
+    const val = parseFloat(orderMaximum as string);
+    updateData.orderMaximum = isNaN(val) || val <= 0 ? null : val;
   }
 
   await prisma.shop.update({
@@ -136,6 +190,11 @@ export default function Integraciones() {
   const [selectedTab, setSelectedTab] = useState(0);
 
   const [formState, setFormState] = useState({
+    // WhatsApp
+    whatsappNumber: shop?.whatsappNumber || "",
+    messageTemplate: shop?.messageTemplate || "Hola, realicé un pedido el cual me gustaría que sea entregado tomando en cuenta los siguientes datos.\n\nNumero de orden: {order_number}\nTotal de la compra: RD${order_total}\nLo que compré fue: {products_summary_with_quantity}\n\nPersona autorizada de recibir:\nNombre: {first_name} {last_name}\nWhatsApp: {phone}\nCorreo electronico: {email}\n\nDirección de entrega:\n{address}, {province}\n\nAgradezco su pronta atención y confirmación del envío.\n\nSaludos cordiales,\n\n{first_name} {last_name}",
+    redirectType: shop?.redirectType || "whatsapp",
+    customRedirectUrl: shop?.customRedirectUrl || "",
     // Visibility
     formEnabled: shop?.formEnabled ?? true,
     enableOnProductPages: shop?.enableOnProductPages ?? true,
@@ -146,6 +205,14 @@ export default function Integraciones() {
     hideProductBuyNowButton: shop?.hideProductBuyNowButton ?? false,
     disableOnHomePage: shop?.disableOnHomePage ?? false,
     disableOnCollectionPages: shop?.disableOnCollectionPages ?? false,
+    // Limits
+    limitToSpecificProducts: shop?.limitToSpecificProducts ?? false,
+    limitToSpecificCollections: shop?.limitToSpecificCollections ?? false,
+    excludeProducts: shop?.excludeProducts ?? false,
+    excludeCollections: shop?.excludeCollections ?? false,
+    limitToCountries: shop?.limitToCountries ?? false,
+    orderMinimum: shop?.orderMinimum ? String(shop.orderMinimum) : "",
+    orderMaximum: shop?.orderMaximum ? String(shop.orderMaximum) : "",
     // Order options
     useCodPaymentMethod: shop?.useCodPaymentMethod ?? true,
     createDraftOrder: shop?.createDraftOrder ?? true,
@@ -171,6 +238,11 @@ export default function Integraciones() {
   const handleSubmit = useCallback(() => {
     const formData = new FormData();
 
+    // WhatsApp
+    formData.append('whatsappNumber', formState.whatsappNumber);
+    formData.append('messageTemplate', formState.messageTemplate);
+    formData.append('redirectType', formState.redirectType);
+    formData.append('customRedirectUrl', formState.customRedirectUrl);
     // Visibility
     formData.append('formEnabled', String(formState.formEnabled));
     formData.append('enableOnProductPages', String(formState.enableOnProductPages));
@@ -181,6 +253,14 @@ export default function Integraciones() {
     formData.append('hideProductBuyNowButton', String(formState.hideProductBuyNowButton));
     formData.append('disableOnHomePage', String(formState.disableOnHomePage));
     formData.append('disableOnCollectionPages', String(formState.disableOnCollectionPages));
+    // Limits
+    formData.append('limitToSpecificProducts', String(formState.limitToSpecificProducts));
+    formData.append('limitToSpecificCollections', String(formState.limitToSpecificCollections));
+    formData.append('excludeProducts', String(formState.excludeProducts));
+    formData.append('excludeCollections', String(formState.excludeCollections));
+    formData.append('limitToCountries', String(formState.limitToCountries));
+    formData.append('orderMinimum', formState.orderMinimum);
+    formData.append('orderMaximum', formState.orderMaximum);
     // Order options
     formData.append('useCodPaymentMethod', String(formState.useCodPaymentMethod));
     formData.append('createDraftOrder', String(formState.createDraftOrder));
@@ -204,9 +284,30 @@ export default function Integraciones() {
   }, [formState, submit]);
 
   const tabs = [
+    { id: "whatsapp", content: "WhatsApp", accessibilityLabel: "WhatsApp" },
     { id: "visibility", content: "Visibilidad", accessibilityLabel: "Visibilidad" },
     { id: "config", content: "Configuración", accessibilityLabel: "Configuración" },
     { id: "integrations", content: "Integraciones", accessibilityLabel: "Integraciones" },
+  ];
+
+  const whatsappPlaceholders = [
+    { code: "{products_summary_with_quantity}", desc: "para insertar todos los productos en el pedido con sus respectivas cantidades" },
+    { code: "{product_title}", desc: "para insertar el título del producto" },
+    { code: "{product_quantity}", desc: "para insertar la cantidad del producto" },
+    { code: "{order_id}", desc: "para insertar el ID del pedido" },
+    { code: "{order_number}", desc: "para insertar el número o el nombre del pedido" },
+    { code: "{order_total}", desc: "para insertar el total del pedido" },
+    { code: "{first_name}", desc: "para insertar el nombre" },
+    { code: "{last_name}", desc: "para insertar el apellido" },
+    { code: "{phone}", desc: "para insertar el número de teléfono" },
+    { code: "{email}", desc: "para insertar la dirección de correo electrónico" },
+    { code: "{address}", desc: "para insertar la dirección" },
+    { code: "{address2}", desc: "para insertar la dirección 2" },
+    { code: "{province}", desc: "para insertar la provincia" },
+    { code: "{city}", desc: "para insertar la ciudad" },
+    { code: "{zip_code}", desc: "para insertar el código postal" },
+    { code: "{order_note}", desc: "para insertar la nota de pedido" },
+    { code: "{shipping_rate_name}", desc: "para insertar el nombre de la tarifa de envío seleccionada por el cliente" },
   ];
 
   return (
@@ -231,8 +332,119 @@ export default function Integraciones() {
 
       <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab}>
         <Box paddingBlockStart="400">
-          {/* TAB: Visibilidad */}
+          {/* TAB: WhatsApp */}
           {selectedTab === 0 && (
+            <Layout>
+              <Layout.Section>
+                {/* Opciones de redirección */}
+                <Card>
+                  <BlockStack gap="400">
+                    <BlockStack gap="200">
+                      <Text as="h2" variant="headingMd">Redirección después del pedido</Text>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        Elige a dónde redirigir a tus clientes después de completar un pedido.
+                      </Text>
+                    </BlockStack>
+                    <BlockStack gap="300">
+                      <RadioButton
+                        label="Redirige a tus clientes a la página de agradecimiento predeterminada de Shopify"
+                        id="redirect-shopify"
+                        name="redirectType"
+                        checked={formState.redirectType === "shopify"}
+                        onChange={() => handleChange("redirectType")("shopify")}
+                      />
+                      <RadioButton
+                        label="Redirige a tus clientes a una página personalizada o enlace"
+                        id="redirect-custom"
+                        name="redirectType"
+                        checked={formState.redirectType === "custom"}
+                        onChange={() => handleChange("redirectType")("custom")}
+                      />
+                      {formState.redirectType === "custom" && (
+                        <Box paddingInlineStart="600">
+                          <TextField
+                            label="URL de redirección personalizada"
+                            value={formState.customRedirectUrl}
+                            onChange={handleChange("customRedirectUrl")}
+                            placeholder="https://mitienda.com/gracias"
+                            autoComplete="off"
+                          />
+                        </Box>
+                      )}
+                      <RadioButton
+                        label="Redirigir a los clientes a un chat de WhatsApp contigo"
+                        id="redirect-whatsapp"
+                        name="redirectType"
+                        checked={formState.redirectType === "whatsapp"}
+                        onChange={() => handleChange("redirectType")("whatsapp")}
+                      />
+                    </BlockStack>
+                  </BlockStack>
+                </Card>
+
+                {/* Configuración de WhatsApp */}
+                {formState.redirectType === "whatsapp" && (
+                  <Box paddingBlockStart="400">
+                    <Card>
+                      <BlockStack gap="400">
+                        <Text as="h2" variant="headingMd">Configuración de WhatsApp</Text>
+                        <FormLayout>
+                          <TextField
+                            label="Tu número de teléfono de WhatsApp"
+                            value={formState.whatsappNumber}
+                            onChange={handleChange("whatsappNumber")}
+                            placeholder="18295795988"
+                            autoComplete="off"
+                            helpText="Importante: incluye el código de tu país en el número de teléfono. Ejemplo: +576264292018"
+                          />
+                          <TextField
+                            label="Mensaje de WhatsApp precargado"
+                            value={formState.messageTemplate}
+                            onChange={handleChange("messageTemplate")}
+                            multiline={12}
+                            autoComplete="off"
+                          />
+                        </FormLayout>
+                      </BlockStack>
+                    </Card>
+                  </Box>
+                )}
+
+                {/* Códigos disponibles */}
+                {formState.redirectType === "whatsapp" && (
+                  <Box paddingBlockStart="400">
+                    <Card>
+                      <BlockStack gap="400">
+                        <Text as="h2" variant="headingMd">Códigos disponibles</Text>
+                        <Text as="p" variant="bodySm" tone="subdued">
+                          Usa estos códigos en tu mensaje de WhatsApp para insertar información del pedido automáticamente:
+                        </Text>
+                        <BlockStack gap="100">
+                          {whatsappPlaceholders.map((placeholder, index) => (
+                            <InlineStack key={index} gap="200" wrap={false}>
+                              <Box minWidth="280px">
+                                <Text as="span" variant="bodySm" fontWeight="semibold">
+                                  <code style={{ backgroundColor: "#f4f4f4", padding: "2px 6px", borderRadius: "4px" }}>
+                                    {placeholder.code}
+                                  </code>
+                                </Text>
+                              </Box>
+                              <Text as="span" variant="bodySm" tone="subdued">
+                                {placeholder.desc}
+                              </Text>
+                            </InlineStack>
+                          ))}
+                        </BlockStack>
+                      </BlockStack>
+                    </Card>
+                  </Box>
+                )}
+              </Layout.Section>
+            </Layout>
+          )}
+
+          {/* TAB: Visibilidad */}
+          {selectedTab === 1 && (
             <Layout>
               <Layout.Section>
                 {/* Estado del formulario */}
@@ -347,12 +559,85 @@ export default function Integraciones() {
                     </Card>
                   </Box>
                 )}
+
+                {/* Límites */}
+                {formState.formEnabled && (
+                  <Box paddingBlockStart="400">
+                    <Card>
+                      <BlockStack gap="400">
+                        <BlockStack gap="200">
+                          <Text as="h2" variant="headingMd">Limita el formulario a productos, colecciones, países y totales</Text>
+                          <Text as="p" variant="bodySm" tone="subdued">
+                            Aquí puedes elegir mostrar tu formulario sólo para clientes en países específicos o para productos y colecciones específicas. También puedes limitar el formulario COD según el total del pedido.
+                          </Text>
+                        </BlockStack>
+                        <BlockStack gap="300">
+                          <Checkbox
+                            label="Habilita el formulario sólo para productos y colecciones específicas"
+                            helpText="El formulario solo aparecerá en los productos y colecciones que selecciones."
+                            checked={formState.limitToSpecificProducts || formState.limitToSpecificCollections}
+                            onChange={(checked) => {
+                              handleChange("limitToSpecificProducts")(checked);
+                              handleChange("limitToSpecificCollections")(checked);
+                            }}
+                          />
+                          <Checkbox
+                            label="Deshabilita tu formulario para uno o más productos y colecciones"
+                            helpText="Excluye productos o colecciones específicas donde no quieres mostrar el formulario."
+                            checked={formState.excludeProducts || formState.excludeCollections}
+                            onChange={(checked) => {
+                              handleChange("excludeProducts")(checked);
+                              handleChange("excludeCollections")(checked);
+                            }}
+                          />
+                          <Checkbox
+                            label="Habilitar el formulario sólo para países específicos"
+                            helpText="El formulario solo estará disponible para visitantes de los países que configures."
+                            checked={formState.limitToCountries}
+                            onChange={handleChange("limitToCountries")}
+                          />
+                          <Divider />
+                          <BlockStack gap="200">
+                            <Text as="p" variant="bodySm">
+                              Tu formulario sólo estará activo si el total del pedido está entre:
+                            </Text>
+                            <InlineStack gap="400">
+                              <div style={{ flex: 1 }}>
+                                <TextField
+                                  label="Mínimo"
+                                  value={formState.orderMinimum}
+                                  onChange={handleChange("orderMinimum")}
+                                  type="number"
+                                  placeholder="0.00"
+                                  prefix="$"
+                                  autoComplete="off"
+                                />
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <TextField
+                                  label="Máximo"
+                                  value={formState.orderMaximum}
+                                  onChange={handleChange("orderMaximum")}
+                                  type="number"
+                                  placeholder="Sin límite"
+                                  prefix="$"
+                                  autoComplete="off"
+                                  helpText="Deja vacío para sin límite"
+                                />
+                              </div>
+                            </InlineStack>
+                          </BlockStack>
+                        </BlockStack>
+                      </BlockStack>
+                    </Card>
+                  </Box>
+                )}
               </Layout.Section>
             </Layout>
           )}
 
           {/* TAB: Configuración */}
-          {selectedTab === 1 && (
+          {selectedTab === 2 && (
             <Layout>
               <Layout.Section>
                 {/* Opciones de pedido */}
@@ -454,7 +739,7 @@ export default function Integraciones() {
           )}
 
           {/* TAB: Integraciones */}
-          {selectedTab === 2 && (
+          {selectedTab === 3 && (
             <Layout>
               <Layout.Section>
                 {/* Facebook Pixel */}
