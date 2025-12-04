@@ -2339,11 +2339,15 @@ export default function Settings() {
                             <InlineStack align="space-between" blockAlign="center">
                               <Text as="h2" variant="headingSm">Tarifas de envío</Text>
                               <InlineStack gap="200">
-                                {shopifyShippingZones && shopifyShippingZones.length > 0 && (
-                                  <Button onClick={importFromShopify}>
-                                    Importar de Shopify ({shopifyShippingZones.length})
-                                  </Button>
-                                )}
+                                <Button
+                                  onClick={importFromShopify}
+                                  disabled={!shopifyShippingZones || shopifyShippingZones.length === 0}
+                                >
+                                  {shopifyShippingZones && shopifyShippingZones.length > 0
+                                    ? `Importar de Shopify (${shopifyShippingZones.length})`
+                                    : "Importar de Shopify"
+                                  }
+                                </Button>
                                 <Button onClick={addShippingRate} icon={PlusIcon} variant="primary">
                                   Agregar tarifa
                                 </Button>
