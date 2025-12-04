@@ -84,13 +84,13 @@ model Shop {
   // ==========================================
   // FORM PLACEHOLDERS (Editable)
   // ==========================================
-  placeholderName     String   @default("Ej: Juan Pérez")
-  placeholderPhone    String   @default("Ej: 809-555-1234")
-  placeholderEmail    String   @default("Ej: juan@email.com")
+  placeholderName     String   @default("Juan Pérez")
+  placeholderPhone    String   @default("809-555-1234")
+  placeholderEmail    String   @default("juan@email.com")
   placeholderAddress  String   @default("Calle, número, sector...")
-  placeholderCity     String   @default("Ej: Santo Domingo")
+  placeholderCity     String   @default("Santo Domingo")
   placeholderNotes    String   @default("Instrucciones especiales...")
-  placeholderPostal   String   @default("Ej: 10101")
+  placeholderPostal   String   @default("10101")
 
   // ==========================================
   // FORM FIELDS VISIBILITY
@@ -119,6 +119,7 @@ model Shop {
   submitButtonText    String   @default("Enviar pedido por WhatsApp")
   submitButtonColor   String   @default("#25D366")
   modalHeaderColor    String   @default("#000000")
+  modalHeaderTextColor String  @default("#ffffff")
   modalAccentColor    String   @default("#25D366")
   showProductImage    Boolean  @default(true)
   showProductPrice    Boolean  @default(true)

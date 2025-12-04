@@ -364,7 +364,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     'placeholderName', 'placeholderPhone', 'placeholderEmail', 'placeholderAddress',
     'placeholderCity', 'placeholderNotes', 'placeholderPostal',
     'formTitle', 'formSubtitle', 'submitButtonText', 'submitButtonColor',
-    'modalHeaderColor', 'modalAccentColor',
+    'modalHeaderColor', 'modalHeaderTextColor', 'modalAccentColor',
     'successTitle', 'successMessage', 'errorTitle', 'errorMessage',
     'defaultCountry', 'pixelId',
     'buttonText', 'buttonColor', 'buttonTextColor',
@@ -923,7 +923,7 @@ function FormModalPreview({
       {/* Modal Header */}
       <div style={{
         background: formState.modalHeaderColor || "#000",
-        color: "#fff",
+        color: formState.modalHeaderTextColor || "#fff",
         padding: "16px 20px",
         display: "flex",
         justifyContent: "space-between",
@@ -1337,6 +1337,7 @@ export default function Settings() {
     submitButtonText: shop?.submitButtonText || "Enviar pedido por WhatsApp",
     submitButtonColor: shop?.submitButtonColor || "#25D366",
     modalHeaderColor: shop?.modalHeaderColor || "#075E54",
+    modalHeaderTextColor: shop?.modalHeaderTextColor || "#ffffff",
     modalAccentColor: shop?.modalAccentColor || "#25D366",
     showProductImage: shop?.showProductImage ?? true,
     showProductPrice: shop?.showProductPrice ?? true,
@@ -1851,6 +1852,11 @@ export default function Settings() {
                               label="Color del encabezado"
                               value={formState.modalHeaderColor}
                               onChange={handleChange("modalHeaderColor")}
+                            />
+                            <ColorPickerField
+                              label="Texto del encabezado"
+                              value={formState.modalHeaderTextColor}
+                              onChange={handleChange("modalHeaderTextColor")}
                             />
                           </InlineStack>
                           <Checkbox
