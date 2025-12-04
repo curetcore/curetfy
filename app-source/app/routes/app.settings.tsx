@@ -1138,6 +1138,7 @@ export default function Settings() {
   const [expandedFields, setExpandedFields] = useState<Set<string>>(new Set());
   const [fieldHistory, setFieldHistory] = useState<any[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [fieldPickerActive, setFieldPickerActive] = useState(false);
 
   // DnD sensors
   const sensors = useSensors(
@@ -1475,9 +1476,6 @@ export default function Settings() {
 
             const collapseAll = () => setExpandedFields(new Set());
             const expandAll = () => setExpandedFields(new Set(allElements.map((el: any) => el.id)));
-
-            // Field picker popover state
-            const [fieldPickerActive, setFieldPickerActive] = useState(false);
 
             // Action list items with icons
             const fieldActionItems = [
