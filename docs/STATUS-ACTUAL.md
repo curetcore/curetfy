@@ -1,6 +1,6 @@
 # Estado Actual del Proyecto - Curetfy COD Form
 
-> Última actualización: 2025-12-04
+> Última actualización: 2025-12-04 (v5)
 
 ## Resumen Ejecutivo
 
@@ -21,26 +21,26 @@
 
 ### 2. Dashboard (App Embebida)
 - [x] Ruta principal con redirect (`_index.tsx`)
-- [x] Página de configuración (`app.settings.tsx`)
+- [x] Página de configuración (`app.settings.tsx`) **- NUEVA v3.0**
 - [x] Página de órdenes (`app.orders.tsx`)
 - [x] Página de billing (`app.billing.tsx`)
 - [x] Integración con Polaris UI
 
 ### 3. API
 - [x] Endpoint crear orden (`api.create-order.tsx`)
-- [x] Endpoint configuración (`api.config.tsx`)
+- [x] Endpoint configuración (`api.config.tsx`) **- NUEVO**
 - [x] Webhooks GDPR completos:
   - `customers/data_request`
   - `customers/redact`
   - `shop/redact`
   - `app/uninstalled`
 
-### 4. Theme App Extension (v4) - MEJORADA
+### 4. Theme App Extension (v5) - COMPLETAMENTE CONFIGURABLE
 - [x] **COD Buy Button** - Bloque manual para producto
 - [x] **COD Auto Button** - App Embed auto-instalable
 - [x] Soporte de carrito completo (múltiples productos)
 - [x] Modal profesional estilo Shopify
-- [x] Configuraciones disponibles:
+- [x] **Configuraciones en Theme Editor (botón):**
   - Texto del botón
   - Tamaño y peso de fuente
   - Color principal y texto
@@ -56,8 +56,35 @@
 - [x] CSS profesional con variables
 - [x] Responsive (modal slide-up en móvil)
 - [x] Detecta 9+ selectores de botón "Add to Cart"
+- [x] **JavaScript v3.0** - Carga configuración dinámica desde API
 
-### 5. Archivos de la Extensión
+### 5. Sistema de Configuración Completo (NUEVO)
+
+#### 5.1 Página de Settings (6 pestañas)
+- **WhatsApp**: Número, plantilla de mensaje con variables
+- **Formulario**: Labels y placeholders editables
+- **Campos**: Visibilidad y requeridos (email, ciudad, provincia, código postal, notas, cantidad)
+- **Modal**: Título, subtítulo, colores, imagen/precio producto
+- **Pedidos**: Tags, prefijo, draft order, nota
+- **Avanzado**: Redirect automático, delay, analytics, Facebook Pixel
+
+#### 5.2 Variables de Plantilla WhatsApp
+```
+{{orderNumber}}, {{name}}, {{phone}}, {{email}}, {{address}},
+{{city}}, {{province}}, {{country}}, {{postalCode}}, {{notes}},
+{{products}}, {{title}}, {{quantity}}, {{price}}, {{total}}
+```
+
+#### 5.3 Países y Provincias Soportados
+- DO (República Dominicana) - 32 provincias
+- CO (Colombia) - 20 departamentos
+- MX (México) - 20 estados
+- PE (Perú) - 10 regiones
+- CL (Chile) - 10 regiones
+- AR (Argentina) - 10 provincias
+- EC (Ecuador) - 10 provincias
+
+### 6. Archivos de la Extensión
 
 ```
 extensions/cod-form/
@@ -67,8 +94,19 @@ extensions/cod-form/
 │   └── auto-button.liquid    # App Embed (auto-instala)
 └── assets/
     ├── cod-form.css          # Estilos profesionales
-    └── cod-form.js           # Lógica del formulario
+    └── cod-form.js           # Lógica v3.0 (fetch config desde API)
 ```
+
+### 7. Base de Datos (Prisma Schema)
+40+ campos de configuración incluyendo:
+- Configuración WhatsApp
+- Configuración de pedidos Shopify
+- Labels y placeholders del formulario
+- Visibilidad y campos requeridos
+- Personalización del modal
+- Mensajes de éxito/error
+- Configuración de países
+- Ajustes avanzados
 
 ---
 
@@ -131,22 +169,27 @@ scopes = "read_products,write_orders,..."
 
 ## Próximos Pasos
 
-### Inmediato (Para Pruebas)
-1. [ ] Probar extensión en tienda de desarrollo
-2. [ ] Verificar auto-instalación del App Embed
-3. [ ] Probar soporte de carrito con múltiples productos
-4. [ ] Verificar animaciones funcionan
-5. [ ] Probar en móvil (modal slide-up)
+### ACCIÓN REQUERIDA: Rebuild en Easypanel
+**El código está en GitHub pero el contenedor necesita rebuild:**
+
+1. Ir a https://easypanel.curetcore.com
+2. Proyecto: `apps` → Servicio: `curetfy`
+3. Click en "Deploy" o "Rebuild" para obtener el nuevo código
+4. Verificar que el build complete sin errores
+
+### Después del Rebuild
+1. [ ] Verificar que `/api/config?shop=test` responda correctamente
+2. [ ] Probar la página de Settings en el admin de Shopify
+3. [ ] Configurar número WhatsApp
+4. [ ] Probar flujo completo: formulario → orden → WhatsApp
 
 ### Fase 1 - MVP (Pendiente)
-1. [ ] Configurar número WhatsApp en settings
-2. [ ] Probar flujo completo: formulario → orden → WhatsApp
-3. [ ] Implementar planes de billing funcionales
-4. [ ] Agregar analytics básicos
-5. [ ] Crear screenshots para App Store (1600x900)
-6. [ ] Crear ícono de app (1200x1200)
-7. [ ] Escribir descripción y política de privacidad
-8. [ ] Submit a Shopify App Store
+1. [ ] Implementar planes de billing funcionales
+2. [ ] Agregar analytics básicos
+3. [ ] Crear screenshots para App Store (1600x900)
+4. [ ] Crear ícono de app (1200x1200)
+5. [ ] Escribir descripción y política de privacidad
+6. [ ] Submit a Shopify App Store
 
 ### Fase 2 - Built for Shopify
 - Ver `docs/FASE-2-BUILT-FOR-SHOPIFY.md`
