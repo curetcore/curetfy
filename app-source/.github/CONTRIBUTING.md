@@ -1,41 +1,49 @@
-# How to contribute
+# Cómo contribuir
 
-The Shopify Remix app template is an open source project. We want to make it as easy and transparent as possible to contribute. If we are missing anything or can make the process easier in any way, please let us know by [opening an issue](https://github.com/Shopify/shopify-app-template-remix/issues/new).
+Curetfy COD Form es un proyecto privado de CURET / Curetcore. Este documento describe el proceso para contribuir al proyecto.
 
-## Code of conduct
+## Código de conducta
 
-We expect all participants to read our [code of conduct](https://github.com/Shopify/shopify-app-template-remix/.github/CODE_OF_CONDUCT.md) to understand which actions are and aren’t tolerated.
+Todos los participantes deben leer nuestro [código de conducta](CODE_OF_CONDUCT.md) para entender qué acciones son aceptables.
 
-## Open development
+## Reportar bugs
 
-All work on the Shopify Remix app template happens directly on GitHub. Both team members and external contributors send pull requests which go through the same review process.
+### Dónde encontrar issues conocidos
 
-## Bugs
+Todos los issues se rastrean en GitHub con la etiqueta [bug](https://github.com/curetcore/curetfy/labels/bug).
 
-### Where to find known issues
+### Reportar nuevos issues
 
-We track all of our issues in GitHub and [bugs](https://github.com/Shopify/shopify-app-template-remix/labels/Bug) are labeled accordingly. If you are planning to work on an issue, avoid ones which already have an assignee, where someone has commented within the last two weeks they are working on it, or the issue is labeled with [fix in progress](https://github.com/Shopify/shopify-app-template-remix/labels/fix%20in%20progress). We will do our best to communicate when an issue is being worked on internally.
+Para reducir duplicados, busca en los issues abiertos antes de crear uno nuevo. Al [abrir un issue](https://github.com/curetcore/curetfy/issues/new), completa la plantilla lo más posible.
 
-### Reporting new issues
+## Pull requests
 
-To reduce duplicates, look through open issues before filing one. When [opening an issue](https://github.com/Shopify/shopify-app-template-remix/issues/new?template=ISSUE.md), complete as much of the template as possible.
+### Antes de enviar un PR
 
-## Your first pull request
+1. Asegúrate de que el código compila (`npm run build`)
+2. Prueba los cambios en una tienda de desarrollo
+3. Verifica que el deploy a Shopify funciona (`npm run deploy`)
+4. Actualiza la documentación si es necesario
+5. Agrega una entrada al CHANGELOG.md
 
-Working on your first pull request? You can learn how from this free video series:
+### Proceso de revisión
 
-[How to Contribute to an Open Source Project on GitHub](https://egghead.io/series/how-to-contribute-to-an-open-source-project-on-github)
+Tu PR será revisado y se puede:
+- Aprobar y mergear
+- Solicitar cambios
+- Cerrar con una explicación
 
-To help you get familiar with our contribution process, we have a list of [good first issues](https://github.com/Shopify/shopify-app-template-remix/labels/good%20first%20issue) that contain bugs with limited scope. This is a great place to get started.
+## Estilo de código
 
-If you decide to fix an issue, please check the comment thread in case somebody is already working on a fix. If nobody is working on it, leave a comment stating that you intend to work on it.
+- Usar TypeScript donde sea posible
+- Seguir las convenciones de Polaris para componentes de UI
+- Usar nombres descriptivos en español para variables de negocio
+- Comentar código complejo
 
-If somebody claims an issue but doesn’t follow up for more than two weeks, it’s fine to take it over but still leave a comment stating that you intend to work on it.
+## Estructura del proyecto
 
-### Sending a pull request
-
-We’ll review your pull request and either merge it, request changes to it, or close it with an explanation. We’ll do our best to provide updates and feedback throughout the process.
-
-### Contributor License Agreement (CLA)
-
-Each contributor is required to [sign a CLA](https://cla.shopify.com/). This process is automated as part of your first pull request and is only required once. If any contributor has not signed or does not have an associated GitHub account, the CLA check will fail and the pull request is unable to be merged.
+```
+app/routes/      # Rutas de Remix
+extensions/      # Extensiones de tema de Shopify
+prisma/          # Schema de base de datos
+```

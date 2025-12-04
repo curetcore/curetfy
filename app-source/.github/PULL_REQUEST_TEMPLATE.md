@@ -1,34 +1,36 @@
 <!--
-  ☝️How to write a good PR title:
-  - Prefix it with [Feature] (if applicable)
-  - Start with a verb, for example: Add, Delete, Improve, Fix…
-  - Give as much context as necessary and as little as possible
-  - Prefix it with [WIP] while it’s a work in progress
+  Cómo escribir un buen título de PR:
+  - Usar prefijo: [Feature], [Fix], [Refactor], [Docs]
+  - Empezar con un verbo: Agregar, Eliminar, Mejorar, Corregir...
+  - Dar contexto suficiente pero conciso
+  - Usar [WIP] si aún está en progreso
 -->
 
-### WHY are these changes introduced?
+### ¿POR QUÉ estos cambios?
 
-Fixes #0000 <!-- link to issue if one exists -->
+Fixes #0000 <!-- link al issue si existe -->
 
 <!--
-  Context about the problem that’s being addressed.
+  Contexto sobre el problema que se está resolviendo.
 -->
 
-### WHAT is this pull request doing?
+### ¿QUÉ hace este PR?
 
 <!--
-  Summary of the changes committed.
-  Before / after screenshots appreciated for UI changes.
+  Resumen de los cambios.
+  Capturas de antes/después para cambios de UI.
 -->
 
-### Test this PR
+### Cómo probar
 
-```bash
-shopify app init --template=https://github.com/Shopify/shopify-app-template-remix#<your-branch-name>
-```
+1.
+2.
+3.
 
 ### Checklist
 
-- [ ] I have made changes to the `README.md` file and other related documentation, if applicable
-- [ ] I have added an entry to `CHANGELOG.md`
-- [ ] I'm aware I need to create a new release when this PR is merged
+- [ ] He actualizado el README.md si aplica
+- [ ] He agregado una entrada en CHANGELOG.md
+- [ ] He probado en una tienda de desarrollo
+- [ ] He verificado que el build pasa sin errores
+- [ ] He verificado el deploy a Shopify

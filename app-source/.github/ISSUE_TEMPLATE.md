@@ -1,46 +1,45 @@
 ---
-name: '🐛 Bug Report'
-about: Something isn't working
-labels: 'Type: Bug 🐛'
+name: 'Bug Report'
+about: Reportar un problema con Curetfy COD Form
+labels: 'bug'
 ---
 
-# Issue summary
+# Resumen del problema
 
-Before opening this issue, I have:
+Antes de abrir este issue, he:
 
-- [ ] Upgraded to the latest version of the `@shopify` packages
-  - Affected `@shopify/shopify-*` package and version:
-  - Node version:
-  - Operating system:
-- [ ] Set `{ logger: { level: LogSeverity.Debug } }` in my configuration
-- [ ] Found a reliable way to reproduce the problem that indicates it's a problem with the package
-- [ ] Looked for similar issues in this repository
-- [ ] Checked that this isn't an issue with a Shopify API
-  - If it is, please create a post in the [Shopify community forums](https://community.shopify.com/c/partners-and-developers/ct-p/appdev) or report it to [Shopify Partner Support](https://help.shopify.com/en/support/partners/org-select)
+- [ ] Verificado que estoy usando la última versión de la app
+- [ ] Probado en una tienda de desarrollo limpia
+- [ ] Buscado issues similares en este repositorio
+- [ ] Verificado que no es un problema con la API de Shopify
 
-<!--
-Write a short description of the issue here.
+## Información del entorno
 
-We can only fix issues for which there is a clear reproduction scenario.
-The more context you can provide, the easier it becomes for us to investigate and fix the issue.
--->
+- Versión de la app:
+- Tema de Shopify:
+- Navegador:
+- Dispositivo (desktop/móvil):
 
-## Expected behavior
+## Comportamiento esperado
 
-What do you think should happen?
+¿Qué debería pasar?
 
-## Actual behavior
+## Comportamiento actual
 
-What actually happens?
+¿Qué pasa realmente?
 
-## Steps to reproduce the problem
+## Pasos para reproducir
 
 1.
-1.
-1.
+2.
+3.
 
-## Debug logs
+## Capturas de pantalla
+
+<!-- Si aplica, agregar capturas de pantalla -->
+
+## Logs de consola
 
 ```
-// Paste any relevant logs here
+// Pegar logs relevantes aquí
 ```
