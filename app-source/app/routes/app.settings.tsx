@@ -25,6 +25,7 @@ import {
   ButtonGroup,
   Collapsible,
   Tooltip,
+  EmptyState,
 } from "@shopify/polaris";
 import {
   PersonIcon,
@@ -414,92 +415,55 @@ function SortableFieldCard({ element, index, isExpanded, onToggle, onUpdate, onR
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
-      <div style={{
-        borderRadius: "12px",
-        border: `1px solid ${isDragging ? colors.border : "#e3e3e3"}`,
-        borderLeft: `4px solid ${colors.border}`,
-        background: isDragging ? colors.bg : "#ffffff",
-        overflow: "hidden",
-        transition: "all 0.2s ease",
-        boxShadow: isDragging ? "0 8px 24px rgba(0,0,0,0.15)" : "0 1px 3px rgba(0,0,0,0.08)",
-      }}>
+    <div ref={setNodeRef} style={style} data-field-id={element.id}>
+      <Card padding="0">
         {/* Header - Always visible */}
-        <div
-          style={{
-            padding: "12px 16px",
-            cursor: "pointer",
-            background: isExpanded ? colors.bg : "transparent",
-            transition: "background 0.2s ease",
-          }}
-          onClick={onToggle}
+        <Box
+          padding="300"
+          background={isExpanded ? "bg-surface-secondary" : "bg-surface"}
+          borderInlineStartWidth="025"
+          borderColor="border-success"
         >
-          <InlineStack align="space-between" blockAlign="center">
-            <InlineStack gap="300" blockAlign="center">
-              {/* Drag Handle */}
-              <div
-                {...attributes}
-                {...listeners}
-                style={{
-                  cursor: "grab",
-                  padding: "4px",
-                  borderRadius: "4px",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Icon source={DragHandleIcon} tone="subdued" />
-              </div>
+          <div onClick={onToggle} style={{ cursor: "pointer" }}>
+            <InlineStack align="space-between" blockAlign="center">
+              <InlineStack gap="300" blockAlign="center">
+                {/* Drag Handle */}
+                <div
+                  {...attributes}
+                  {...listeners}
+                  style={{ cursor: "grab", display: "flex", alignItems: "center" }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Icon source={DragHandleIcon} tone="subdued" />
+                </div>
 
-              {/* Index */}
-              <div style={{
-                width: "24px",
-                height: "24px",
-                borderRadius: "6px",
-                background: colors.bg,
-                border: `1px solid ${colors.border}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "12px",
-                fontWeight: "600",
-                color: colors.border,
-              }}>
-                {index + 1}
-              </div>
+                {/* Index Badge */}
+                <Badge tone={colors.badge}>{index + 1}</Badge>
 
-              {/* Icon & Label */}
-              <Icon source={config.icon} tone="base" />
-              <BlockStack gap="0">
-                <Text as="span" variant="bodyMd" fontWeight="semibold">
-                  {element.label || config.label}
-                </Text>
-                <InlineStack gap="100">
-                  <Text as="span" variant="bodySm" tone="subdued">{config.label}</Text>
-                  {element.required && <Badge tone="critical" size="small">Requerido</Badge>}
-                </InlineStack>
-              </BlockStack>
+                {/* Icon & Label */}
+                <Icon source={config.icon} tone="base" />
+                <BlockStack gap="0">
+                  <Text as="span" variant="bodyMd" fontWeight="semibold">
+                    {element.label || config.label}
+                  </Text>
+                  <InlineStack gap="100">
+                    <Text as="span" variant="bodySm" tone="subdued">{config.label}</Text>
+                    {element.required && <Badge tone="critical" size="small">Requerido</Badge>}
+                  </InlineStack>
+                </BlockStack>
+              </InlineStack>
+
+              <InlineStack gap="200" blockAlign="center">
+                <Badge tone={colors.badge}>{categoryLabels[category]}</Badge>
+                <Icon source={isExpanded ? ChevronDownIcon : ChevronRightIcon} tone="subdued" />
+              </InlineStack>
             </InlineStack>
-
-            <InlineStack gap="200" blockAlign="center">
-              <Badge tone={colors.badge} size="small">{categoryLabels[category]}</Badge>
-              <div style={{
-                transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
-                transition: "transform 0.2s ease",
-              }}>
-                <Icon source={ChevronRightIcon} tone="subdued" />
-              </div>
-            </InlineStack>
-          </InlineStack>
-        </div>
+          </div>
+        </Box>
 
         {/* Expandable Content */}
         <Collapsible open={isExpanded} id={`field-${element.id}`}>
-          <div style={{
-            padding: "0 16px 16px 16px",
-            borderTop: `1px solid ${colors.border}20`,
-          }}>
+          <Box padding="400" borderBlockStart="divider">
             <BlockStack gap="300">
               {/* Label Field */}
               {element.type !== "html" && (
@@ -508,7 +472,6 @@ function SortableFieldCard({ element, index, isExpanded, onToggle, onUpdate, onR
                   value={element.label || ""}
                   onChange={(value) => onUpdate({ label: value })}
                   autoComplete="off"
-                  size="slim"
                 />
               )}
 
@@ -519,7 +482,6 @@ function SortableFieldCard({ element, index, isExpanded, onToggle, onUpdate, onR
                   value={element.placeholder || ""}
                   onChange={(value) => onUpdate({ placeholder: value })}
                   autoComplete="off"
-                  size="slim"
                 />
               )}
 
@@ -532,7 +494,6 @@ function SortableFieldCard({ element, index, isExpanded, onToggle, onUpdate, onR
                     options: value.split(",").map((o: string) => o.trim()).filter(Boolean)
                   })}
                   autoComplete="off"
-                  size="slim"
                   helpText="Separadas por coma: Opción 1, Opción 2"
                 />
               )}
@@ -556,7 +517,6 @@ function SortableFieldCard({ element, index, isExpanded, onToggle, onUpdate, onR
                   value={element.imageUrl || ""}
                   onChange={(value) => onUpdate({ imageUrl: value })}
                   autoComplete="off"
-                  size="slim"
                 />
               )}
 
@@ -567,21 +527,19 @@ function SortableFieldCard({ element, index, isExpanded, onToggle, onUpdate, onR
                   value={element.url || ""}
                   onChange={(value) => onUpdate({ url: value })}
                   autoComplete="off"
-                  size="slim"
                 />
               )}
 
               {/* Actions Row */}
               <InlineStack align="space-between" blockAlign="center">
                 {/* Required Checkbox */}
-                {!isDecorative && (
+                {!isDecorative ? (
                   <Checkbox
                     label="Campo obligatorio"
                     checked={element.required || false}
                     onChange={(value) => onUpdate({ required: value })}
                   />
-                )}
-                {isDecorative && <div />}
+                ) : <div />}
 
                 {/* Delete Button */}
                 <Button
@@ -597,9 +555,9 @@ function SortableFieldCard({ element, index, isExpanded, onToggle, onUpdate, onR
                 </Button>
               </InlineStack>
             </BlockStack>
-          </div>
+          </Box>
         </Collapsible>
-      </div>
+      </Card>
     </div>
   );
 }
@@ -1400,34 +1358,24 @@ export default function Settings() {
             const expandAll = () => setExpandedFields(new Set(allElements.map((el: any) => el.id)));
 
             // Render an add button with counter
-            const AddFieldButton = ({ type, variant = "secondary" }: { type: string; variant?: "primary" | "secondary" }) => {
+            const AddFieldButton = ({ type }: { type: string }) => {
               const config = FIELD_TYPES[type];
               if (!config) return null;
               const count = typeCounts[type] || 0;
               const isAtLimit = count >= config.maxCount;
               const isSingleUse = singleUseFields.includes(type);
-              const category = getFieldCategory(type);
-              const colors = CATEGORY_COLORS[category];
 
               return (
-                <div style={{
-                  display: "inline-block",
-                  borderRadius: "8px",
-                  background: isAtLimit ? "#f3f3f3" : colors.bg,
-                  border: `1px solid ${isAtLimit ? "#ddd" : colors.border}`,
-                  overflow: "hidden",
-                }}>
-                  <Button
-                    onClick={() => addElement(type)}
-                    size="slim"
-                    variant="tertiary"
-                    disabled={isAtLimit}
-                    icon={config.icon}
-                  >
-                    {config.label}
-                    {isSingleUse && count > 0 && " ✓"}
-                  </Button>
-                </div>
+                <Button
+                  onClick={() => addElement(type)}
+                  size="slim"
+                  variant={isAtLimit ? "tertiary" : "secondary"}
+                  disabled={isAtLimit}
+                  icon={config.icon}
+                >
+                  {config.label}
+                  {isSingleUse && count > 0 && " ✓"}
+                </Button>
               );
             };
 
@@ -1447,13 +1395,13 @@ export default function Settings() {
                       {/* Essential COD fields */}
                       <BlockStack gap="200">
                         <InlineStack gap="200" blockAlign="center">
-                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: CATEGORY_COLORS.essential.border }} />
-                          <Text as="span" variant="headingSm">Campos esenciales</Text>
+                          <Badge tone="success">Esenciales</Badge>
+                          <Text as="span" variant="bodySm" tone="subdued">Campos principales para COD</Text>
                         </InlineStack>
                         <InlineStack gap="200" wrap>
-                          <AddFieldButton type="name" variant="primary" />
-                          <AddFieldButton type="phone" variant="primary" />
-                          <AddFieldButton type="address" variant="primary" />
+                          <AddFieldButton type="name" />
+                          <AddFieldButton type="phone" />
+                          <AddFieldButton type="address" />
                           <AddFieldButton type="city" />
                           <AddFieldButton type="province" />
                           <AddFieldButton type="email" />
@@ -1468,8 +1416,8 @@ export default function Settings() {
                       {/* Custom input fields */}
                       <BlockStack gap="200">
                         <InlineStack gap="200" blockAlign="center">
-                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: CATEGORY_COLORS.custom.border }} />
-                          <Text as="span" variant="headingSm">Campos personalizados</Text>
+                          <Badge tone="info">Personalizados</Badge>
+                          <Text as="span" variant="bodySm" tone="subdued">Campos adicionales para tu formulario</Text>
                         </InlineStack>
                         <InlineStack gap="200" wrap>
                           <AddFieldButton type="text" />
@@ -1487,8 +1435,8 @@ export default function Settings() {
                       {/* Decorative elements */}
                       <BlockStack gap="200">
                         <InlineStack gap="200" blockAlign="center">
-                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: CATEGORY_COLORS.decorative.border }} />
-                          <Text as="span" variant="headingSm">Elementos decorativos</Text>
+                          <Badge tone="attention">Decorativos</Badge>
+                          <Text as="span" variant="bodySm" tone="subdued">Elementos visuales sin datos</Text>
                         </InlineStack>
                         <InlineStack gap="200" wrap>
                           <AddFieldButton type="heading" />
@@ -1543,33 +1491,14 @@ export default function Settings() {
                       </InlineStack>
 
                       {allElements.length === 0 ? (
-                        <div style={{
-                          border: "2px dashed #e3e3e3",
-                          borderRadius: "12px",
-                          padding: "48px 24px",
-                          textAlign: "center",
-                          background: "#fafafa",
-                        }}>
-                          <BlockStack gap="300" inlineAlign="center">
-                            <div style={{
-                              width: "64px",
-                              height: "64px",
-                              borderRadius: "50%",
-                              background: "#f0f0f0",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}>
-                              <Icon source={PlusIcon} tone="subdued" />
-                            </div>
-                            <Text as="p" variant="bodyMd" tone="subdued">
-                              Tu formulario está vacío
-                            </Text>
-                            <Text as="p" variant="bodySm" tone="subdued">
-                              Agrega campos usando los botones de arriba
-                            </Text>
-                          </BlockStack>
-                        </div>
+                        <Card>
+                          <EmptyState
+                            heading="Tu formulario está vacío"
+                            image=""
+                          >
+                            <p>Agrega campos usando los botones de arriba para comenzar a construir tu formulario de pedidos.</p>
+                          </EmptyState>
+                        </Card>
                       ) : (
                         <DndContext
                           sensors={sensors}
@@ -1764,17 +1693,7 @@ export default function Settings() {
                       <BlockStack gap="400" inlineAlign="start">
                         <InlineStack align="space-between" wrap={false}>
                           <Text as="h2" variant="headingSm">Vista previa</Text>
-                          <InlineStack gap="100" blockAlign="center">
-                            <span style={{
-                              width: "8px",
-                              height: "8px",
-                              borderRadius: "50%",
-                              background: "#22c55e",
-                              display: "inline-block",
-                              animation: "pulse 2s infinite",
-                            }} />
-                            <Text as="span" variant="bodySm" tone="success">En vivo</Text>
-                          </InlineStack>
+                          <Badge tone="success">En vivo</Badge>
                         </InlineStack>
                         <ButtonGroup variant="segmented" fullWidth>
                           <Button
