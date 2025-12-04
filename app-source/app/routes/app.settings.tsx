@@ -1088,8 +1088,8 @@ export default function Settings() {
     formTitle: shop?.formTitle || "Completa tu pedido",
     formSubtitle: shop?.formSubtitle || "Ingresa tus datos para recibir tu pedido",
     submitButtonText: shop?.submitButtonText || "Enviar pedido por WhatsApp",
-    submitButtonColor: shop?.submitButtonColor || "#25D366",
-    modalHeaderColor: shop?.modalHeaderColor || "#000000",
+    submitButtonColor: shop?.submitButtonColor || "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+    modalHeaderColor: shop?.modalHeaderColor || "#075E54",
     modalAccentColor: shop?.modalAccentColor || "#25D366",
     showProductImage: shop?.showProductImage ?? true,
     showProductPrice: shop?.showProductPrice ?? true,
@@ -1607,7 +1607,7 @@ export default function Settings() {
                           />
                           <FormLayout.Group>
                             <TextField
-                              label="Color del botón"
+                              label="Color/Gradiente del botón"
                               value={formState.submitButtonColor}
                               onChange={handleChange("submitButtonColor")}
                               prefix={
@@ -1620,6 +1620,7 @@ export default function Settings() {
                                 }} />
                               }
                               autoComplete="off"
+                              helpText="Acepta colores (#25D366) o gradientes (linear-gradient(...))"
                             />
                             <TextField
                               label="Color del encabezado"
