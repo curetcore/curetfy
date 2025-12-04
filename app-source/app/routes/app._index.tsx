@@ -378,7 +378,7 @@ export default function Dashboard() {
         <Layout>
           <Layout.Section variant="oneThird">
             <Card>
-              <BlockStack gap="300">
+              <BlockStack gap="300" inlineAlign="start">
                 <InlineStack gap="200" blockAlign="center">
                   <Icon source={PhoneIcon} tone="base" />
                   <Text as="h3" variant="headingMd">WhatsApp</Text>
@@ -395,7 +395,7 @@ export default function Dashboard() {
 
           <Layout.Section variant="oneThird">
             <Card>
-              <BlockStack gap="300">
+              <BlockStack gap="300" inlineAlign="start">
                 <InlineStack gap="200" blockAlign="center">
                   <Icon source={SettingsIcon} tone="base" />
                   <Text as="h3" variant="headingMd">Formulario</Text>
@@ -412,7 +412,7 @@ export default function Dashboard() {
 
           <Layout.Section variant="oneThird">
             <Card>
-              <BlockStack gap="300">
+              <BlockStack gap="300" inlineAlign="start">
                 <InlineStack gap="200" blockAlign="center">
                   <Icon source={CodeIcon} tone="base" />
                   <Text as="h3" variant="headingMd">Facebook Pixel</Text>
