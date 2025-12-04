@@ -1,6 +1,6 @@
 {% comment %}
   Curetfy COD Form - Professional Buy Button Block
-  Version: 2.0.0
+  Version: 4.1.0 - Full Featured with Inline Icons
 {% endcomment %}
 
 {% liquid
@@ -13,11 +13,26 @@
     assign product_price_raw = current_variant.price | divided_by: 100.0
     assign product_image = product.featured_image | image_url: width: 200
     assign product_available = current_variant.available
+    assign compare_price = current_variant.compare_at_price | money_without_trailing_zeros
+    assign has_discount = false
+    if current_variant.compare_at_price > current_variant.price
+      assign has_discount = true
+    endif
+  endif
+
+  if template.name == 'cart'
+    assign cart_total = cart.total_price | divided_by: 100.0
+    assign cart_count = cart.item_count
   endif
 
   assign has_gradient = false
   if block.settings.enable_gradient
     assign has_gradient = true
+  endif
+
+  assign has_border = false
+  if block.settings.border_width > 0
+    assign has_border = true
   endif
 
   assign animation_class = ''
@@ -30,12 +45,152 @@
       assign animation_class = 'curetfy-animate-shake'
     when 'bounce'
       assign animation_class = 'curetfy-animate-bounce'
+    when 'wiggle'
+      assign animation_class = 'curetfy-animate-wiggle'
+    when 'heartbeat'
+      assign animation_class = 'curetfy-animate-heartbeat'
+    when 'flash'
+      assign animation_class = 'curetfy-animate-flash'
+    when 'rubber'
+      assign animation_class = 'curetfy-animate-rubber'
+    when 'swing'
+      assign animation_class = 'curetfy-animate-swing'
+    when 'tada'
+      assign animation_class = 'curetfy-animate-tada'
+  endcase
+
+  assign alignment_class = ''
+  case block.settings.button_alignment
+    when 'left'
+      assign alignment_class = 'curetfy-align-left'
+    when 'center'
+      assign alignment_class = 'curetfy-align-center'
+    when 'right'
+      assign alignment_class = 'curetfy-align-right'
+  endcase
+
+  assign should_show = true
+  if block.settings.visibility == 'in_stock' and product_available == false
+    assign should_show = false
+  endif
+  if block.settings.visibility == 'out_of_stock' and product_available == true
+    assign should_show = false
+  endif
+
+  assign button_mode = 'product'
+  if template.name == 'cart'
+    assign button_mode = 'cart'
+  endif
+%}
+
+{% comment %} Inline Icon Capture - All SVG icons defined here {% endcomment %}
+{% capture icon_whatsapp %}
+<svg xmlns="http://www.w3.org/2000/svg" width="{{ block.settings.icon_size }}" height="{{ block.settings.icon_size }}" viewBox="0 0 24 24" fill="currentColor" class="curetfy-btn-icon">
+  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+</svg>
+{% endcapture %}
+
+{% capture icon_cart %}
+<svg xmlns="http://www.w3.org/2000/svg" width="{{ block.settings.icon_size }}" height="{{ block.settings.icon_size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="curetfy-btn-icon">
+  <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+</svg>
+{% endcapture %}
+
+{% capture icon_bag %}
+<svg xmlns="http://www.w3.org/2000/svg" width="{{ block.settings.icon_size }}" height="{{ block.settings.icon_size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="curetfy-btn-icon">
+  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
+</svg>
+{% endcapture %}
+
+{% capture icon_phone %}
+<svg xmlns="http://www.w3.org/2000/svg" width="{{ block.settings.icon_size }}" height="{{ block.settings.icon_size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="curetfy-btn-icon">
+  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+</svg>
+{% endcapture %}
+
+{% capture icon_check %}
+<svg xmlns="http://www.w3.org/2000/svg" width="{{ block.settings.icon_size }}" height="{{ block.settings.icon_size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="curetfy-btn-icon">
+  <polyline points="20 6 9 17 4 12"/>
+</svg>
+{% endcapture %}
+
+{% capture icon_arrow_right %}
+<svg xmlns="http://www.w3.org/2000/svg" width="{{ block.settings.icon_size }}" height="{{ block.settings.icon_size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="curetfy-btn-icon">
+  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+</svg>
+{% endcapture %}
+
+{% capture icon_truck %}
+<svg xmlns="http://www.w3.org/2000/svg" width="{{ block.settings.icon_size }}" height="{{ block.settings.icon_size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="curetfy-btn-icon">
+  <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+</svg>
+{% endcapture %}
+
+{% capture icon_box %}
+<svg xmlns="http://www.w3.org/2000/svg" width="{{ block.settings.icon_size }}" height="{{ block.settings.icon_size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="curetfy-btn-icon">
+  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+</svg>
+{% endcapture %}
+
+{% capture icon_star %}
+<svg xmlns="http://www.w3.org/2000/svg" width="{{ block.settings.icon_size }}" height="{{ block.settings.icon_size }}" viewBox="0 0 24 24" fill="currentColor" class="curetfy-btn-icon">
+  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+</svg>
+{% endcapture %}
+
+{% capture icon_heart %}
+<svg xmlns="http://www.w3.org/2000/svg" width="{{ block.settings.icon_size }}" height="{{ block.settings.icon_size }}" viewBox="0 0 24 24" fill="currentColor" class="curetfy-btn-icon">
+  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+</svg>
+{% endcapture %}
+
+{% capture icon_lightning %}
+<svg xmlns="http://www.w3.org/2000/svg" width="{{ block.settings.icon_size }}" height="{{ block.settings.icon_size }}" viewBox="0 0 24 24" fill="currentColor" class="curetfy-btn-icon">
+  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+</svg>
+{% endcapture %}
+
+{% capture icon_shield %}
+<svg xmlns="http://www.w3.org/2000/svg" width="{{ block.settings.icon_size }}" height="{{ block.settings.icon_size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="curetfy-btn-icon">
+  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>
+</svg>
+{% endcapture %}
+
+{% comment %} Select the appropriate icon based on settings {% endcomment %}
+{% liquid
+  assign selected_icon = ''
+  case block.settings.icon_type
+    when 'whatsapp'
+      assign selected_icon = icon_whatsapp
+    when 'cart'
+      assign selected_icon = icon_cart
+    when 'bag'
+      assign selected_icon = icon_bag
+    when 'phone'
+      assign selected_icon = icon_phone
+    when 'check'
+      assign selected_icon = icon_check
+    when 'arrow_right'
+      assign selected_icon = icon_arrow_right
+    when 'truck'
+      assign selected_icon = icon_truck
+    when 'box'
+      assign selected_icon = icon_box
+    when 'star'
+      assign selected_icon = icon_star
+    when 'heart'
+      assign selected_icon = icon_heart
+    when 'lightning'
+      assign selected_icon = icon_lightning
+    when 'shield'
+      assign selected_icon = icon_shield
   endcase
 %}
 
+{% if should_show %}
 <div
   id="{{ container_id }}"
-  class="curetfy-cod-container"
+  class="curetfy-cod-container {{ alignment_class }}"
   data-block-id="{{ block.id }}"
   data-shop="{{ shop.permanent_domain }}"
   data-product-id="{{ product.id }}"
@@ -47,17 +202,21 @@
   data-currency="{{ shop.currency }}"
   data-locale="{{ request.locale.iso_code }}"
   data-available="{{ product_available }}"
-  data-mode="product"
+  data-mode="{{ button_mode }}"
+  {% if block.settings.custom_class != blank %}data-custom-class="{{ block.settings.custom_class }}"{% endif %}
   style="
     margin-top: {{ block.settings.margin_top }}px;
     margin-bottom: {{ block.settings.margin_bottom }}px;
+    {% if block.settings.button_alignment == 'left' %}text-align: left;{% endif %}
+    {% if block.settings.button_alignment == 'center' %}text-align: center;{% endif %}
+    {% if block.settings.button_alignment == 'right' %}text-align: right;{% endif %}
   "
 >
   <button
     type="button"
     id="{{ button_id }}"
-    class="curetfy-cod-button {{ animation_class }}"
-    {% unless product_available %}disabled{% endunless %}
+    class="curetfy-cod-button {{ animation_class }} {% if block.settings.custom_class != blank %}{{ block.settings.custom_class }}{% endif %}"
+    {% if block.settings.hide_when_unavailable and product_available == false %}disabled{% endif %}
     style="
       {% if has_gradient %}
         background: linear-gradient({{ block.settings.gradient_angle }}deg, {{ block.settings.button_color }}, {{ block.settings.gradient_color }});
@@ -69,30 +228,63 @@
       padding: {{ block.settings.button_padding_y }}px {{ block.settings.button_padding_x }}px;
       font-size: {{ block.settings.button_font_size }}px;
       font-weight: {{ block.settings.button_font_weight }};
+      letter-spacing: {{ block.settings.letter_spacing }}px;
+      {% if block.settings.text_transform != 'none' %}text-transform: {{ block.settings.text_transform }};{% endif %}
       {% if block.settings.button_full_width %}width: 100%;{% endif %}
       {% if block.settings.button_shadow %}box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.2);{% endif %}
+      {% if has_border %}
+        border: {{ block.settings.border_width }}px {{ block.settings.border_style }} {{ block.settings.border_color }};
+      {% else %}
+        border: none;
+      {% endif %}
+      --curetfy-hover-bg: {{ block.settings.hover_color }};
+      --curetfy-hover-text: {{ block.settings.hover_text_color }};
+      --curetfy-hover-scale: {{ block.settings.hover_scale }};
     "
   >
-    {% if block.settings.show_icon %}
-      {% case block.settings.icon_type %}
-        {% when 'whatsapp' %}
-          <svg class="curetfy-btn-icon" viewBox="0 0 24 24" width="{{ block.settings.icon_size }}" height="{{ block.settings.icon_size }}" fill="currentColor">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-          </svg>
-        {% when 'cart' %}
-          <svg class="curetfy-btn-icon" viewBox="0 0 24 24" width="{{ block.settings.icon_size }}" height="{{ block.settings.icon_size }}" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-          </svg>
-        {% when 'bag' %}
-          <svg class="curetfy-btn-icon" viewBox="0 0 24 24" width="{{ block.settings.icon_size }}" height="{{ block.settings.icon_size }}" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
-          </svg>
-      {% endcase %}
+    {% if block.settings.show_icon and block.settings.icon_position == 'left' %}
+      {{ selected_icon }}
     {% endif %}
-    <span class="curetfy-btn-text">{{ block.settings.button_text }}</span>
+
+    <span class="curetfy-btn-content">
+      <span class="curetfy-btn-text">{{ block.settings.button_text }}</span>
+      {% if block.settings.show_secondary_text %}
+        <span class="curetfy-btn-secondary">
+          {% case block.settings.secondary_text_type %}
+            {% when 'price' %}
+              {% if template.name == 'cart' %}
+                {{ cart.total_price | money_without_trailing_zeros }}
+              {% else %}
+                {{ product_price }}
+              {% endif %}
+            {% when 'compare_price' %}
+              {% if has_discount %}
+                <span class="curetfy-price-compare">{{ compare_price }}</span>
+                {{ product_price }}
+              {% else %}
+                {{ product_price }}
+              {% endif %}
+            {% when 'custom' %}
+              {{ block.settings.secondary_text_custom }}
+            {% when 'free_shipping' %}
+              Envío gratis
+            {% when 'stock' %}
+              {% if product_available %}
+                En stock
+              {% else %}
+                Agotado
+              {% endif %}
+          {% endcase %}
+        </span>
+      {% endif %}
+    </span>
+
+    {% if block.settings.show_icon and block.settings.icon_position == 'right' %}
+      {{ selected_icon }}
+    {% endif %}
   </button>
 </div>
+{% endif %}
 
 {{ 'cod-form.css' | asset_url | stylesheet_tag }}
 <script src="{{ 'cod-form.js' | asset_url }}" defer></script>
@@ -103,17 +295,17 @@
   "target": "section",
   "class": "curetfy-block",
   "enabled_on": {
-    "templates": ["product"]
+    "templates": ["product", "cart", "collection", "index"]
   },
   "settings": [
     {
       "type": "header",
-      "content": "Texto del botón"
+      "content": "Texto principal"
     },
     {
       "type": "text",
       "id": "button_text",
-      "label": "Texto",
+      "label": "Texto del botón",
       "default": "Pedir por WhatsApp"
     },
     {
@@ -121,7 +313,7 @@
       "id": "button_font_size",
       "label": "Tamaño de fuente",
       "min": 12,
-      "max": 22,
+      "max": 24,
       "step": 1,
       "default": 15,
       "unit": "px"
@@ -134,9 +326,61 @@
         { "value": "400", "label": "Normal" },
         { "value": "500", "label": "Medium" },
         { "value": "600", "label": "Semibold" },
-        { "value": "700", "label": "Bold" }
+        { "value": "700", "label": "Bold" },
+        { "value": "800", "label": "Extra Bold" }
       ],
       "default": "600"
+    },
+    {
+      "type": "select",
+      "id": "text_transform",
+      "label": "Transformar texto",
+      "options": [
+        { "value": "none", "label": "Normal" },
+        { "value": "uppercase", "label": "MAYÚSCULAS" },
+        { "value": "lowercase", "label": "minúsculas" },
+        { "value": "capitalize", "label": "Capitalizar" }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "range",
+      "id": "letter_spacing",
+      "label": "Espaciado entre letras",
+      "min": -1,
+      "max": 5,
+      "step": 0.5,
+      "default": 0,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Texto secundario"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_secondary_text",
+      "label": "Mostrar texto secundario",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "secondary_text_type",
+      "label": "Tipo de texto secundario",
+      "options": [
+        { "value": "price", "label": "Precio del producto" },
+        { "value": "compare_price", "label": "Precio con descuento" },
+        { "value": "free_shipping", "label": "Envío gratis" },
+        { "value": "stock", "label": "Estado de stock" },
+        { "value": "custom", "label": "Texto personalizado" }
+      ],
+      "default": "price"
+    },
+    {
+      "type": "text",
+      "id": "secondary_text_custom",
+      "label": "Texto personalizado",
+      "default": "Pago contra entrega"
     },
     {
       "type": "header",
@@ -145,7 +389,7 @@
     {
       "type": "color",
       "id": "button_color",
-      "label": "Color principal",
+      "label": "Color de fondo",
       "default": "#000000"
     },
     {
@@ -178,6 +422,62 @@
     },
     {
       "type": "header",
+      "content": "Hover (al pasar el cursor)"
+    },
+    {
+      "type": "color",
+      "id": "hover_color",
+      "label": "Color de fondo en hover",
+      "default": "#333333"
+    },
+    {
+      "type": "color",
+      "id": "hover_text_color",
+      "label": "Color del texto en hover",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "range",
+      "id": "hover_scale",
+      "label": "Escala en hover",
+      "min": 1,
+      "max": 1.15,
+      "step": 0.01,
+      "default": 1.02
+    },
+    {
+      "type": "header",
+      "content": "Borde"
+    },
+    {
+      "type": "range",
+      "id": "border_width",
+      "label": "Ancho del borde",
+      "min": 0,
+      "max": 5,
+      "step": 1,
+      "default": 0,
+      "unit": "px"
+    },
+    {
+      "type": "select",
+      "id": "border_style",
+      "label": "Estilo del borde",
+      "options": [
+        { "value": "solid", "label": "Sólido" },
+        { "value": "dashed", "label": "Discontinuo" },
+        { "value": "dotted", "label": "Punteado" }
+      ],
+      "default": "solid"
+    },
+    {
+      "type": "color",
+      "id": "border_color",
+      "label": "Color del borde",
+      "default": "#000000"
+    },
+    {
+      "type": "header",
       "content": "Forma y tamaño"
     },
     {
@@ -187,7 +487,7 @@
       "min": 0,
       "max": 50,
       "step": 2,
-      "default": 4,
+      "default": 8,
       "unit": "px"
     },
     {
@@ -195,7 +495,7 @@
       "id": "button_padding_y",
       "label": "Espaciado vertical",
       "min": 8,
-      "max": 24,
+      "max": 28,
       "step": 2,
       "default": 16,
       "unit": "px"
@@ -205,7 +505,7 @@
       "id": "button_padding_x",
       "label": "Espaciado horizontal",
       "min": 16,
-      "max": 48,
+      "max": 56,
       "step": 4,
       "default": 32,
       "unit": "px"
@@ -221,6 +521,17 @@
       "id": "button_shadow",
       "label": "Mostrar sombra",
       "default": false
+    },
+    {
+      "type": "select",
+      "id": "button_alignment",
+      "label": "Alineación",
+      "options": [
+        { "value": "left", "label": "Izquierda" },
+        { "value": "center", "label": "Centro" },
+        { "value": "right", "label": "Derecha" }
+      ],
+      "default": "center"
     },
     {
       "type": "header",
@@ -239,43 +550,72 @@
       "options": [
         { "value": "whatsapp", "label": "WhatsApp" },
         { "value": "cart", "label": "Carrito" },
-        { "value": "bag", "label": "Bolsa" }
+        { "value": "bag", "label": "Bolsa" },
+        { "value": "phone", "label": "Teléfono" },
+        { "value": "check", "label": "Check" },
+        { "value": "arrow_right", "label": "Flecha derecha" },
+        { "value": "truck", "label": "Camión" },
+        { "value": "box", "label": "Caja" },
+        { "value": "star", "label": "Estrella" },
+        { "value": "heart", "label": "Corazón" },
+        { "value": "lightning", "label": "Rayo" },
+        { "value": "shield", "label": "Escudo" }
       ],
       "default": "whatsapp"
+    },
+    {
+      "type": "select",
+      "id": "icon_position",
+      "label": "Posición del ícono",
+      "options": [
+        { "value": "left", "label": "Izquierda" },
+        { "value": "right", "label": "Derecha" }
+      ],
+      "default": "left"
     },
     {
       "type": "range",
       "id": "icon_size",
       "label": "Tamaño del ícono",
-      "min": 16,
-      "max": 28,
+      "min": 14,
+      "max": 32,
       "step": 2,
       "default": 20,
       "unit": "px"
     },
     {
       "type": "header",
-      "content": "Animación y espaciado"
+      "content": "Animación"
     },
     {
       "type": "select",
       "id": "button_animation",
-      "label": "Animación",
+      "label": "Animación del botón",
       "options": [
         { "value": "none", "label": "Ninguna" },
         { "value": "pulse", "label": "Pulso" },
         { "value": "glow", "label": "Brillo" },
         { "value": "shake", "label": "Vibrar" },
-        { "value": "bounce", "label": "Rebote" }
+        { "value": "bounce", "label": "Rebote" },
+        { "value": "wiggle", "label": "Meneo" },
+        { "value": "heartbeat", "label": "Latido" },
+        { "value": "flash", "label": "Destello" },
+        { "value": "rubber", "label": "Elástico" },
+        { "value": "swing", "label": "Balanceo" },
+        { "value": "tada", "label": "Tada" }
       ],
       "default": "none"
+    },
+    {
+      "type": "header",
+      "content": "Espaciado"
     },
     {
       "type": "range",
       "id": "margin_top",
       "label": "Margen superior",
       "min": 0,
-      "max": 40,
+      "max": 60,
       "step": 4,
       "default": 0,
       "unit": "px"
@@ -285,10 +625,41 @@
       "id": "margin_bottom",
       "label": "Margen inferior",
       "min": 0,
-      "max": 40,
+      "max": 60,
       "step": 4,
       "default": 0,
       "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Visibilidad"
+    },
+    {
+      "type": "select",
+      "id": "visibility",
+      "label": "Mostrar botón",
+      "options": [
+        { "value": "always", "label": "Siempre" },
+        { "value": "in_stock", "label": "Solo con stock" },
+        { "value": "out_of_stock", "label": "Solo sin stock" }
+      ],
+      "default": "always"
+    },
+    {
+      "type": "checkbox",
+      "id": "hide_when_unavailable",
+      "label": "Deshabilitar si no hay stock",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Avanzado"
+    },
+    {
+      "type": "text",
+      "id": "custom_class",
+      "label": "Clase CSS personalizada",
+      "info": "Añade clases CSS separadas por espacios"
     }
   ]
 }

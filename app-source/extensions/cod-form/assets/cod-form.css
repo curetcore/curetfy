@@ -44,15 +44,7 @@
   overflow: hidden;
 }
 
-.curetfy-cod-button:hover:not(:disabled) {
-  opacity: 0.92;
-  transform: translateY(-1px);
-}
-
-.curetfy-cod-button:active:not(:disabled) {
-  transform: translateY(0);
-  opacity: 0.88;
-}
+/* hover styles are defined with CSS variables below */
 
 .curetfy-cod-button:disabled {
   opacity: 0.4;
@@ -118,6 +110,128 @@
   20% { transform: translateY(0); }
   30% { transform: translateY(-4px); }
   40% { transform: translateY(0); }
+}
+
+.curetfy-animate-wiggle {
+  animation: curetfy-wiggle 2.5s ease-in-out infinite;
+}
+
+@keyframes curetfy-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  10% { transform: rotate(-3deg); }
+  20% { transform: rotate(3deg); }
+  30% { transform: rotate(-3deg); }
+  40% { transform: rotate(3deg); }
+  50% { transform: rotate(0deg); }
+}
+
+.curetfy-animate-heartbeat {
+  animation: curetfy-heartbeat 1.5s ease-in-out infinite;
+}
+
+@keyframes curetfy-heartbeat {
+  0%, 100% { transform: scale(1); }
+  14% { transform: scale(1.08); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.08); }
+  70% { transform: scale(1); }
+}
+
+.curetfy-animate-flash {
+  animation: curetfy-flash 2s ease infinite;
+}
+
+@keyframes curetfy-flash {
+  0%, 50%, 100% { opacity: 1; }
+  25%, 75% { opacity: 0.6; }
+}
+
+.curetfy-animate-rubber {
+  animation: curetfy-rubber 2s ease infinite;
+}
+
+@keyframes curetfy-rubber {
+  0% { transform: scale3d(1, 1, 1); }
+  30% { transform: scale3d(1.15, 0.85, 1); }
+  40% { transform: scale3d(0.85, 1.15, 1); }
+  50% { transform: scale3d(1.1, 0.9, 1); }
+  65% { transform: scale3d(0.95, 1.05, 1); }
+  75% { transform: scale3d(1.02, 0.98, 1); }
+  100% { transform: scale3d(1, 1, 1); }
+}
+
+.curetfy-animate-swing {
+  transform-origin: top center;
+  animation: curetfy-swing 2s ease-in-out infinite;
+}
+
+@keyframes curetfy-swing {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(8deg); }
+  40% { transform: rotate(-6deg); }
+  60% { transform: rotate(4deg); }
+  80% { transform: rotate(-2deg); }
+}
+
+.curetfy-animate-tada {
+  animation: curetfy-tada 2.5s ease infinite;
+}
+
+@keyframes curetfy-tada {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  10%, 20% { transform: scale(0.95) rotate(-3deg); }
+  30%, 50%, 70%, 90% { transform: scale(1.05) rotate(3deg); }
+  40%, 60%, 80% { transform: scale(1.05) rotate(-3deg); }
+}
+
+/* ============================================
+   Button Hover with CSS Variables
+   ============================================ */
+.curetfy-cod-button:hover:not(:disabled) {
+  background-color: var(--curetfy-hover-bg, inherit) !important;
+  color: var(--curetfy-hover-text, inherit) !important;
+  transform: scale(var(--curetfy-hover-scale, 1.02)) translateY(-1px);
+}
+
+.curetfy-cod-button:active:not(:disabled) {
+  transform: scale(calc(var(--curetfy-hover-scale, 1.02) - 0.02)) translateY(0);
+}
+
+/* ============================================
+   Button Content Layout
+   ============================================ */
+.curetfy-btn-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.curetfy-btn-secondary {
+  font-size: 0.8em;
+  opacity: 0.9;
+  font-weight: 400;
+}
+
+.curetfy-price-compare {
+  text-decoration: line-through;
+  opacity: 0.7;
+  margin-right: 6px;
+}
+
+/* ============================================
+   Button Alignment
+   ============================================ */
+.curetfy-align-left {
+  text-align: left;
+}
+
+.curetfy-align-center {
+  text-align: center;
+}
+
+.curetfy-align-right {
+  text-align: right;
 }
 
 /* ============================================
