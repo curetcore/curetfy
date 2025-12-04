@@ -546,7 +546,7 @@ export default function Dashboard() {
         </Card>
 
         {/* Charts Section */}
-        <Text as="h2" variant="headingMd">Analítica</Text>
+        <Text as="h2" variant="headingMd">Analítica (últimos 30 días)</Text>
 
         <Layout>
           <Layout.Section variant="oneHalf">
