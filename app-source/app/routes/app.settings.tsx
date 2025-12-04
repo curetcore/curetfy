@@ -1036,439 +1036,482 @@ export default function Settings() {
           )}
 
           {/* TAB: Unified Form Builder */}
-          {selectedTab === 1 && (
-            <Layout>
-              <Layout.Section>
-                {/* STANDARD FIELDS SECTION */}
-                <Card>
-                  <BlockStack gap="400">
-                    <InlineStack align="space-between">
-                      <Text as="h2" variant="headingMd">Campos del formulario</Text>
-                      <Badge tone="success">Arrastra para reordenar</Badge>
-                    </InlineStack>
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      Configura cada campo: etiqueta, placeholder, visibilidad y si es requerido.
-                    </Text>
+          {selectedTab === 1 && (() => {
+            // Build unified list of all elements
+            const allElements = (formState.customFields as any[]).map((field, idx) => ({
+              ...field,
+              _index: idx,
+              _isCustom: true,
+            }));
 
-                    {/* Field list with drag-and-drop style */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                      {(formState.fieldOrder as string[]).map((fieldId, index) => {
-                        const isAlwaysRequired = ["name", "phone", "address"].includes(fieldId);
-                        const isVisible =
-                          isAlwaysRequired ||
-                          (fieldId === "email" && formState.showEmail) ||
-                          (fieldId === "city" && formState.showCity) ||
-                          (fieldId === "province" && formState.showProvince) ||
-                          (fieldId === "postalCode" && formState.showPostalCode) ||
-                          (fieldId === "notes" && formState.showNotes) ||
-                          (fieldId === "quantity" && formState.showQuantity);
+            // Element type labels and icons
+            const typeInfo: Record<string, { label: string; icon: string; color: string }> = {
+              // Input fields
+              name: { label: "Nombre", icon: "👤", color: "#5C6AC4" },
+              phone: { label: "Teléfono", icon: "📱", color: "#5C6AC4" },
+              email: { label: "Email", icon: "✉️", color: "#5C6AC4" },
+              address: { label: "Dirección", icon: "📍", color: "#5C6AC4" },
+              city: { label: "Ciudad", icon: "🏙️", color: "#5C6AC4" },
+              province: { label: "Provincia", icon: "🗺️", color: "#5C6AC4" },
+              postalCode: { label: "Código postal", icon: "📮", color: "#5C6AC4" },
+              notes: { label: "Notas", icon: "📝", color: "#5C6AC4" },
+              quantity: { label: "Cantidad", icon: "🔢", color: "#5C6AC4" },
+              // Custom types
+              text: { label: "Campo de texto", icon: "✏️", color: "#00A0AC" },
+              textarea: { label: "Área de texto", icon: "📄", color: "#00A0AC" },
+              select: { label: "Desplegable", icon: "📋", color: "#00A0AC" },
+              radio: { label: "Opción única", icon: "🔘", color: "#00A0AC" },
+              checkbox: { label: "Casilla", icon: "☑️", color: "#00A0AC" },
+              date: { label: "Fecha", icon: "📅", color: "#00A0AC" },
+              number: { label: "Número", icon: "#️⃣", color: "#00A0AC" },
+              // Decorative
+              heading: { label: "Título/Texto", icon: "🏷️", color: "#637381" },
+              image: { label: "Imagen", icon: "🖼️", color: "#637381" },
+              html: { label: "HTML", icon: "🧩", color: "#637381" },
+              link_button: { label: "Botón enlace", icon: "🔗", color: "#637381" },
+            };
 
-                        // Get the label and placeholder keys
-                        const labelKey = `label${fieldId.charAt(0).toUpperCase() + fieldId.slice(1)}` as keyof typeof formState;
-                        const placeholderKey = fieldId === "postalCode" ? "placeholderPostal" : `placeholder${fieldId.charAt(0).toUpperCase() + fieldId.slice(1)}` as keyof typeof formState;
-                        const showKey = `show${fieldId.charAt(0).toUpperCase() + fieldId.slice(1)}` as keyof typeof formState;
-                        const requireKey = `require${fieldId.charAt(0).toUpperCase() + fieldId.slice(1)}` as keyof typeof formState;
+            const addElement = (type: string) => {
+              // Default labels and placeholders for COD essential fields
+              const fieldDefaults: Record<string, { label: string; placeholder: string; required: boolean }> = {
+                name: { label: "Nombre completo", placeholder: "Ej: Juan Pérez", required: true },
+                phone: { label: "Teléfono / WhatsApp", placeholder: "Ej: 809-555-1234", required: true },
+                email: { label: "Email", placeholder: "Ej: juan@email.com", required: false },
+                address: { label: "Dirección de entrega", placeholder: "Calle, número, sector...", required: true },
+                city: { label: "Ciudad", placeholder: "Ej: Santo Domingo", required: false },
+                province: { label: "Provincia / Estado", placeholder: "", required: false },
+                postalCode: { label: "Código postal", placeholder: "Ej: 10101", required: false },
+                notes: { label: "Notas del pedido", placeholder: "Instrucciones especiales...", required: false },
+                quantity: { label: "Cantidad", placeholder: "", required: false },
+              };
 
-                        return (
-                          <Card key={fieldId}>
-                            <BlockStack gap="300">
-                              <InlineStack align="space-between">
-                                <InlineStack gap="300">
-                                  {/* Move buttons */}
-                                  <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                                    <button
-                                      onClick={() => index > 0 && moveField(index, index - 1)}
-                                      disabled={index === 0}
-                                      style={{ background: "none", border: "none", cursor: index === 0 ? "default" : "pointer", opacity: index === 0 ? 0.3 : 1, padding: "2px", fontSize: "12px" }}
-                                    >
-                                      ▲
-                                    </button>
-                                    <button
-                                      onClick={() => index < (formState.fieldOrder as string[]).length - 1 && moveField(index, index + 1)}
-                                      disabled={index === (formState.fieldOrder as string[]).length - 1}
-                                      style={{ background: "none", border: "none", cursor: index === (formState.fieldOrder as string[]).length - 1 ? "default" : "pointer", opacity: index === (formState.fieldOrder as string[]).length - 1 ? 0.3 : 1, padding: "2px", fontSize: "12px" }}
-                                    >
-                                      ▼
-                                    </button>
-                                  </div>
-                                  <Text as="span" fontWeight="semibold">{fieldLabels[fieldId]}</Text>
-                                  {isAlwaysRequired && <Badge tone="info">Siempre requerido</Badge>}
-                                  {!isVisible && !isAlwaysRequired && <Badge>Oculto</Badge>}
-                                </InlineStack>
-                                {/* Visibility toggle for optional fields */}
-                                {!isAlwaysRequired && (
-                                  <Checkbox
-                                    label="Visible"
-                                    checked={formState[showKey] as boolean}
-                                    onChange={handleChange(showKey)}
-                                  />
-                                )}
-                              </InlineStack>
+              const defaults = fieldDefaults[type] || { label: typeInfo[type]?.label || "Nuevo elemento", placeholder: "", required: false };
 
-                              {/* Field settings - only show if visible or always required */}
-                              {(isVisible || isAlwaysRequired) && (
-                                <FormLayout>
-                                  <FormLayout.Group>
-                                    <TextField
-                                      label="Etiqueta"
-                                      value={formState[labelKey] as string || ""}
-                                      onChange={handleChange(labelKey)}
-                                      autoComplete="off"
-                                    />
-                                    {fieldId !== "quantity" && fieldId !== "province" && (
-                                      <TextField
-                                        label="Placeholder"
-                                        value={formState[placeholderKey] as string || ""}
-                                        onChange={handleChange(placeholderKey)}
-                                        autoComplete="off"
-                                      />
-                                    )}
-                                  </FormLayout.Group>
-                                  {/* Required checkbox for optional fields */}
-                                  {!isAlwaysRequired && fieldId !== "quantity" && (
-                                    <Checkbox
-                                      label="Campo requerido"
-                                      checked={formState[requireKey] as boolean}
-                                      onChange={handleChange(requireKey)}
-                                    />
-                                  )}
-                                </FormLayout>
-                              )}
-                            </BlockStack>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  </BlockStack>
-                </Card>
+              const newField = {
+                id: `field_${Date.now()}`,
+                type,
+                label: defaults.label,
+                placeholder: defaults.placeholder,
+                required: defaults.required,
+                options: [],
+                content: "",
+                imageUrl: "",
+                url: "",
+              };
+              setFormState(prev => ({
+                ...prev,
+                customFields: [...(prev.customFields as any[]), newField]
+              }));
+            };
 
-                {/* COUNTRIES SECTION */}
-                <Box paddingBlockStart="400">
+            const updateElement = (index: number, updates: any) => {
+              const newFields = [...(formState.customFields as any[])];
+              newFields[index] = { ...newFields[index], ...updates };
+              setFormState(prev => ({ ...prev, customFields: newFields }));
+            };
+
+            const removeElement = (index: number) => {
+              const newFields = (formState.customFields as any[]).filter((_, i) => i !== index);
+              setFormState(prev => ({ ...prev, customFields: newFields }));
+            };
+
+            const moveElement = (index: number, direction: "up" | "down") => {
+              const newFields = [...(formState.customFields as any[])];
+              const newIndex = direction === "up" ? index - 1 : index + 1;
+              if (newIndex < 0 || newIndex >= newFields.length) return;
+              [newFields[index], newFields[newIndex]] = [newFields[newIndex], newFields[index]];
+              setFormState(prev => ({ ...prev, customFields: newFields }));
+            };
+
+            return (
+              <Layout>
+                <Layout.Section>
+                  {/* HEADER & ADD BUTTON */}
                   <Card>
                     <BlockStack gap="400">
-                      <Text as="h2" variant="headingMd">Países y regiones</Text>
-                      <FormLayout>
-                        <TextField
-                          label="Países habilitados"
-                          value={formState.countries}
-                          onChange={handleChange("countries")}
-                          helpText="Códigos ISO separados por coma: DO, CO, MX, PE, CL, AR"
-                          autoComplete="off"
-                        />
-                        <Select
-                          label="País por defecto"
-                          options={COUNTRIES}
-                          value={formState.defaultCountry}
-                          onChange={handleChange("defaultCountry")}
-                        />
-                      </FormLayout>
+                      <InlineStack align="space-between" blockAlign="start">
+                        <BlockStack gap="200">
+                          <Text as="h2" variant="headingLg">Constructor de formulario</Text>
+                          <Text as="p" tone="subdued">
+                            Arma tu formulario agregando elementos y ordenándolos como quieras.
+                          </Text>
+                        </BlockStack>
+                        {allElements.length === 0 && (
+                          <Button
+                            variant="primary"
+                            onClick={() => {
+                              // Add all essential COD fields at once
+                              const essentialFields = [
+                                { id: `field_${Date.now()}_1`, type: "name", label: "Nombre completo", placeholder: "Ej: Juan Pérez", required: true, options: [], content: "", imageUrl: "", url: "" },
+                                { id: `field_${Date.now()}_2`, type: "phone", label: "Teléfono / WhatsApp", placeholder: "Ej: 809-555-1234", required: true, options: [], content: "", imageUrl: "", url: "" },
+                                { id: `field_${Date.now()}_3`, type: "address", label: "Dirección de entrega", placeholder: "Calle, número, sector...", required: true, options: [], content: "", imageUrl: "", url: "" },
+                                { id: `field_${Date.now()}_4`, type: "city", label: "Ciudad", placeholder: "Ej: Santo Domingo", required: false, options: [], content: "", imageUrl: "", url: "" },
+                                { id: `field_${Date.now()}_5`, type: "province", label: "Provincia", placeholder: "", required: false, options: [], content: "", imageUrl: "", url: "" },
+                              ];
+                              setFormState(prev => ({
+                                ...prev,
+                                customFields: essentialFields
+                              }));
+                            }}
+                          >
+                            🚀 Comenzar con plantilla COD
+                          </Button>
+                        )}
+                      </InlineStack>
+
+                      {/* Quick add - Essential COD fields */}
+                      <BlockStack gap="300">
+                        <Text as="p" variant="headingSm">📦 Campos esenciales COD:</Text>
+                        <InlineStack gap="200" wrap>
+                          <Button onClick={() => addElement("name")} size="slim" variant="primary">👤 Nombre</Button>
+                          <Button onClick={() => addElement("phone")} size="slim" variant="primary">📱 Teléfono</Button>
+                          <Button onClick={() => addElement("address")} size="slim" variant="primary">📍 Dirección</Button>
+                          <Button onClick={() => addElement("city")} size="slim">🏙️ Ciudad</Button>
+                          <Button onClick={() => addElement("province")} size="slim">🗺️ Provincia</Button>
+                          <Button onClick={() => addElement("email")} size="slim">✉️ Email</Button>
+                          <Button onClick={() => addElement("notes")} size="slim">📝 Notas</Button>
+                          <Button onClick={() => addElement("quantity")} size="slim">🔢 Cantidad</Button>
+                        </InlineStack>
+                      </BlockStack>
+
+                      {/* Quick add - Custom elements */}
+                      <BlockStack gap="300">
+                        <Text as="p" variant="headingSm">🎨 Elementos personalizados:</Text>
+                        <InlineStack gap="200" wrap>
+                          <Button onClick={() => addElement("text")} size="slim">✏️ Texto</Button>
+                          <Button onClick={() => addElement("textarea")} size="slim">📄 Área texto</Button>
+                          <Button onClick={() => addElement("select")} size="slim">📋 Desplegable</Button>
+                          <Button onClick={() => addElement("radio")} size="slim">🔘 Opciones</Button>
+                          <Button onClick={() => addElement("checkbox")} size="slim">☑️ Casilla</Button>
+                          <Button onClick={() => addElement("number")} size="slim">#️⃣ Número</Button>
+                          <Button onClick={() => addElement("date")} size="slim">📅 Fecha</Button>
+                        </InlineStack>
+                      </BlockStack>
+
+                      {/* Quick add - Decorative */}
+                      <BlockStack gap="300">
+                        <Text as="p" variant="headingSm">✨ Elementos decorativos:</Text>
+                        <InlineStack gap="200" wrap>
+                          <Button onClick={() => addElement("heading")} size="slim">🏷️ Título</Button>
+                          <Button onClick={() => addElement("image")} size="slim">🖼️ Imagen/GIF</Button>
+                          <Button onClick={() => addElement("html")} size="slim">🧩 HTML</Button>
+                          <Button onClick={() => addElement("link_button")} size="slim">🔗 Botón enlace</Button>
+                        </InlineStack>
+                      </BlockStack>
                     </BlockStack>
                   </Card>
-                </Box>
 
-                {/* CUSTOM FIELDS SECTION */}
-                <Box paddingBlockStart="400">
-                  <Card>
-                    <BlockStack gap="400">
-                      <InlineStack align="space-between">
-                        <Text as="h2" variant="headingMd">Campos personalizados</Text>
-                        <Button
-                          onClick={() => {
-                            const newField = {
-                              id: `field_${Date.now()}`,
-                              type: "text",
-                              label: "Nuevo campo",
-                              placeholder: "",
-                              required: false,
-                              options: [],
-                            };
-                            setFormState(prev => ({
-                              ...prev,
-                              customFields: [...(prev.customFields as any[]), newField]
-                            }));
-                          }}
-                        >
-                          Agregar campo
-                        </Button>
-                      </InlineStack>
-                      <Text as="p" variant="bodySm" tone="subdued">
-                        Agrega campos adicionales: selectores, checkboxes, fechas, títulos, imágenes, etc.
-                      </Text>
-
-                      {(formState.customFields as any[]).length === 0 ? (
-                        <Banner tone="info">
-                          <p>No hay campos personalizados. Haz clic en "Agregar campo" para crear uno.</p>
-                        </Banner>
+                  {/* ELEMENTS LIST */}
+                  <Box paddingBlockStart="400">
+                    <BlockStack gap="300">
+                      {allElements.length === 0 ? (
+                        <Card>
+                          <BlockStack gap="400" inlineAlign="center">
+                            <div style={{ fontSize: "48px", opacity: 0.5 }}>📝</div>
+                            <Text as="p" tone="subdued" alignment="center">
+                              Tu formulario está vacío. Usa los botones de arriba para agregar elementos.
+                            </Text>
+                          </BlockStack>
+                        </Card>
                       ) : (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                          {(formState.customFields as any[]).map((field, index) => (
-                            <Card key={field.id}>
-                              <BlockStack gap="300">
-                                <InlineStack align="space-between">
-                                  <InlineStack gap="200">
-                                    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                                      <button
-                                        onClick={() => {
-                                          if (index > 0) {
-                                            const newFields = [...(formState.customFields as any[])];
-                                            [newFields[index], newFields[index - 1]] = [newFields[index - 1], newFields[index]];
-                                            setFormState(prev => ({ ...prev, customFields: newFields }));
-                                          }
-                                        }}
-                                        disabled={index === 0}
-                                        style={{ background: "none", border: "none", cursor: index === 0 ? "default" : "pointer", opacity: index === 0 ? 0.3 : 1, padding: "2px", fontSize: "12px" }}
-                                      >
-                                        ▲
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          if (index < (formState.customFields as any[]).length - 1) {
-                                            const newFields = [...(formState.customFields as any[])];
-                                            [newFields[index], newFields[index + 1]] = [newFields[index + 1], newFields[index]];
-                                            setFormState(prev => ({ ...prev, customFields: newFields }));
-                                          }
-                                        }}
-                                        disabled={index === (formState.customFields as any[]).length - 1}
-                                        style={{ background: "none", border: "none", cursor: index === (formState.customFields as any[]).length - 1 ? "default" : "pointer", opacity: index === (formState.customFields as any[]).length - 1 ? 0.3 : 1, padding: "2px", fontSize: "12px" }}
-                                      >
-                                        ▼
-                                      </button>
+                        allElements.map((element, index) => {
+                          const info = typeInfo[element.type] || { label: element.type, icon: "📦", color: "#637381" };
+                          const isDecorative = ["heading", "image", "html", "link_button"].includes(element.type);
+
+                          return (
+                            <div
+                              key={element.id}
+                              style={{
+                                background: "#fff",
+                                border: "1px solid #e1e3e5",
+                                borderRadius: "12px",
+                                borderLeft: `4px solid ${info.color}`,
+                                overflow: "hidden",
+                              }}
+                            >
+                              {/* Element header */}
+                              <div style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                padding: "12px 16px",
+                                background: "#fafbfc",
+                                borderBottom: "1px solid #e1e3e5",
+                              }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                  {/* Position indicator */}
+                                  <div style={{
+                                    width: "28px",
+                                    height: "28px",
+                                    borderRadius: "50%",
+                                    background: info.color,
+                                    color: "#fff",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontSize: "12px",
+                                    fontWeight: 600,
+                                  }}>
+                                    {index + 1}
+                                  </div>
+                                  <span style={{ fontSize: "18px" }}>{info.icon}</span>
+                                  <div>
+                                    <div style={{ fontWeight: 600, fontSize: "14px" }}>
+                                      {element.label || info.label}
                                     </div>
-                                    <Badge tone={field.required ? "attention" : "info"}>
-                                      {{
-                                        text: "Texto",
-                                        textarea: "Área de texto",
-                                        select: "Desplegable",
-                                        radio: "Selección única",
-                                        checkbox: "Casilla",
-                                        date: "Fecha",
-                                        number: "Número",
-                                        heading: "Título",
-                                        image: "Imagen",
-                                        link_button: "Botón enlace",
-                                      }[field.type as string] || field.type}
-                                    </Badge>
-                                    <Text as="span" fontWeight="semibold">{field.label}</Text>
-                                  </InlineStack>
-                                  <Button
-                                    tone="critical"
-                                    variant="plain"
-                                    onClick={() => {
-                                      const newFields = (formState.customFields as any[]).filter((_, i) => i !== index);
-                                      setFormState(prev => ({ ...prev, customFields: newFields }));
+                                    <div style={{ fontSize: "12px", color: "#637381" }}>
+                                      {info.label}
+                                      {element.required && <span style={{ color: "#D72C0D", marginLeft: "6px" }}>• Requerido</span>}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                  {/* Move buttons */}
+                                  <button
+                                    onClick={() => moveElement(index, "up")}
+                                    disabled={index === 0}
+                                    style={{
+                                      padding: "6px 10px",
+                                      border: "1px solid #e1e3e5",
+                                      borderRadius: "6px",
+                                      background: index === 0 ? "#f6f6f7" : "#fff",
+                                      cursor: index === 0 ? "default" : "pointer",
+                                      opacity: index === 0 ? 0.4 : 1,
+                                      fontSize: "14px",
                                     }}
+                                    title="Mover arriba"
                                   >
-                                    Eliminar
-                                  </Button>
-                                </InlineStack>
+                                    ↑
+                                  </button>
+                                  <button
+                                    onClick={() => moveElement(index, "down")}
+                                    disabled={index === allElements.length - 1}
+                                    style={{
+                                      padding: "6px 10px",
+                                      border: "1px solid #e1e3e5",
+                                      borderRadius: "6px",
+                                      background: index === allElements.length - 1 ? "#f6f6f7" : "#fff",
+                                      cursor: index === allElements.length - 1 ? "default" : "pointer",
+                                      opacity: index === allElements.length - 1 ? 0.4 : 1,
+                                      fontSize: "14px",
+                                    }}
+                                    title="Mover abajo"
+                                  >
+                                    ↓
+                                  </button>
+                                  <button
+                                    onClick={() => removeElement(index)}
+                                    style={{
+                                      padding: "6px 10px",
+                                      border: "1px solid #ffd2cc",
+                                      borderRadius: "6px",
+                                      background: "#fff5f5",
+                                      color: "#D72C0D",
+                                      cursor: "pointer",
+                                      fontSize: "14px",
+                                    }}
+                                    title="Eliminar"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              </div>
 
+                              {/* Element config */}
+                              <div style={{ padding: "16px" }}>
                                 <FormLayout>
-                                  <FormLayout.Group>
-                                    <Select
-                                      label="Tipo"
-                                      options={[
-                                        { value: "text", label: "Texto" },
-                                        { value: "textarea", label: "Área de texto" },
-                                        { value: "select", label: "Desplegable" },
-                                        { value: "radio", label: "Selección única" },
-                                        { value: "checkbox", label: "Casilla" },
-                                        { value: "date", label: "Fecha" },
-                                        { value: "number", label: "Número" },
-                                        { value: "heading", label: "Título/Texto" },
-                                        { value: "image", label: "Imagen/GIF" },
-                                        { value: "link_button", label: "Botón enlace" },
-                                      ]}
-                                      value={field.type}
-                                      onChange={(value) => {
-                                        const newFields = [...(formState.customFields as any[])];
-                                        newFields[index] = { ...field, type: value };
-                                        setFormState(prev => ({ ...prev, customFields: newFields }));
-                                      }}
-                                    />
-                                    <TextField
-                                      label="Etiqueta"
-                                      value={field.label}
-                                      onChange={(value) => {
-                                        const newFields = [...(formState.customFields as any[])];
-                                        newFields[index] = { ...field, label: value };
-                                        setFormState(prev => ({ ...prev, customFields: newFields }));
-                                      }}
-                                      autoComplete="off"
-                                    />
-                                  </FormLayout.Group>
+                                  {/* Type selector */}
+                                  <Select
+                                    label="Tipo de elemento"
+                                    options={[
+                                      { label: "── Campos COD esenciales ──", value: "", disabled: true },
+                                      { value: "name", label: "👤 Nombre" },
+                                      { value: "phone", label: "📱 Teléfono" },
+                                      { value: "email", label: "✉️ Email" },
+                                      { value: "address", label: "📍 Dirección" },
+                                      { value: "city", label: "🏙️ Ciudad" },
+                                      { value: "province", label: "🗺️ Provincia" },
+                                      { value: "postalCode", label: "📮 Código postal" },
+                                      { value: "notes", label: "📝 Notas" },
+                                      { value: "quantity", label: "🔢 Cantidad" },
+                                      { label: "── Campos personalizados ──", value: "_custom", disabled: true },
+                                      { value: "text", label: "✏️ Campo de texto" },
+                                      { value: "textarea", label: "📄 Área de texto" },
+                                      { value: "number", label: "#️⃣ Número" },
+                                      { value: "select", label: "📋 Desplegable" },
+                                      { value: "radio", label: "🔘 Opción única" },
+                                      { value: "checkbox", label: "☑️ Casilla" },
+                                      { value: "date", label: "📅 Fecha" },
+                                      { label: "── Elementos decorativos ──", value: "_deco", disabled: true },
+                                      { value: "heading", label: "🏷️ Título o texto" },
+                                      { value: "image", label: "🖼️ Imagen o GIF" },
+                                      { value: "html", label: "🧩 Código HTML" },
+                                      { value: "link_button", label: "🔗 Botón con enlace" },
+                                    ]}
+                                    value={element.type}
+                                    onChange={(value) => updateElement(index, { type: value })}
+                                  />
 
-                                  {["text", "textarea", "number"].includes(field.type) && (
+                                  {/* Label for non-HTML types */}
+                                  {element.type !== "html" && (
                                     <TextField
-                                      label="Placeholder"
-                                      value={field.placeholder || ""}
-                                      onChange={(value) => {
-                                        const newFields = [...(formState.customFields as any[])];
-                                        newFields[index] = { ...field, placeholder: value };
-                                        setFormState(prev => ({ ...prev, customFields: newFields }));
-                                      }}
+                                      label={element.type === "heading" ? "Texto a mostrar" : "Etiqueta del campo"}
+                                      value={element.label || ""}
+                                      onChange={(value) => updateElement(index, { label: value })}
                                       autoComplete="off"
                                     />
                                   )}
 
-                                  {["select", "radio"].includes(field.type) && (
+                                  {/* Placeholder for input types */}
+                                  {["text", "textarea", "number"].includes(element.type) && (
                                     <TextField
-                                      label="Opciones (separadas por coma)"
-                                      value={(field.options || []).join(", ")}
-                                      onChange={(value) => {
-                                        const newFields = [...(formState.customFields as any[])];
-                                        newFields[index] = { ...field, options: value.split(",").map((o: string) => o.trim()).filter(Boolean) };
-                                        setFormState(prev => ({ ...prev, customFields: newFields }));
-                                      }}
-                                      placeholder="Opción 1, Opción 2, Opción 3"
+                                      label="Texto de ayuda (placeholder)"
+                                      value={element.placeholder || ""}
+                                      onChange={(value) => updateElement(index, { placeholder: value })}
                                       autoComplete="off"
                                     />
                                   )}
 
-                                  {field.type === "link_button" && (
+                                  {/* Options for select/radio */}
+                                  {["select", "radio"].includes(element.type) && (
                                     <TextField
-                                      label="URL del enlace"
-                                      value={field.url || ""}
-                                      onChange={(value) => {
-                                        const newFields = [...(formState.customFields as any[])];
-                                        newFields[index] = { ...field, url: value };
-                                        setFormState(prev => ({ ...prev, customFields: newFields }));
-                                      }}
-                                      placeholder="https://ejemplo.com/terminos"
+                                      label="Opciones (una por línea o separadas por coma)"
+                                      value={(element.options || []).join(", ")}
+                                      onChange={(value) => updateElement(index, {
+                                        options: value.split(/[,\n]/).map((o: string) => o.trim()).filter(Boolean)
+                                      })}
+                                      multiline={2}
                                       autoComplete="off"
+                                      helpText="Ejemplo: Opción 1, Opción 2, Opción 3"
                                     />
                                   )}
 
-                                  {field.type === "image" && (
+                                  {/* HTML content */}
+                                  {element.type === "html" && (
+                                    <TextField
+                                      label="Código HTML"
+                                      value={element.content || ""}
+                                      onChange={(value) => updateElement(index, { content: value })}
+                                      multiline={4}
+                                      autoComplete="off"
+                                      monospaced
+                                      helpText="Puedes usar HTML para mostrar mensajes, banners, etc."
+                                    />
+                                  )}
+
+                                  {/* Image URL */}
+                                  {element.type === "image" && (
                                     <TextField
                                       label="URL de la imagen"
-                                      value={field.imageUrl || ""}
-                                      onChange={(value) => {
-                                        const newFields = [...(formState.customFields as any[])];
-                                        newFields[index] = { ...field, imageUrl: value };
-                                        setFormState(prev => ({ ...prev, customFields: newFields }));
-                                      }}
-                                      placeholder="https://ejemplo.com/imagen.jpg"
+                                      value={element.imageUrl || ""}
+                                      onChange={(value) => updateElement(index, { imageUrl: value })}
                                       autoComplete="off"
+                                      helpText="Pega la URL de una imagen o GIF"
                                     />
                                   )}
 
-                                  {!["heading", "image", "link_button"].includes(field.type) && (
+                                  {/* Link button URL */}
+                                  {element.type === "link_button" && (
+                                    <TextField
+                                      label="URL del enlace"
+                                      value={element.url || ""}
+                                      onChange={(value) => updateElement(index, { url: value })}
+                                      autoComplete="off"
+                                      helpText="A dónde llevará el botón al hacer clic"
+                                    />
+                                  )}
+
+                                  {/* Required toggle for input fields */}
+                                  {!isDecorative && (
                                     <Checkbox
-                                      label="Campo requerido"
-                                      checked={field.required}
-                                      onChange={(value) => {
-                                        const newFields = [...(formState.customFields as any[])];
-                                        newFields[index] = { ...field, required: value };
-                                        setFormState(prev => ({ ...prev, customFields: newFields }));
-                                      }}
+                                      label="Este campo es obligatorio"
+                                      checked={element.required || false}
+                                      onChange={(value) => updateElement(index, { required: value })}
                                     />
                                   )}
                                 </FormLayout>
-                              </BlockStack>
-                            </Card>
-                          ))}
-                        </div>
+                              </div>
+                            </div>
+                          );
+                        })
                       )}
                     </BlockStack>
-                  </Card>
-                </Box>
+                  </Box>
 
-                {/* CUSTOMIZATION SECTION */}
-                <Box paddingBlockStart="400">
-                  <Card>
-                    <BlockStack gap="400">
-                      <Text as="h2" variant="headingMd">Contenido personalizado</Text>
+                  {/* COUNTRIES & OPTIONS */}
+                  <Box paddingBlockStart="400">
+                    <Card>
+                      <BlockStack gap="400">
+                        <Text as="h2" variant="headingMd">Configuración regional</Text>
+                        <FormLayout>
+                          <TextField
+                            label="Países habilitados"
+                            value={formState.countries}
+                            onChange={handleChange("countries")}
+                            helpText="Códigos separados por coma: DO, CO, MX, PE, CL, AR"
+                            autoComplete="off"
+                          />
+                          <Select
+                            label="País por defecto"
+                            options={COUNTRIES}
+                            value={formState.defaultCountry}
+                            onChange={handleChange("defaultCountry")}
+                          />
+                        </FormLayout>
+                      </BlockStack>
+                    </Card>
+                  </Box>
 
-                      <FormLayout>
-                        <TextField
-                          label="URL de imagen personalizada"
-                          value={formState.customImageUrl}
-                          onChange={handleChange("customImageUrl")}
-                          placeholder="https://ejemplo.com/imagen.jpg"
-                          helpText="Imagen adicional para mostrar en el modal"
-                          autoComplete="off"
-                        />
-                        <Select
-                          label="Posición de la imagen"
-                          options={[
-                            { value: "none", label: "No mostrar" },
-                            { value: "top", label: "Arriba del formulario" },
-                            { value: "after_product", label: "Después del producto" },
-                            { value: "bottom", label: "Antes del botón" },
-                          ]}
-                          value={formState.customImagePosition}
-                          onChange={handleChange("customImagePosition")}
-                        />
-                        <TextField
-                          label="HTML arriba del formulario"
-                          value={formState.customHtmlTop}
-                          onChange={handleChange("customHtmlTop")}
-                          multiline={3}
-                          placeholder="<div class='promo'>¡Envío gratis!</div>"
-                          autoComplete="off"
-                          monospaced
-                        />
-                        <TextField
-                          label="HTML abajo del formulario"
-                          value={formState.customHtmlBottom}
-                          onChange={handleChange("customHtmlBottom")}
-                          multiline={3}
-                          placeholder="<p>Al enviar aceptas los términos</p>"
-                          autoComplete="off"
-                          monospaced
-                        />
-                        <TextField
-                          label="CSS personalizado"
-                          value={formState.customCss}
-                          onChange={handleChange("customCss")}
-                          multiline={4}
-                          placeholder=".curetfy-modal { border-radius: 20px; }"
-                          autoComplete="off"
-                          monospaced
-                        />
-                      </FormLayout>
-                    </BlockStack>
-                  </Card>
-                </Box>
+                  {/* FORM OPTIONS */}
+                  <Box paddingBlockStart="400">
+                    <Card>
+                      <BlockStack gap="400">
+                        <Text as="h2" variant="headingMd">Opciones de visualización</Text>
+                        <FormLayout>
+                          <Checkbox
+                            label="Ocultar etiquetas de campos"
+                            helpText="Solo mostrar placeholders, estilo más limpio"
+                            checked={formState.hideFieldLabels}
+                            onChange={handleChange("hideFieldLabels")}
+                          />
+                          <Checkbox
+                            label="Texto de derecha a izquierda (RTL)"
+                            helpText="Para árabe, hebreo y otros idiomas RTL"
+                            checked={formState.enableRTL}
+                            onChange={handleChange("enableRTL")}
+                          />
+                          <TextField
+                            label="CSS personalizado (avanzado)"
+                            value={formState.customCss}
+                            onChange={handleChange("customCss")}
+                            multiline={3}
+                            autoComplete="off"
+                            monospaced
+                            helpText="Estilos CSS adicionales para el formulario"
+                          />
+                        </FormLayout>
+                      </BlockStack>
+                    </Card>
+                  </Box>
+                </Layout.Section>
 
-                {/* FORM OPTIONS */}
-                <Box paddingBlockStart="400">
-                  <Card>
-                    <BlockStack gap="400">
-                      <Text as="h2" variant="headingMd">Opciones del formulario</Text>
-                      <FormLayout>
-                        <Checkbox
-                          label="Ocultar etiquetas de campos"
-                          helpText="Solo muestra placeholders"
-                          checked={formState.hideFieldLabels}
-                          onChange={handleChange("hideFieldLabels")}
-                        />
-                        <Checkbox
-                          label="Soporte RTL (derecha a izquierda)"
-                          helpText="Para árabe, hebreo, etc."
-                          checked={formState.enableRTL}
-                          onChange={handleChange("enableRTL")}
-                        />
-                      </FormLayout>
-                    </BlockStack>
-                  </Card>
-                </Box>
-              </Layout.Section>
-
-              {/* PREVIEW */}
-              <Layout.Section variant="oneThird">
-                <Card>
-                  <BlockStack gap="400">
-                    <InlineStack align="space-between">
-                      <Text as="h2" variant="headingMd">Vista previa</Text>
-                      <Badge tone="info">En tiempo real</Badge>
-                    </InlineStack>
-                    <FormModalPreview formState={formState} previewType="form" />
-                  </BlockStack>
-                </Card>
-              </Layout.Section>
-            </Layout>
-          )}
+                {/* PREVIEW */}
+                <Layout.Section variant="oneThird">
+                  <div style={{ position: "sticky", top: "20px" }}>
+                    <Card>
+                      <BlockStack gap="400">
+                        <InlineStack align="space-between">
+                          <Text as="h2" variant="headingMd">Vista previa</Text>
+                          <Badge tone="info">En tiempo real</Badge>
+                        </InlineStack>
+                        <FormModalPreview formState={formState} previewType="form" />
+                      </BlockStack>
+                    </Card>
+                  </div>
+                </Layout.Section>
+              </Layout>
+            );
+          })()}
 
           {/* TAB: Modal Customization */}
           {selectedTab === 2 && (
