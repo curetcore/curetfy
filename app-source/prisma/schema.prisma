@@ -381,10 +381,8 @@ model FormOpen {
 }
 
 enum Plan {
-  FREE        // 60 orders/month
-  PRO         // 500 orders/month
-  BUSINESS    // 2000 orders/month
-  UNLIMITED   // Unlimited
+  FREE        // 100 orders/month
+  PRO         // Unlimited orders
 }
 
 enum OrderStatus {

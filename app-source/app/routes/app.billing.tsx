@@ -23,6 +23,7 @@ const PLANS = {
     name: "Gratis",
     price: 0,
     orders: 100,
+    unlimited: false,
     features: [
       "100 órdenes/mes",
       "Integración WhatsApp",
@@ -34,7 +35,8 @@ const PLANS = {
   PRO: {
     name: "Pro",
     price: 9,
-    orders: Infinity,
+    orders: -1,
+    unlimited: true,
     features: [
       "Órdenes ilimitadas",
       "Constructor de formularios",
@@ -124,10 +126,10 @@ export default function Billing() {
                     <Text as="p" variant="heading2xl" fontWeight="bold">
                       ${plan.price}
                     </Text>
-                    <Text as="p" variant="bodySm" tone="subdued">/mes</Text>
+                    <Text as="p" variant="bodySm" tone="subdued">USD/mes</Text>
                   </InlineStack>
                   <Text as="p" variant="bodySm" tone="subdued">
-                    {plan.orders === Infinity ? "Órdenes ilimitadas" : `${plan.orders} órdenes/mes`}
+                    {plan.unlimited ? "Órdenes ilimitadas" : `${plan.orders} órdenes/mes`}
                   </Text>
                 </BlockStack>
 
