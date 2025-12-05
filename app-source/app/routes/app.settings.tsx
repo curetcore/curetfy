@@ -1267,17 +1267,17 @@ function FormModalPreview({
             borderRadius: "20px",
             fontSize: "13px",
           }}>
-            <span style={{ fontWeight: 600, color: "#166534" }}>4SALE</span>
-            <span style={{ color: "#166534" }}>-$4</span>
+            <span style={{ fontWeight: 600, color: "#166534" }}>DESCUENTO10</span>
+            <span style={{ color: "#166534" }}>-10%</span>
             <span style={{ cursor: "pointer", color: "#6b7177", marginLeft: "4px" }}>×</span>
           </div>
         </div>
 
         {/* Order Summary */}
         {(() => {
-          const subtotal = 2500;
+          const subtotal = sampleProduct?.price ? parseFloat(sampleProduct.price) : 1250;
           const shipping = 0;
-          const discount = 4;
+          const discount = subtotal * 0.1; // 10% discount example
           const taxRate = parseFloat(formState.taxRate) || 18;
           const taxIncluded = formState.taxIncluded;
 
@@ -1306,14 +1306,14 @@ function FormModalPreview({
             }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", fontSize: "13px" }}>
                 <span style={{ color: "#6b7177" }}>Subtotal:</span>
-                <span>${displaySubtotal.toLocaleString()}</span>
+                <span>${displaySubtotal.toFixed(2)}</span>
               </div>
               {formState.enableTax && (
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", fontSize: "13px" }}>
                   <span style={{ color: "#6b7177" }}>
                     Impuesto ({taxRate}%){taxIncluded ? " incl." : ""}:
                   </span>
-                  <span>{taxIncluded ? "" : "+"} ${taxAmount.toLocaleString()}</span>
+                  <span>{taxIncluded ? "" : "+"} ${taxAmount.toFixed(2)}</span>
                 </div>
               )}
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", fontSize: "13px" }}>
@@ -1321,8 +1321,8 @@ function FormModalPreview({
                 <span style={{ color: "#008060", fontWeight: 500 }}>GRATIS</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "13px" }}>
-                <span style={{ color: "#6b7177" }}>Descuento:</span>
-                <span style={{ color: "#dc2626" }}>-${discount}</span>
+                <span style={{ color: "#6b7177" }}>Descuento (10%):</span>
+                <span style={{ color: "#dc2626" }}>-${discount.toFixed(2)}</span>
               </div>
               <div style={{
                 display: "flex",
@@ -1333,7 +1333,7 @@ function FormModalPreview({
                 fontWeight: 600,
               }}>
                 <span>Total:</span>
-                <span style={{ color: "#1a1a1a" }}>${total.toLocaleString()}</span>
+                <span style={{ color: "#1a1a1a" }}>${total.toFixed(2)}</span>
               </div>
             </div>
           );
