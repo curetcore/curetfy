@@ -53,7 +53,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
 
     // Check order limits
-    const orderLimit = PLAN_LIMITS[shopData.plan] || 60;
+    const orderLimit = PLAN_LIMITS[shopData.plan] || 100;
     if (shopData.ordersThisMonth >= orderLimit) {
       return json({
         success: false,

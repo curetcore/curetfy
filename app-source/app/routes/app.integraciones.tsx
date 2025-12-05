@@ -29,23 +29,23 @@ import prisma from "../db.server";
 // WhatsApp Message Preview Component
 function WhatsAppPreview({ template, shopName }: { template: string; shopName: string }) {
   const sampleData: Record<string, string> = {
-    order_number: "COD-001",
+    order_number: "COD-00001",
     order_id: "12345",
-    order_total: "2,500.00",
-    first_name: "Juan",
-    last_name: "Pérez",
-    phone: "+1 809 555 1234",
-    email: "juan@email.com",
-    address: "Calle Principal #123, Sector Centro",
+    order_total: "$125.00",
+    first_name: "María",
+    last_name: "García",
+    phone: "+1 555 123 4567",
+    email: "maria@email.com",
+    address: "Calle Principal #123",
     address2: "Apt 4B",
-    city: "Santo Domingo",
-    province: "Distrito Nacional",
+    city: "Ciudad",
+    province: "Provincia",
     zip_code: "10101",
     order_note: "Entregar después de las 5pm",
     shipping_rate_name: "Envío estándar",
-    product_title: "Camiseta Premium Negra",
+    product_title: "Producto de ejemplo",
     product_quantity: "2",
-    products_summary_with_quantity: "2x Camiseta Premium Negra ($1,250.00)\n1x Pantalón Jogger Gris ($1,890.00)",
+    products_summary_with_quantity: "2x Producto Premium ($50.00)\n1x Producto Básico ($25.00)",
   };
 
   let preview = template;

@@ -317,7 +317,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   });
 
   // Calculate stats
-  const orderLimit = PLAN_LIMITS[shop.plan] || 60;
+  const orderLimit = PLAN_LIMITS[shop.plan] || 100;
   const usagePercentage = orderLimit === Infinity ? 0 : Math.round((ordersThisMonth / orderLimit) * 100);
 
   // Calculate conversion rate (REAL DATA)

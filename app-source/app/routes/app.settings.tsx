@@ -423,7 +423,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
                 zoneName: zone?.name || "Sin zona",
                 name: method.name,
                 price: method.rateProvider?.price?.amount || "0.00",
-                currency: method.rateProvider?.price?.currencyCode || "DOP",
+                currency: method.rateProvider?.price?.currencyCode || "USD",
               });
             }
           }
@@ -2273,7 +2273,7 @@ export default function Settings() {
             };
 
             // Calculate sample values for preview
-            const sampleSubtotal = parseFloat(sampleProduct?.price || "2500");
+            const sampleSubtotal = parseFloat(sampleProduct?.price || "100");
             const freeShippingThreshold = parseFloat(formState.freeShippingThreshold as string) || 2000;
             const amountToFreeShipping = Math.max(0, freeShippingThreshold - sampleSubtotal);
             const freeShippingProgress = Math.min(100, (sampleSubtotal / freeShippingThreshold) * 100);
