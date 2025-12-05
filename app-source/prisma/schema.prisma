@@ -40,7 +40,7 @@ model Shop {
   // WHATSAPP CONFIGURATION
   // ==========================================
   whatsappNumber      String?
-  messageTemplate     String?  @default("Hola, realicé un pedido el cual me gustaría que sea entregado tomando en cuenta los siguientes datos.\n\nNumero de orden: {order_number}\nTotal de la compra: RD${order_total}\nLo que compré fue: {products_summary_with_quantity}\n\nPersona autorizada de recibir:\nNombre: {first_name} {last_name}\nWhatsApp: {phone}\nCorreo electronico: {email}\n\nDirección de entrega:\n{address}, {province}\n\nAgradezco su pronta atención y confirmación del envío.\n\nSaludos cordiales,\n\n{first_name} {last_name}")
+  messageTemplate     String?  @default("Hola, realicé un pedido el cual me gustaría que sea entregado tomando en cuenta los siguientes datos.\n\nNumero de orden: {order_number}\nTotal de la compra: {order_total}\nLo que compré fue: {products_summary_with_quantity}\n\nPersona autorizada de recibir:\nNombre: {first_name} {last_name}\nWhatsApp: {phone}\nCorreo electronico: {email}\n\nDirección de entrega:\n{address}, {province}\n\nAgradezco su pronta atención y confirmación del envío.\n\nSaludos cordiales,\n\n{first_name} {last_name}")
 
   // Redirect options after order: "shopify" | "custom" | "whatsapp"
   redirectType        String   @default("whatsapp")

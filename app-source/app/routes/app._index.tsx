@@ -33,10 +33,8 @@ import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
 
 const PLAN_LIMITS: Record<string, number> = {
-  FREE: 60,
-  PRO: 500,
-  BUSINESS: 2000,
-  UNLIMITED: Infinity,
+  FREE: 100,
+  PRO: Infinity,
 };
 
 // Generate last 30 days for chart
@@ -192,6 +190,20 @@ function LineChart({
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session, admin } = await authenticate.admin(request);
+
+  // Fetch shop currency from Shopify
+  const shopResponse = await admin.graphql(`
+    query {
+      shop {
+        currencyCode
+        currencyFormats {
+          moneyFormat
+        }
+      }
+    }
+  `);
+  const shopData = await shopResponse.json();
+  const currency = shopData.data?.shop?.currencyCode || "USD";
 
   // Find or create shop
   let shop = await prisma.shop.findUnique({
@@ -398,13 +410,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     orderLimit,
     usagePercentage,
     setupComplete: !!shop.whatsappNumber,
+    currency,
   });
 };
 
 export default function Dashboard() {
-  const { shop, stats, chartData, utmData, orderLimit, usagePercentage, setupComplete } = useLoaderData<typeof loader>();
-
-  const currency = "DOP";
+  const { shop, stats, chartData, utmData, orderLimit, usagePercentage, setupComplete, currency } = useLoaderData<typeof loader>();
 
   // UTM table rows
   const utmRows = utmData.map(row => [

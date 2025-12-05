@@ -45,7 +45,7 @@ function WhatsAppPreview({ template, shopName }: { template: string; shopName: s
     shipping_rate_name: "Envío estándar",
     product_title: "Camiseta Premium Negra",
     product_quantity: "2",
-    products_summary_with_quantity: "2x Camiseta Premium Negra (RD$ 1,250.00)\n1x Pantalón Jogger Gris (RD$ 1,890.00)",
+    products_summary_with_quantity: "2x Camiseta Premium Negra ($1,250.00)\n1x Pantalón Jogger Gris ($1,890.00)",
   };
 
   let preview = template;
@@ -312,7 +312,7 @@ export default function Integraciones() {
   const [formState, setFormState] = useState({
     // WhatsApp
     whatsappNumber: shop?.whatsappNumber || "",
-    messageTemplate: shop?.messageTemplate || "Hola, realicé un pedido el cual me gustaría que sea entregado tomando en cuenta los siguientes datos.\n\nNumero de orden: {order_number}\nTotal de la compra: RD${order_total}\nLo que compré fue: {products_summary_with_quantity}\n\nPersona autorizada de recibir:\nNombre: {first_name} {last_name}\nWhatsApp: {phone}\nCorreo electronico: {email}\n\nDirección de entrega:\n{address}, {province}\n\nAgradezco su pronta atención y confirmación del envío.\n\nSaludos cordiales,\n\n{first_name} {last_name}",
+    messageTemplate: shop?.messageTemplate || "Hola, realicé un pedido el cual me gustaría que sea entregado tomando en cuenta los siguientes datos.\n\nNumero de orden: {order_number}\nTotal de la compra: {order_total}\nLo que compré fue: {products_summary_with_quantity}\n\nPersona autorizada de recibir:\nNombre: {first_name} {last_name}\nWhatsApp: {phone}\nCorreo electronico: {email}\n\nDirección de entrega:\n{address}, {province}\n\nAgradezco su pronta atención y confirmación del envío.\n\nSaludos cordiales,\n\n{first_name} {last_name}",
     redirectType: shop?.redirectType || "whatsapp",
     customRedirectUrl: shop?.customRedirectUrl || "",
     // Visibility

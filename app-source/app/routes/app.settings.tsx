@@ -921,7 +921,7 @@ function FormModalPreview({
   // Use sample product from store or fallback
   const productTitle = sampleProduct?.title || "Producto de ejemplo";
   const productImage = sampleProduct?.image;
-  const productPrice = sampleProduct?.price ? `$${parseFloat(sampleProduct.price).toLocaleString('es-DO', { minimumFractionDigits: 2 })}` : "RD$ 1,250.00";
+  const productPrice = sampleProduct?.price ? `$${parseFloat(sampleProduct.price).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : "$1,250.00";
 
   const hideLabels = formState.hideFieldLabels;
   const fieldStyle = { marginBottom: "16px" };
@@ -1268,7 +1268,7 @@ function FormModalPreview({
             fontSize: "13px",
           }}>
             <span style={{ fontWeight: 600, color: "#166534" }}>4SALE</span>
-            <span style={{ color: "#166534" }}>-RD$4</span>
+            <span style={{ color: "#166534" }}>-$4</span>
             <span style={{ cursor: "pointer", color: "#6b7177", marginLeft: "4px" }}>×</span>
           </div>
         </div>
@@ -1306,14 +1306,14 @@ function FormModalPreview({
             }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", fontSize: "13px" }}>
                 <span style={{ color: "#6b7177" }}>Subtotal:</span>
-                <span>RD${displaySubtotal.toLocaleString()}</span>
+                <span>${displaySubtotal.toLocaleString()}</span>
               </div>
               {formState.enableTax && (
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", fontSize: "13px" }}>
                   <span style={{ color: "#6b7177" }}>
-                    ITBIS ({taxRate}%){taxIncluded ? " incl." : ""}:
+                    Impuesto ({taxRate}%){taxIncluded ? " incl." : ""}:
                   </span>
-                  <span>{taxIncluded ? "" : "+"} RD${taxAmount.toLocaleString()}</span>
+                  <span>{taxIncluded ? "" : "+"} ${taxAmount.toLocaleString()}</span>
                 </div>
               )}
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", fontSize: "13px" }}>
@@ -1322,7 +1322,7 @@ function FormModalPreview({
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "13px" }}>
                 <span style={{ color: "#6b7177" }}>Descuento:</span>
-                <span style={{ color: "#dc2626" }}>-RD${discount}</span>
+                <span style={{ color: "#dc2626" }}>-${discount}</span>
               </div>
               <div style={{
                 display: "flex",
@@ -1333,7 +1333,7 @@ function FormModalPreview({
                 fontWeight: 600,
               }}>
                 <span>Total:</span>
-                <span style={{ color: "#1a1a1a" }}>RD${total.toLocaleString()}</span>
+                <span style={{ color: "#1a1a1a" }}>${total.toLocaleString()}</span>
               </div>
             </div>
           );
@@ -1373,7 +1373,7 @@ function FormModalPreview({
                   <span style={{ fontSize: "14px", fontWeight: index === 0 ? 500 : 400 }}>{rate.name || "Envío"}</span>
                 </div>
                 <span style={{ fontSize: "14px", fontWeight: 500, color: parseFloat(rate.price) === 0 ? "#008060" : "#1a1a1a" }}>
-                  {parseFloat(rate.price) === 0 ? "GRATIS" : `RD$${rate.price}`}
+                  {parseFloat(rate.price) === 0 ? "GRATIS" : `$${rate.price}`}
                 </span>
               </label>
             ))}

@@ -3,10 +3,8 @@ import { json } from "@remix-run/node";
 import prisma from "../db.server";
 
 const PLAN_LIMITS: Record<string, number> = {
-  FREE: 60,
-  PRO: 500,
-  BUSINESS: 2000,
-  UNLIMITED: Infinity,
+  FREE: 100,
+  PRO: Infinity,
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -24,7 +22,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       variantId,
       quantity = 1,
       price,
-      currency = "DOP",
+      currency = "USD",
       customer,
       // UTM tracking
       utmSource,
@@ -168,7 +166,20 @@ function generateWhatsAppLink(params: {
 
 function formatCurrency(amount: number, currency: string): string {
   try {
-    return new Intl.NumberFormat("es-DO", {
+    // Use locale based on currency for proper formatting
+    const localeMap: Record<string, string> = {
+      USD: "en-US",
+      DOP: "es-DO",
+      COP: "es-CO",
+      MXN: "es-MX",
+      PEN: "es-PE",
+      CLP: "es-CL",
+      ARS: "es-AR",
+      EUR: "es-ES",
+    };
+    const locale = localeMap[currency] || "en-US";
+
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency,
     }).format(amount);
