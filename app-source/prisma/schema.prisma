@@ -85,10 +85,10 @@ model Shop {
   // FORM PLACEHOLDERS (Editable)
   // ==========================================
   placeholderName     String   @default("Juan Pérez")
-  placeholderPhone    String   @default("809-555-1234")
+  placeholderPhone    String   @default("+1 555-123-4567")
   placeholderEmail    String   @default("juan@email.com")
   placeholderAddress  String   @default("Calle, número, sector...")
-  placeholderCity     String   @default("Santo Domingo")
+  placeholderCity     String   @default("Tu ciudad")
   placeholderNotes    String   @default("Instrucciones especiales...")
   placeholderPostal   String   @default("10101")
 
@@ -323,7 +323,7 @@ model Order {
   subtotal            Decimal     @db.Decimal(10, 2)
   discount            Decimal     @default(0) @db.Decimal(10, 2)
   total               Decimal     @db.Decimal(10, 2)
-  currency            String      @default("DOP")
+  currency            String      @default("USD")
 
   // Upsells
   upsellsData         Json?       // Store upsell items if any

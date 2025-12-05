@@ -948,14 +948,14 @@ function FormModalPreview({
         return (
           <div key={field.id} style={fieldStyle}>
             <label style={labelStyle}>{field.label || "Nombre completo"} {field.required ? "*" : ""}</label>
-            <input type="text" placeholder={field.placeholder || "Juan Pérez"} readOnly style={inputStyle} />
+            <input type="text" placeholder={field.placeholder || "Tu nombre"} readOnly style={inputStyle} />
           </div>
         );
       case "phone":
         return (
           <div key={field.id} style={fieldStyle}>
             <label style={labelStyle}>{field.label || "Teléfono / WhatsApp"} {field.required ? "*" : ""}</label>
-            <input type="text" placeholder={field.placeholder || "809-555-1234"} readOnly style={inputStyle} />
+            <input type="text" placeholder={field.placeholder || "+1 555-123-4567"} readOnly style={inputStyle} />
           </div>
         );
       case "email":
@@ -976,7 +976,7 @@ function FormModalPreview({
         return (
           <div key={field.id} style={fieldStyle}>
             <label style={labelStyle}>{field.label || "Ciudad"} {field.required ? "*" : ""}</label>
-            <input type="text" placeholder={field.placeholder || "Santo Domingo"} readOnly style={inputStyle} />
+            <input type="text" placeholder={field.placeholder || "Tu ciudad"} readOnly style={inputStyle} />
           </div>
         );
       case "province":
@@ -1537,10 +1537,10 @@ export default function Settings() {
 
     // Placeholders
     placeholderName: shop?.placeholderName || "Juan Pérez",
-    placeholderPhone: shop?.placeholderPhone || "809-555-1234",
+    placeholderPhone: shop?.placeholderPhone || "+1 555-123-4567",
     placeholderEmail: shop?.placeholderEmail || "correo@ejemplo.com",
     placeholderAddress: shop?.placeholderAddress || "Calle, número, sector...",
-    placeholderCity: shop?.placeholderCity || "Santo Domingo",
+    placeholderCity: shop?.placeholderCity || "Tu ciudad",
     placeholderNotes: shop?.placeholderNotes || "Instrucciones especiales...",
     placeholderPostal: shop?.placeholderPostal || "10101",
 
@@ -1661,10 +1661,10 @@ export default function Settings() {
     if (!hasInitialized.current && (formState.customFields as any[]).length === 0) {
       hasInitialized.current = true;
       const defaultCODTemplate = [
-        { id: `field_${Date.now()}_1`, type: "name", label: "Nombre completo", placeholder: "Juan Pérez", required: true, options: [], content: "", imageUrl: "", url: "" },
-        { id: `field_${Date.now()}_2`, type: "phone", label: "Teléfono / WhatsApp", placeholder: "809-555-1234", required: true, options: [], content: "", imageUrl: "", url: "" },
+        { id: `field_${Date.now()}_1`, type: "name", label: "Nombre completo", placeholder: "Tu nombre", required: true, options: [], content: "", imageUrl: "", url: "" },
+        { id: `field_${Date.now()}_2`, type: "phone", label: "Teléfono / WhatsApp", placeholder: "+1 555-123-4567", required: true, options: [], content: "", imageUrl: "", url: "" },
         { id: `field_${Date.now()}_3`, type: "address", label: "Dirección de entrega", placeholder: "Calle, número, sector...", required: true, options: [], content: "", imageUrl: "", url: "" },
-        { id: `field_${Date.now()}_4`, type: "city", label: "Ciudad", placeholder: "Santo Domingo", required: false, options: [], content: "", imageUrl: "", url: "" },
+        { id: `field_${Date.now()}_4`, type: "city", label: "Ciudad", placeholder: "Tu ciudad", required: false, options: [], content: "", imageUrl: "", url: "" },
         { id: `field_${Date.now()}_5`, type: "province", label: "Provincia / Estado", placeholder: "", required: false, options: [], content: "", imageUrl: "", url: "" },
       ];
       setFormState(prev => ({ ...prev, customFields: defaultCODTemplate }));
@@ -1770,11 +1770,11 @@ export default function Settings() {
 
             // Default values for COD fields
             const fieldDefaults: Record<string, { label: string; placeholder: string; required: boolean }> = {
-              name: { label: "Nombre completo", placeholder: "Juan Pérez", required: true },
-              phone: { label: "Teléfono / WhatsApp", placeholder: "809-555-1234", required: true },
+              name: { label: "Nombre completo", placeholder: "Tu nombre", required: true },
+              phone: { label: "Teléfono / WhatsApp", placeholder: "+1 555-123-4567", required: true },
               email: { label: "Email", placeholder: "correo@ejemplo.com", required: false },
               address: { label: "Dirección de entrega", placeholder: "Calle, número, sector...", required: true },
-              city: { label: "Ciudad", placeholder: "Santo Domingo", required: false },
+              city: { label: "Ciudad", placeholder: "Tu ciudad", required: false },
               province: { label: "Provincia / Estado", placeholder: "", required: false },
               postalCode: { label: "Código postal", placeholder: "10101", required: false },
               notes: { label: "Notas del pedido", placeholder: "Instrucciones especiales...", required: false },
@@ -2899,14 +2899,14 @@ export default function Settings() {
                               onChange={handleChange("taxRate")}
                               type="number"
                               suffix="%"
-                              helpText="ITBIS u otro impuesto (ej: 18%)"
+                              helpText="IVA, ITBIS u otro impuesto (ej: 18%)"
                               autoComplete="off"
                             />
                             <BlockStack gap="200">
                               <Text as="span" variant="bodyMd" fontWeight="medium">¿Cómo se aplica?</Text>
                               <RadioButton
                                 label="Incluido en el precio"
-                                helpText="Los precios ya incluyen ITBIS"
+                                helpText="Los precios ya incluyen el impuesto"
                                 id="tax-included"
                                 name="taxIncluded"
                                 checked={formState.taxIncluded === true}
@@ -2914,7 +2914,7 @@ export default function Settings() {
                               />
                               <RadioButton
                                 label="Agregar sobre el precio"
-                                helpText="El ITBIS se suma al subtotal"
+                                helpText="El impuesto se suma al subtotal"
                                 id="tax-added"
                                 name="taxIncluded"
                                 checked={formState.taxIncluded === false}

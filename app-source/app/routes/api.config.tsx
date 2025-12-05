@@ -372,13 +372,13 @@ function getDefaultConfig() {
       quantity: "Cantidad",
     },
     placeholders: {
-      name: "Ej: Juan Pérez",
-      phone: "Ej: 809-555-1234",
-      email: "Ej: juan@email.com",
+      name: "Tu nombre",
+      phone: "+1 555-123-4567",
+      email: "correo@ejemplo.com",
       address: "Calle, número, sector...",
-      city: "Ej: Santo Domingo",
+      city: "Tu ciudad",
       notes: "Instrucciones especiales...",
-      postalCode: "Ej: 10101",
+      postalCode: "10101",
     },
     fields: {
       showEmail: false,
