@@ -20,50 +20,30 @@ import prisma from "../db.server";
 
 const PLANS = {
   FREE: {
-    name: "Free",
+    name: "Gratis",
     price: 0,
-    orders: 60,
+    orders: 100,
     features: [
-      "60 órdenes/mes",
-      "1 número WhatsApp",
+      "100 órdenes/mes",
+      "Integración WhatsApp",
       "Formulario básico",
+      "1 zona de envío",
       "Soporte por email",
     ],
   },
   PRO: {
     name: "Pro",
-    price: 7.99,
-    orders: 500,
-    features: [
-      "500 órdenes/mes",
-      "1 número WhatsApp",
-      "Personalización completa",
-      "Analytics básico",
-      "Soporte prioritario",
-    ],
-  },
-  BUSINESS: {
-    name: "Business",
-    price: 19.99,
-    orders: 2000,
-    features: [
-      "2,000 órdenes/mes",
-      "Múltiples números WhatsApp",
-      "Google Sheets export",
-      "Facebook Pixel",
-      "Analytics avanzado",
-    ],
-  },
-  UNLIMITED: {
-    name: "Unlimited",
-    price: 49.99,
+    price: 9,
     orders: Infinity,
     features: [
       "Órdenes ilimitadas",
-      "Todo en Business",
-      "A/B Testing",
-      "API access",
-      "Soporte dedicado",
+      "Constructor de formularios",
+      "Zonas de envío ilimitadas",
+      "Cupones de descuento",
+      "Analytics completo",
+      "Draft orders en Shopify",
+      "Soporte prioritario",
+      "Sin marca de agua",
     ],
   },
 };
@@ -129,7 +109,7 @@ export default function Billing() {
       <TitleBar title="Planes de facturación" />
       <Layout>
         {Object.entries(plans).map(([key, plan]) => (
-          <Layout.Section key={key} variant="oneQuarter">
+          <Layout.Section key={key} variant="oneHalf">
             <Card>
               <BlockStack gap="400">
                 <InlineStack align="space-between">
