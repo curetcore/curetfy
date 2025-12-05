@@ -84,9 +84,9 @@ model Shop {
   // ==========================================
   // FORM PLACEHOLDERS (Editable)
   // ==========================================
-  placeholderName     String   @default("Juan Pérez")
+  placeholderName     String   @default("Tu nombre")
   placeholderPhone    String   @default("+1 555-123-4567")
-  placeholderEmail    String   @default("juan@email.com")
+  placeholderEmail    String   @default("correo@ejemplo.com")
   placeholderAddress  String   @default("Calle, número, sector...")
   placeholderCity     String   @default("Tu ciudad")
   placeholderNotes    String   @default("Instrucciones especiales...")

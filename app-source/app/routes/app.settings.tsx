@@ -1536,7 +1536,7 @@ export default function Settings() {
     labelQuantity: shop?.labelQuantity || "Cantidad",
 
     // Placeholders
-    placeholderName: shop?.placeholderName || "Juan Pérez",
+    placeholderName: shop?.placeholderName || "Tu nombre",
     placeholderPhone: shop?.placeholderPhone || "+1 555-123-4567",
     placeholderEmail: shop?.placeholderEmail || "correo@ejemplo.com",
     placeholderAddress: shop?.placeholderAddress || "Calle, número, sector...",
