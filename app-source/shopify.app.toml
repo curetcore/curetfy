@@ -3,7 +3,7 @@
 
 client_id = "e7fe6e424e36bfe9558ba5eafb8703d5"
 name = "Curetfy - COD Form"
-handle = "curetfy-cod-form"
+handle = "curetfy-cod"
 application_url = "https://app.curetcore.com"
 embedded = true
 
