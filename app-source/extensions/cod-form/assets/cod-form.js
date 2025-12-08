@@ -14,6 +14,10 @@
   let shopCountries = null;
   let currentModal = null;
 
+  // Visitor tracking (Built for Shopify 5.7.2)
+  let currentVisitorId = null;
+  let visitorSessionId = null;
+
   // Current order state
   let orderState = {
     subtotal: 0,
@@ -37,9 +41,75 @@
     };
   }
 
+  // Generate session ID for visitor tracking
+  function generateSessionId() {
+    const stored = sessionStorage.getItem('curetfy_session_id');
+    if (stored) return stored;
+    const newId = 'cs_' + Date.now() + '_' + Math.random().toString(36).substring(2, 15);
+    sessionStorage.setItem('curetfy_session_id', newId);
+    return newId;
+  }
+
+  // Initialize visitor session (Built for Shopify 5.7.2)
+  async function initVisitorSession(shop) {
+    try {
+      if (!visitorSessionId) {
+        visitorSessionId = generateSessionId();
+      }
+
+      const utm = getUTMParams();
+      const res = await fetch(`${API_BASE}/api/visitors`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'session',
+          shop,
+          sessionId: visitorSessionId,
+          referrer: document.referrer || null,
+          landingPage: window.location.href,
+          ...utm,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success && data.visitorId) {
+        currentVisitorId = data.visitorId;
+      }
+    } catch (err) {
+      console.warn('Curetfy: Failed to init visitor session', err);
+    }
+  }
+
+  // Track visitor activity
+  async function trackVisitorActivity(event, metadata = {}) {
+    if (!currentVisitorId) return;
+    try {
+      await fetch(`${API_BASE}/api/visitors`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'activity',
+          visitorId: currentVisitorId,
+          event,
+          metadata,
+        }),
+      });
+    } catch (err) {
+      // Silent fail for activity tracking
+    }
+  }
+
   // Track form open
   async function trackFormOpen(shop, productId, productTitle) {
     try {
+      // Initialize visitor session if not already done
+      if (!currentVisitorId) {
+        await initVisitorSession(shop);
+      }
+
+      // Track form open activity
+      trackVisitorActivity('form_open', { productId, productTitle });
+
       const utm = getUTMParams();
       await fetch(`${API_BASE}/api/track-open`, {
         method: 'POST',
@@ -1177,34 +1247,41 @@
       }
     });
 
+    // Track submit attempt
+    trackVisitorActivity('submit_attempt', { total: orderState.total });
+
+    // Build payload for the new order-complete endpoint (Built for Shopify 5.7.3)
+    const mainItem = items[0];
     const payload = {
       shop: modal.dataset.shop,
-      items: items.map(item => ({
-        productId: item.id,
-        productTitle: item.title,
-        variantId: item.variantId,
-        quantity: isMultiple ? item.quantity : quantity,
-        price: item.price,
-        image: item.image
-      })),
+      productId: String(mainItem.id),
+      productTitle: mainItem.title,
+      variantId: mainItem.variantId ? String(mainItem.variantId) : undefined,
+      variantTitle: mainItem.variantTitle || undefined,
+      productImage: mainItem.image,
+      quantity: isMultiple ? items.reduce((sum, i) => sum + i.quantity, 0) : quantity,
+      price: String(mainItem.price),
       currency,
-      subtotal: orderState.subtotal,
-      shipping: orderState.shipping,
-      shippingMethod: orderState.shippingMethod,
-      codFee: orderState.codFee,
-      total: orderState.total,
       customer: {
         name: form.querySelector('#curetfy-name')?.value.trim() || '',
         phone: form.querySelector('#curetfy-phone')?.value.trim() || '',
         email: form.querySelector('#curetfy-email')?.value.trim() || '',
         address: form.querySelector('#curetfy-address')?.value.trim() || '',
+        address2: '',
         city: form.querySelector('#curetfy-city')?.value.trim() || '',
         province: form.querySelector('#curetfy-province')?.value || '',
         postalCode: form.querySelector('#curetfy-postal')?.value.trim() || '',
         notes: form.querySelector('#curetfy-notes')?.value.trim() || '',
         country: cfg.defaultCountry || 'DO'
       },
-      customFields: customFieldValues,
+      shippingRate: orderState.shippingMethod ? {
+        name: orderState.shippingMethod,
+        price: orderState.shipping
+      } : undefined,
+      codFee: orderState.codFee,
+      discount: 0,
+      // Visitor tracking (Built for Shopify 5.7.2)
+      visitorId: currentVisitorId || undefined,
       // UTM tracking
       utmSource: utm.utmSource,
       utmMedium: utm.utmMedium,
@@ -1214,7 +1291,8 @@
     };
 
     try {
-      const res = await fetch(`${API_BASE}/api/create-order`, {
+      // Use the new order-complete endpoint that integrates customer sync
+      const res = await fetch(`${API_BASE}/api/order-complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -1223,6 +1301,13 @@
       const result = await res.json();
 
       if (result.success && result.data?.whatsappLink) {
+        // Track successful conversion
+        trackVisitorActivity('order_completed', {
+          orderId: result.data.orderId,
+          orderNumber: result.data.orderNumber,
+          total: orderState.total
+        });
+
         // Hide form, show success
         modal.querySelector('.curetfy-modal-content').style.display = 'none';
         const success = modal.querySelector('.curetfy-success');

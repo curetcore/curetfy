@@ -319,26 +319,48 @@ export async function loader({ request }: LoaderFunctionArgs) {
       customFields: shop.customFields || [],
     };
 
-    // Get provinces for enabled countries
-    const enabledProvinces: Record<string, typeof PROVINCES.DO> = {};
-    shop.countries.forEach(countryCode => {
-      if (PROVINCES[countryCode]) {
-        enabledProvinces[countryCode] = PROVINCES[countryCode];
-      }
-    });
+    // Configuration warnings
+    const warnings: string[] = [];
 
-    // Get country names for enabled countries
-    const enabledCountries: Record<string, string> = {};
-    shop.countries.forEach(countryCode => {
-      if (COUNTRIES[countryCode]) {
-        enabledCountries[countryCode] = COUNTRIES[countryCode];
-      }
-    });
+    // Check if countries are configured
+    const hasCountriesConfigured = shop.countries && shop.countries.length > 0;
+
+    if (!hasCountriesConfigured) {
+      warnings.push("No countries configured. Please configure countries in the app settings.");
+    }
+
+    // Check if WhatsApp is configured
+    const cleanWhatsApp = shop.whatsappNumber?.replace(/\D/g, "") || "";
+    if (!cleanWhatsApp || cleanWhatsApp.length < 10) {
+      warnings.push("WhatsApp number not configured or invalid. Orders will not redirect to WhatsApp.");
+    }
+
+    // Get provinces for enabled countries (or all if none configured)
+    let enabledProvinces: Record<string, typeof PROVINCES.DO> = {};
+    let enabledCountries: Record<string, string> = {};
+
+    if (hasCountriesConfigured) {
+      // Use configured countries
+      shop.countries.forEach(countryCode => {
+        if (PROVINCES[countryCode]) {
+          enabledProvinces[countryCode] = PROVINCES[countryCode];
+        }
+        if (COUNTRIES[countryCode]) {
+          enabledCountries[countryCode] = COUNTRIES[countryCode];
+        }
+      });
+    } else {
+      // Provide all countries when none configured (allows form to work)
+      enabledProvinces = { ...PROVINCES };
+      enabledCountries = { ...COUNTRIES };
+    }
 
     return json({
       config,
       provinces: enabledProvinces,
       countries: enabledCountries,
+      warnings: warnings.length > 0 ? warnings : undefined,
+      configurationComplete: warnings.length === 0,
     }, { headers });
 
   } catch (error) {
@@ -412,8 +434,8 @@ function getDefaultConfig() {
       errorTitle: "Error",
       errorMessage: "Hubo un problema al procesar tu pedido. Intenta de nuevo.",
     },
-    countries: ["DO"],
-    defaultCountry: "DO",
+    countries: [],
+    defaultCountry: "",
     autoRedirectWhatsApp: true,
     redirectDelay: 2000,
     enableAnalytics: true,

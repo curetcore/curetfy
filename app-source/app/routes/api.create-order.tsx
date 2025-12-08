@@ -1,30 +1,49 @@
 import type { ActionFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
+import {
+  PLAN_LIMITS,
+  checkAndResetBillingCycle,
+  getShopByDomain,
+  getShopById,
+  createOrderWithTransaction,
+  buildTemplateData,
+  generateWhatsAppLink,
+  isValidWhatsAppNumber,
+  type OrderRequestBody,
+  type OrderResult,
+} from "../services/order.server";
 import prisma from "../db.server";
 
-const PLAN_LIMITS: Record<string, number> = {
-  FREE: 100,
-  PRO: Infinity,
-};
+// ============================================================================
+// MAIN ACTION HANDLER
+// ============================================================================
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   // Only allow POST
   if (request.method !== "POST") {
-    return json({ success: false, error: "Method not allowed" }, { status: 405 });
+    return json({
+      success: false,
+      error: "Method not allowed",
+      code: "METHOD_NOT_ALLOWED",
+    }, { status: 405 });
   }
 
   try {
-    const body = await request.json();
+    const body: OrderRequestBody = await request.json();
     const {
       shop,
       productId,
       productTitle,
       variantId,
+      variantTitle,
+      productImage,
       quantity = 1,
       price,
       currency = "USD",
       customer,
-      // UTM tracking
+      shippingRate,
+      codFee = 0,
+      discount = 0,
       utmSource,
       utmMedium,
       utmCampaign,
@@ -32,169 +51,202 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       utmContent,
     } = body;
 
-    // Validate required fields
-    if (!shop || !productId || !customer?.name || !customer?.phone || !customer?.address) {
+    // ========================================================================
+    // VALIDATION
+    // ========================================================================
+
+    const validationErrors: string[] = [];
+
+    if (!shop) validationErrors.push("shop is required");
+    if (!productId) validationErrors.push("productId is required");
+    if (!productTitle) validationErrors.push("productTitle is required");
+    if (!customer?.name) validationErrors.push("customer.name is required");
+    if (!customer?.phone) validationErrors.push("customer.phone is required");
+    if (!customer?.address) validationErrors.push("customer.address is required");
+
+    if (validationErrors.length > 0) {
       return json({
         success: false,
-        error: "Missing required fields",
+        error: "Validation failed",
+        code: "VALIDATION_ERROR",
+        details: validationErrors,
       }, { status: 400 });
     }
 
-    // Get shop configuration
-    const shopData = await prisma.shop.findUnique({
-      where: { shopDomain: shop },
-    });
+    // ========================================================================
+    // GET SHOP & CHECK BILLING
+    // ========================================================================
+
+    const shopData = await getShopByDomain(shop);
 
     if (!shopData) {
       return json({
         success: false,
         error: "Shop not found or app not installed",
+        code: "SHOP_NOT_FOUND",
       }, { status: 404 });
     }
 
-    // Check order limits
-    const orderLimit = PLAN_LIMITS[shopData.plan] || 100;
-    if (shopData.ordersThisMonth >= orderLimit) {
+    // Check and reset billing cycle if needed
+    await checkAndResetBillingCycle(shopData.id, shopData.billingCycleStart);
+
+    // Reload shop data after potential reset
+    const updatedShopData = await getShopById(shopData.id);
+
+    if (!updatedShopData) {
       return json({
         success: false,
-        error: "Order limit reached",
+        error: "Shop data error",
+        code: "SHOP_DATA_ERROR",
+      }, { status: 500 });
+    }
+
+    // Check order limits
+    const orderLimit = PLAN_LIMITS[updatedShopData.plan] || 100;
+    if (updatedShopData.ordersThisMonth >= orderLimit) {
+      return json({
+        success: false,
+        error: "Order limit reached for your plan",
+        code: "ORDER_LIMIT_REACHED",
         upgradeRequired: true,
-        currentPlan: shopData.plan,
-        ordersUsed: shopData.ordersThisMonth,
-        orderLimit,
+        currentPlan: updatedShopData.plan,
+        ordersUsed: updatedShopData.ordersThisMonth,
+        orderLimit: orderLimit === Infinity ? "unlimited" : orderLimit,
       }, { status: 403 });
     }
 
-    // Calculate totals
+    // ========================================================================
+    // CALCULATE TOTALS
+    // ========================================================================
+
     const unitPrice = parseFloat(price) || 0;
+    const shippingCost = shippingRate?.price || 0;
     const subtotal = unitPrice * quantity;
-    const total = subtotal; // No discount for now
+    const total = subtotal + shippingCost + codFee - discount;
 
-    // Generate order number
-    const orderCount = await prisma.order.count({ where: { shopId: shopData.id } });
-    const orderNumber = `COD-${String(orderCount + 1).padStart(5, "0")}`;
+    // ========================================================================
+    // CREATE ORDER WITH TRANSACTION (Atomic operation)
+    // ========================================================================
 
-    // Create order in our database
-    const order = await prisma.order.create({
-      data: {
-        shopId: shopData.id,
-        shopifyOrderNumber: orderNumber,
-        customerName: customer.name,
-        customerPhone: customer.phone,
-        customerAddress: customer.address,
-        customerProvince: customer.province || "",
-        customerCountry: customer.country || "DO",
-        productId,
-        productTitle,
-        productVariantId: variantId,
-        quantity,
-        unitPrice,
-        subtotal,
-        total,
-        currency,
-        status: "PENDING",
-        // UTM tracking
-        utmSource: utmSource || null,
-        utmMedium: utmMedium || null,
-        utmCampaign: utmCampaign || null,
-        utmTerm: utmTerm || null,
-        utmContent: utmContent || null,
-      },
+    const orderResult = await createOrderWithTransaction({
+      shopId: updatedShopData.id,
+      customer,
+      productId,
+      productTitle,
+      variantId,
+      variantTitle,
+      productImage,
+      quantity,
+      unitPrice,
+      subtotal,
+      shippingCost,
+      shippingRateName: shippingRate?.name,
+      codFee,
+      discount,
+      total,
+      currency,
+      utmSource,
+      utmMedium,
+      utmCampaign,
+      utmTerm,
+      utmContent,
     });
 
-    // Increment order counter
-    await prisma.shop.update({
-      where: { id: shopData.id },
-      data: { ordersThisMonth: { increment: 1 } },
+    // ========================================================================
+    // GENERATE WHATSAPP LINK
+    // ========================================================================
+
+    const templateData = buildTemplateData({
+      orderNumber: orderResult.orderNumber,
+      orderId: orderResult.order.id,
+      customer,
+      productTitle,
+      variantTitle,
+      quantity,
+      unitPrice,
+      subtotal,
+      shippingCost,
+      shippingRateName: shippingRate?.name,
+      codFee,
+      discount,
+      total,
+      currency,
     });
 
-    // Generate WhatsApp link
-    const whatsappLink = generateWhatsAppLink({
-      phone: shopData.whatsappNumber || "",
-      template: shopData.messageTemplate || "",
-      data: {
-        orderNumber,
-        product: productTitle,
-        quantity: String(quantity),
-        total: formatCurrency(total, currency),
-        name: customer.name,
-        phone: customer.phone,
-        address: customer.address,
-        province: customer.province || "",
-      },
-    });
+    let whatsappLink: string | null = null;
+    const hasValidWhatsApp = isValidWhatsAppNumber(updatedShopData.whatsappNumber);
 
-    return json({
+    if (hasValidWhatsApp && updatedShopData.messageTemplate) {
+      whatsappLink = generateWhatsAppLink({
+        phone: updatedShopData.whatsappNumber!,
+        template: updatedShopData.messageTemplate,
+        data: templateData,
+      });
+    }
+
+    // ========================================================================
+    // RETURN SUCCESS RESPONSE
+    // ========================================================================
+
+    const response: { success: true; data: OrderResult; warnings?: string[] } = {
       success: true,
       data: {
-        orderId: order.id,
-        shopifyOrderNumber: orderNumber,
+        orderId: orderResult.order.id,
+        orderNumber: orderResult.orderNumber,
+        subtotal: subtotal.toFixed(2),
+        shipping: shippingCost.toFixed(2),
+        codFee: codFee.toFixed(2),
+        discount: discount.toFixed(2),
         total: total.toFixed(2),
         currency,
         whatsappLink,
+        whatsappNumber: hasValidWhatsApp ? updatedShopData.whatsappNumber : null,
       },
-    });
+    };
+
+    // Add warnings if WhatsApp is not configured
+    if (!hasValidWhatsApp) {
+      response.warnings = ["WhatsApp number not configured or invalid. Customer cannot be redirected to WhatsApp."];
+    }
+
+    return json(response);
+
   } catch (error) {
     console.error("Error creating order:", error);
+
+    // Handle specific Prisma errors
+    if (error instanceof Error) {
+      if (error.message.includes("Transaction")) {
+        return json({
+          success: false,
+          error: "Order creation failed due to high traffic. Please try again.",
+          code: "TRANSACTION_ERROR",
+        }, { status: 503 });
+      }
+    }
+
     return json({
       success: false,
       error: "Failed to create order",
+      code: "INTERNAL_ERROR",
     }, { status: 500 });
   }
 };
 
-function generateWhatsAppLink(params: {
-  phone: string;
-  template: string;
-  data: Record<string, string>;
-}): string {
-  let message = params.template;
+// ============================================================================
+// LOADER (GET) - Return shop config
+// ============================================================================
 
-  // Replace template variables
-  Object.entries(params.data).forEach(([key, value]) => {
-    message = message.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), value);
-  });
-
-  // Clean phone number
-  const cleanPhone = params.phone.replace(/\D/g, "");
-
-  // Encode message
-  const encodedMessage = encodeURIComponent(message);
-
-  return `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
-}
-
-function formatCurrency(amount: number, currency: string): string {
-  try {
-    // Use locale based on currency for proper formatting
-    const localeMap: Record<string, string> = {
-      USD: "en-US",
-      DOP: "es-DO",
-      COP: "es-CO",
-      MXN: "es-MX",
-      PEN: "es-PE",
-      CLP: "es-CL",
-      ARS: "es-AR",
-      EUR: "es-ES",
-    };
-    const locale = localeMap[currency] || "en-US";
-
-    return new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency,
-    }).format(amount);
-  } catch {
-    return `${currency} ${amount.toFixed(2)}`;
-  }
-}
-
-// Handle GET for config
 export const loader = async ({ request }: ActionFunctionArgs) => {
   const url = new URL(request.url);
   const shop = url.searchParams.get("shop");
 
   if (!shop) {
-    return json({ success: false, error: "Shop parameter required" }, { status: 400 });
+    return json({
+      success: false,
+      error: "Shop parameter required",
+      code: "MISSING_SHOP_PARAM",
+    }, { status: 400 });
   }
 
   const shopData = await prisma.shop.findUnique({
@@ -208,15 +260,26 @@ export const loader = async ({ request }: ActionFunctionArgs) => {
       countries: true,
       defaultCountry: true,
       messageTemplate: true,
+      formEnabled: true,
     },
   });
 
   if (!shopData) {
-    return json({ success: false, error: "Shop not found" }, { status: 404 });
+    return json({
+      success: false,
+      error: "Shop not found",
+      code: "SHOP_NOT_FOUND",
+    }, { status: 404 });
   }
+
+  // Validate WhatsApp configuration
+  const whatsappConfigured = isValidWhatsAppNumber(shopData.whatsappNumber);
 
   return json({
     success: true,
-    config: shopData,
+    config: {
+      ...shopData,
+      whatsappConfigured,
+    },
   });
 };

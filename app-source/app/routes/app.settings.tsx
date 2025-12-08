@@ -665,7 +665,7 @@ function SortableShippingRate({ rate, index, onUpdate, onRemove }: SortableShipp
                 label="Nombre"
                 value={rate.name}
                 onChange={(value) => onUpdate({ name: value })}
-                placeholder="Delivery Santo Domingo"
+                placeholder="Envío estándar"
                 autoComplete="off"
               />
               <TextField
@@ -915,7 +915,7 @@ function FormModalPreview({
   previewType: "form" | "fields" | "modal";
   sampleProduct?: { title: string; image: string | null; price: string } | null;
 }) {
-  const provinces = PROVINCES_BY_COUNTRY[formState.defaultCountry] || PROVINCES_BY_COUNTRY.DO;
+  const provinces = PROVINCES_BY_COUNTRY[formState.defaultCountry] || [];
   const customFields = formState.customFields as any[] || [];
 
   // Use sample product from store or fallback
@@ -1577,8 +1577,8 @@ export default function Settings() {
     errorMessage: shop?.errorMessage || "Hubo un problema al procesar tu pedido. Intenta de nuevo.",
 
     // Countries
-    countries: (shop?.countries || ["DO"]).join(", "),
-    defaultCountry: shop?.defaultCountry || "DO",
+    countries: (shop?.countries || []).join(", "),
+    defaultCountry: shop?.defaultCountry || "",
 
     // Advanced
     autoRedirectWhatsApp: shop?.autoRedirectWhatsApp ?? true,
@@ -2375,7 +2375,7 @@ export default function Settings() {
                                   label="Dirección del local"
                                   value={formState.pickupAddress as string}
                                   onChange={handleChange("pickupAddress")}
-                                  placeholder="Av. Winston Churchill #123, Santo Domingo"
+                                  placeholder="Tu dirección completa"
                                   autoComplete="off"
                                 />
                                 <TextField

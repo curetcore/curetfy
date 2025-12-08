@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import {
   Page,
@@ -31,11 +31,7 @@ import {
 import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
-
-const PLAN_LIMITS: Record<string, number> = {
-  FREE: 100,
-  PRO: Infinity,
-};
+import { PLAN_LIMITS, checkAndResetBillingCycle } from "../services/order.server";
 
 // Generate last 30 days for chart
 function getLast30Days() {
@@ -214,15 +210,30 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     shop = await prisma.shop.create({
       data: { shopDomain: session.shop },
     });
+    // New shop - redirect to onboarding
+    return redirect("/app/onboarding");
   }
 
-  // Get orders this month
-  const ordersThisMonth = await prisma.order.count({
-    where: {
-      shopId: shop.id,
-      createdAt: { gte: shop.billingCycleStart },
-    },
-  });
+  // Check if onboarding is complete
+  if (!shop.onboardingComplete) {
+    return redirect("/app/onboarding");
+  }
+
+  // Check and reset billing cycle if needed
+  const wasReset = await checkAndResetBillingCycle(shop.id, shop.billingCycleStart);
+
+  // Reload shop data if billing cycle was reset
+  if (wasReset) {
+    shop = await prisma.shop.findUnique({
+      where: { id: shop.id },
+    });
+    if (!shop) {
+      throw new Error("Shop not found after billing cycle reset");
+    }
+  }
+
+  // Use shop.ordersThisMonth as single source of truth
+  const ordersThisMonth = shop.ordersThisMonth;
 
   // Get orders last 7 days
   const sevenDaysAgo = new Date();
@@ -453,7 +464,7 @@ export default function Dashboard() {
               <Badge tone={setupComplete ? "success" : "attention"}>
                 {setupComplete ? "Activo" : "Configuración pendiente"}
               </Badge>
-              <Button url={`https://${shop.shopDomain}/admin/themes/current/editor`} external size="slim">
+              <Button url={`https://admin.shopify.com/store/${shop.shopDomain.replace('.myshopify.com', '')}/themes/current/editor`} external size="slim">
                 Instalar en tema
               </Button>
             </BlockStack>

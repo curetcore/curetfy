@@ -119,22 +119,35 @@ export default function PrivacyPolicy() {
         <li><strong>Facebook Pixel:</strong> (Optional) Analytics - <a href="https://www.facebook.com/privacy/policy" target="_blank" rel="noopener">Privacy Policy</a></li>
       </ul>
 
-      <h2>10. Children's Privacy</h2>
+      <h2>10. Data Breach Response</h2>
+      <p>
+        In the event of a data breach affecting personal information, we commit to:
+      </p>
+      <ul>
+        <li><strong>Notify Shopify:</strong> Within 24 hours of discovery</li>
+        <li><strong>Notify affected merchants:</strong> Within 72 hours with breach details</li>
+        <li><strong>Contain the breach:</strong> Immediate steps to prevent further exposure</li>
+        <li><strong>Investigate:</strong> Determine scope, cause, and affected data</li>
+        <li><strong>Remediate:</strong> Implement fixes and preventive measures</li>
+        <li><strong>Document:</strong> Maintain records per regulatory requirements</li>
+      </ul>
+
+      <h2>11. Children's Privacy</h2>
       <p>
         Our service is not intended for children under 13 years of age. We do not knowingly collect personal information from children.
       </p>
 
-      <h2>11. International Data Transfers</h2>
+      <h2>12. International Data Transfers</h2>
       <p>
         Your data may be processed in servers located outside your country. We ensure appropriate safeguards are in place for international transfers.
       </p>
 
-      <h2>12. Changes to This Policy</h2>
+      <h2>13. Changes to This Policy</h2>
       <p>
         We may update this Privacy Policy from time to time. We will notify merchants of significant changes via email or in-app notification.
       </p>
 
-      <h2>13. Contact Us</h2>
+      <h2>14. Contact Us</h2>
       <p>For privacy-related inquiries:</p>
       <ul>
         <li><strong>Email:</strong> <a href="mailto:privacy@curetcore.com">privacy@curetcore.com</a></li>

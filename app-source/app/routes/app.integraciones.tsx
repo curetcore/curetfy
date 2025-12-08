@@ -32,11 +32,11 @@ function WhatsAppPreview({ template, shopName }: { template: string; shopName: s
     order_number: "COD-00001",
     order_id: "12345",
     order_total: "$125.00",
-    first_name: "María",
-    last_name: "García",
+    first_name: "Cliente",
+    last_name: "Ejemplo",
     phone: "+1 555 123 4567",
-    email: "maria@email.com",
-    address: "Calle Principal #123",
+    email: "cliente@email.com",
+    address: "Dirección de ejemplo #123",
     address2: "Apt 4B",
     city: "Ciudad",
     province: "Provincia",
@@ -521,9 +521,9 @@ export default function Integraciones() {
                             label="Tu número de teléfono de WhatsApp"
                             value={formState.whatsappNumber}
                             onChange={handleChange("whatsappNumber")}
-                            placeholder="18295795988"
+                            placeholder="15551234567"
                             autoComplete="off"
-                            helpText="Importante: incluye el código de tu país en el número de teléfono. Ejemplo: +576264292018"
+                            helpText="Incluye el código de tu país. Ejemplo: 15551234567 (USA), 521234567890 (México)"
                           />
                           <TextField
                             label="Mensaje de WhatsApp precargado"

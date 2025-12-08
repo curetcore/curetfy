@@ -182,8 +182,8 @@ model Shop {
   // ==========================================
   // COUNTRY/REGION CONFIGURATION
   // ==========================================
-  countries           String[] @default(["DO"])
-  defaultCountry      String   @default("DO")
+  countries           String[] @default([])
+  defaultCountry      String   @default("")
   provincesConfig     Json?    // Custom provinces per country
 
   // ==========================================
@@ -253,9 +253,9 @@ model Shop {
   termsRequired       Boolean  @default(true)
 
   // ==========================================
-  // WHATSAPP MESSAGE TEMPLATE
+  // ORDER SEQUENCE (for atomic order numbering)
   // ==========================================
-  whatsappTemplate    String   @default("*Nuevo Pedido*\n\n*Cliente:* {nombre}\n*Teléfono:* {telefono}\n*Dirección:* {direccion}\n\n*Productos:*\n{productos}\n\n*Subtotal:* {subtotal}\n*Envío:* {envio}\n*Total:* {total}")
+  orderSequence       Int      @default(0)  // Auto-incrementing sequence for order numbers
 
   // ==========================================
   // BLOCKED PROVINCES
@@ -286,9 +286,17 @@ model Shop {
   billingCycleStart   DateTime @default(now())
   shopifyChargeId     String?
 
+  // ==========================================
+  // MARKETING CONSENT (Shopify Partner Terms Compliance)
+  // ==========================================
+  marketingConsent    Boolean  @default(false)  // Merchant consents to receive marketing emails
+  marketingConsentAt  DateTime?                 // When consent was given
+  onboardingComplete  Boolean  @default(false)  // Has completed initial setup
+
   // Relations
   orders              Order[]
   formOpens           FormOpen[]
+  visitors            Visitor[]
 
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
@@ -310,17 +318,21 @@ model Order {
   customerAddress     String
   customerProvince    String
   customerCity        String?
-  customerCountry     String      @default("DO")
+  customerCountry     String      @default("")
   customerNotes       String?
 
   // Order Details
   productId           String
   productTitle        String
   productVariantId    String?
+  productVariantTitle String?
   productImage        String?
   quantity            Int         @default(1)
   unitPrice           Decimal     @db.Decimal(10, 2)
   subtotal            Decimal     @db.Decimal(10, 2)
+  shippingCost        Decimal     @default(0) @db.Decimal(10, 2)
+  shippingRateName    String?
+  codFee              Decimal     @default(0) @db.Decimal(10, 2)
   discount            Decimal     @default(0) @db.Decimal(10, 2)
   total               Decimal     @db.Decimal(10, 2)
   currency            String      @default("USD")
@@ -393,4 +405,67 @@ enum OrderStatus {
   DELIVERED
   CANCELLED
   RETURNED
+}
+
+// ============================================================================
+// VISITOR TRACKING (Built for Shopify Requirement 5.7.2)
+// ============================================================================
+
+model Visitor {
+  id                  String      @id @default(cuid())
+  shopId              String
+  shop                Shop        @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  // Session tracking
+  sessionId           String
+  fingerprint         String?
+  ipAddress           String?
+  userAgent           String?
+  referrer            String?
+  landingPage         String?
+
+  // UTM Tracking
+  utmSource           String?
+  utmMedium           String?
+  utmCampaign         String?
+  utmTerm             String?
+  utmContent          String?
+
+  // Customer identification (when form is submitted)
+  phone               String?
+  email               String?
+  customerName        String?
+  shopifyCustomerId   String?     // Numeric Shopify customer ID
+  shopifyCustomerGid  String?     // Full Shopify GID
+
+  // Conversion tracking
+  orderId             String?     // Link to converted order
+
+  // Timestamps
+  firstSeen           DateTime    @default(now())
+  lastSeen            DateTime    @default(now())
+  identifiedAt        DateTime?   // When customer was identified
+  convertedAt         DateTime?   // When order was placed
+
+  // Relations
+  activities          VisitorActivity[]
+
+  @@index([shopId, sessionId])
+  @@index([shopId, firstSeen(sort: Desc)])
+  @@index([shopId, phone])
+  @@index([shopId, email])
+  @@index([shopifyCustomerId])
+}
+
+model VisitorActivity {
+  id                  String      @id @default(cuid())
+  visitorId           String
+  visitor             Visitor     @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+
+  event               String      // form_open, field_focus, field_blur, submit_attempt, etc.
+  metadata            String?     // JSON string of additional data
+
+  createdAt           DateTime    @default(now())
+
+  @@index([visitorId, createdAt(sort: Desc)])
 }
