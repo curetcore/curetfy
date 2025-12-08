@@ -31,6 +31,11 @@ import { useState, useCallback } from "react";
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
 
+  // Get URL params to preserve for redirects
+  const url = new URL(request.url);
+  const searchParams = url.searchParams.toString();
+  const redirectSuffix = searchParams ? `?${searchParams}` : "";
+
   const shop = await prisma.shop.findUnique({
     where: { shopDomain: session.shop },
     select: {
@@ -42,7 +47,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   // If onboarding is complete, redirect to dashboard
   if (shop?.onboardingComplete) {
-    return redirect("/app");
+    return redirect(`/app${redirectSuffix}`);
   }
 
   return json({
@@ -53,6 +58,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { session } = await authenticate.admin(request);
+
+  // Get URL params to preserve for redirects
+  const url = new URL(request.url);
+  const searchParams = new URLSearchParams(url.searchParams);
+  searchParams.set("welcome", "true");
+  const redirectSuffix = `?${searchParams.toString()}`;
+
   const formData = await request.formData();
 
   const whatsappNumber = formData.get("whatsappNumber") as string;
@@ -80,7 +92,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     },
   });
 
-  return redirect("/app?welcome=true");
+  return redirect(`/app${redirectSuffix}`);
 };
 
 export default function Onboarding() {

@@ -187,6 +187,11 @@ function LineChart({
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session, admin } = await authenticate.admin(request);
 
+  // Get URL params to preserve for redirects
+  const url = new URL(request.url);
+  const searchParams = url.searchParams.toString();
+  const redirectSuffix = searchParams ? `?${searchParams}` : "";
+
   // Fetch shop currency from Shopify
   const shopResponse = await admin.graphql(`
     query {
@@ -210,13 +215,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     shop = await prisma.shop.create({
       data: { shopDomain: session.shop },
     });
-    // New shop - redirect to onboarding
-    return redirect("/app/onboarding");
+    // New shop - redirect to onboarding with query params
+    return redirect(`/app/onboarding${redirectSuffix}`);
   }
 
   // Check if onboarding is complete
   if (!shop.onboardingComplete) {
-    return redirect("/app/onboarding");
+    return redirect(`/app/onboarding${redirectSuffix}`);
   }
 
   // Check and reset billing cycle if needed
